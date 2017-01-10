@@ -8,10 +8,18 @@ public class Gardener {
 
     RobotController rc;
     Map map;
+    Direction[] treeDirs;
+    int lastWatered;
 
     public Gardener(RobotController rc){
         this.rc = rc;
         this.map = new Map(rc);
+        treeDirs = new Direction[6];
+        float angle = (float)Math.PI / 3.0f;
+        for (int i = 0; i < 6; i++) {
+            treeDirs[i] = new Direction(angle * i);
+        }
+        lastWatered = 0;
     }
 
     public void run(){
@@ -23,21 +31,40 @@ public class Gardener {
 
     protected void tick(){
         try {
-            // Listen for home archon's location
-            int xPos = rc.readBroadcast(0);
-            int yPos = rc.readBroadcast(1);
-            MapLocation archonLoc = new MapLocation(xPos,yPos);
-
-            // Generate a random direction
-            Direction dir = randomDirection();
-
-            // Randomly attempt to build a soldier or lumberjack in this direction
-            if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .02) {
-                rc.buildRobot(RobotType.SOLDIER, dir);
+            TreeInfo[] tis = rc.senseNearbyTrees(2.0f);
+            if (tis.length < 5) {
+                for (int i = 0; i < 6; i++) {
+                    if (rc.canPlantTree(treeDirs[i])) {
+                        rc.plantTree(treeDirs[i]);
+                        break;
+                    }
+                }
             }
 
-            // Move randomly
-            tryMove(randomDirection());
+            for (int i = 0; i < 6; i++) {
+                if (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i])) {
+                    rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
+                    break;
+                }
+            }
+
+            // Try watering trees in some order
+            if (tis.length > 0) {
+                lastWatered = (lastWatered + 1) % tis.length;
+                int id = tis[lastWatered].ID;
+                if (rc.canWater(id)) {
+                    rc.water(id);
+                }
+            }
+
+
+            // Generate a random direction
+            // Direction dir = randomDirection();
+
+            // // Randomly attempt to build a soldier or lumberjack in this direction
+            // if (rc.canBuildRobot(RobotType.SOLDIER, dir) && Math.random() < .02) {
+                // rc.buildRobot(RobotType.SOLDIER, dir);
+            // }
 
         } catch (Exception e) {
             System.out.println("Gardener Exception");
