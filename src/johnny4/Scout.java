@@ -74,7 +74,9 @@ public class Scout {
             if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
                 if (dist < RobotType.SOLDIER.sensorRadius ){
                     tryMove(nextEnemy.directionTo(myLocation));
-                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                    if (rc.canFireSingleShot()) {
+                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                    }
                 }else {
                 //System.out.println("Moving towards enemy at distance " + dist);
                     tryMove(myLocation.directionTo(nextEnemy));
