@@ -24,6 +24,9 @@ public class Lumberjack {
 
     protected void tick(){
         try {
+            if (rc.getTeamBullets() >= 10000f){
+                rc.donate(10000f);
+            }
 /*
             // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
             RobotInfo[] robots = rc.senseNearbyRobots(RobotType.LUMBERJACK.bodyRadius+ GameConstants.LUMBERJACK_STRIKE_RADIUS, enemy);
