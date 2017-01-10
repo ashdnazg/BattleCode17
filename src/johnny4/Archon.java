@@ -35,6 +35,7 @@ public class Archon {
 
             int frame = rc.getRoundNum();
             MapLocation myLocation = rc.getLocation();
+            map.sense();
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
             }
@@ -52,9 +53,7 @@ public class Archon {
             }
 
             // Move randomly
-            if (tryMove(lastDirection)) {
-
-            } else {
+            while (!tryMove(lastDirection) && Math.random() > 0.02) {
                 lastDirection = randomDirection();
             }
         } catch (Exception e) {

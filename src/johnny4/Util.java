@@ -23,7 +23,7 @@ public class Util {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        return tryMove(dir, 20, 3);
+        return tryMove(dir, 35, 3);
     }
 
     /**

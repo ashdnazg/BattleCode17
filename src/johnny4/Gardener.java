@@ -72,7 +72,7 @@ public class Gardener {
 
             for (int i = 0; i < 6; i++) {
                 if (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i])) {
-                    if (radio.countAllies(RobotType.SCOUT) < 10) {
+                    if (radio.countAllies(RobotType.SCOUT) < 3 || (radio.countAllies(RobotType.SCOUT) < 10 && Math.random() < 0.2)) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                     }
                 }

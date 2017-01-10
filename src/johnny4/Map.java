@@ -16,14 +16,16 @@ public class Map {
         // init vision
     }
 
-    public void sense() {
+    public RobotInfo[] sense() {
         int frame = rc.getRoundNum();
         int clocks = Clock.getBytecodeNum();
-        for (RobotInfo r : rc.senseNearbyRobots()) {
+        RobotInfo[] ret = rc.senseNearbyRobots();
+        for (RobotInfo r : ret) {
             if (!r.getTeam().equals(rc.getTeam())) {
                 radio.reportEnemy(r.getLocation(), r.getType(), frame);
             }
         }
+        return ret;
         //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
     }
 

@@ -27,25 +27,48 @@ public class Soldier {
 
     protected void tick() {
         try {
-            if (rc.getTeamBullets() >= 10000f){
+            if (rc.getTeamBullets() >= 10000f) {
                 rc.donate(10000f);
             }
-            map.sense();
 
+            int frame = rc.getRoundNum();
             MapLocation myLocation = rc.getLocation();
 
-            // See if there are any nearby enemy robots
-            MapLocation target = map.getTarget(myLocation);
 
-            if (target == null) {
-                tryMove(randomDirection());
-            } else {
-                if (myLocation.distanceTo(target) < 0.7f * RobotType.SOLDIER.sensorRadius) {
-                    tryMove(target.directionTo(myLocation));
-                } else {
-                    tryMove(myLocation.directionTo(target));
+            MapLocation nextEnemy = null;
+            for (RobotInfo r : rc.senseNearbyRobots()) {
+                if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
+                    nextEnemy = r.location;
                 }
-                rc.fireSingleShot(myLocation.directionTo(target));
+            }
+            boolean longrange = false;
+            if (nextEnemy == null) {
+                longrange = true;
+                nextEnemy = map.getTarget(myLocation);
+            }
+            float dist = 10000f;
+            if (nextEnemy != null){
+                dist = myLocation.distanceTo(nextEnemy);
+                if (dist < 0.5 * RobotType.SCOUT.sensorRadius ){
+                    if (!longrange && rc.getTeamBullets() > 400 && rc.canFirePentadShot()) {
+                        rc.firePentadShot(myLocation.directionTo(nextEnemy));
+                    }
+                    if(!longrange && rc.getTeamBullets() > 100 && rc.canFireTriadShot()){
+                        rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+                    }
+                    tryMove(nextEnemy.directionTo(myLocation));
+                }else {
+                    tryMove(myLocation.directionTo(nextEnemy));
+                }
+
+                if (!longrange && rc.canFireSingleShot()) {
+                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                }
+            } else  {
+                tryMove(randomDirection());
+            }
+            if (rc.getRoundNum() - frame > 0 && !longrange){
+                System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 
 
