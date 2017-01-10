@@ -2,10 +2,7 @@ package johnny4;
 
 import battlecode.common.*;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class Map {
 
@@ -20,6 +17,7 @@ public class Map {
     }
 
     public void sense(){
+        System.out.println(Clock.getBytecodeNum());
         int clocks = Clock.getBytecodeNum();
         for (RobotInfo r : rc.senseNearbyRobots()){
             if (!r.getTeam().equals(rc.getTeam())) {
@@ -34,27 +32,47 @@ public class Map {
         return intel.stream().filter(i -> round - i.creationTime < 10).min(Comparator.comparing(i -> myLoc.distanceTo(i.location))).map(i -> i.location);
     }
 
+    private static List<Intel> toremove = new ArrayList();
+
     public class Intel{
 
         final int creationTime;
         final int robotId;
         final MapLocation location;
         final RobotType robotType;
+        final Intel previousIntel;
+
 
         public Intel(int creationTime, int robotId, MapLocation location, RobotType robotType){
 
+            System.out.println(Clock.getBytecodeNum());
             this.creationTime = creationTime;
             this.robotId = robotId;
             this.location = location;
             this.robotType = robotType;
 
+            System.out.println(Clock.getBytecodeNum());
+            toremove.clear();
+            System.out.println(Clock.getBytecodeNum());
+            Intel bestprev = null;
+            for (Intel i : intel) {
+                if (i.equalRobot(this)){
+                    toremove.add(i);
+                    if (bestprev == null || bestprev.creationTime < i.creationTime){
+                        bestprev = i;
+                    }
+                }
+            }
+            System.out.println(Clock.getBytecodeNum());
+            previousIntel = bestprev;
             //register
-            if (!intel.stream().anyMatch(i -> i.equalRobot(this) && i.creationTime > creationTime)){
-                intel.removeIf(i -> i.equalRobot(this));
+            if (previousIntel == null || previousIntel.creationTime < creationTime){
+                intel.removeAll(toremove);
                 intel.add(this);
                 System.out.println("Sensed enemy at " + location);
                 System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
             }
+            System.out.println(Clock.getBytecodeNum());
         }
 
         public Intel(RobotInfo r) {

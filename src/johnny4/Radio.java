@@ -2,21 +2,58 @@ package johnny4;
 
 import battlecode.common.*;
 
-import static johnny4.Util.*;
-
 public class Radio {
 
     //Integer 0:        Archon Counter (0-7) Unit Counter (8-15) Enemy Counter (16-23)
     //Integer 1-3:      Archon Info
     //Integer 4-100:    Unit Info
     //Integer 101-200:  Enemy Info
+    //Integer 201-300:  Enemy Trees
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
     RobotController rc;
+    final int myId;
+    final int myType;
 
     public Radio(RobotController rc) {
         this.rc = rc;
+        myId = getUnitCounter();
+        incrementUnitCounter();
+        myType = typeToInt(rc.getType());
+    }
+
+    public void reportMyPosition(MapLocation location){
+        int info = ((int)location.x << 22) | ((int)location.y << 12) | (myType << 9) | (rc.getRoundNum() / 8);
+        write(myId + 4, info);
+    }
+
+    //very expensive, use sparingly
+    public MapLocation[] getAllyPositions(RobotType robotType){
+        int shiftedType = typeToInt(robotType) << 9;
+        int found = 0;
+        int frame = rc.getRoundNum();
+        MapLocation[] result = new MapLocation[100];
+        for (int pos = 4; pos < getUnitCounter() + 4; pos++){
+            if (pos == myId + 4) continue;
+            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getAge(pos) < 20){
+                result[found++] = new MapLocation(getX(pos), getY(pos));
+            }
+        }
+        return result;
+    }
+    //very expensive, use sparingly
+    public MapLocation[] getAllyPositions(){
+        int found = 0;
+        int frame = rc.getRoundNum();
+        MapLocation[] result = new MapLocation[100];
+        for (int pos = 4; pos < getUnitCounter() + 4; pos++){
+            if (pos == myId + 4) continue;
+            if (frame - getAge(pos) < 20){
+                result[found++] = new MapLocation(getX(pos), getY(pos));
+            }
+        }
+        return result;
     }
 
     public int getEnemyCounter() {
@@ -41,12 +78,26 @@ public class Radio {
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
     }
 
-
     public void reportEnemy(MapLocation location, RobotType type, int time) {
         int info = ((int)location.x << 22) | ((int)location.y << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
         incrementEnemyCounter();
     }
+
+    private float getX(int pos){
+        return ((read(pos) & 0b11111111110000000000000000000000) >> 22);
+    }
+    private float getY(int pos) {
+        return ((read(pos) & 0b00000000001111111111000000000000) >> 12);
+    }
+    private float getAge(int pos) {
+        return ((read(pos) & 0b00000000000000000000000111111111)) * 8;
+    }
+
+    private RobotType getType(int pos){
+        return intToType((read(pos) & 0b00000000000000000000111000000000) >> 9);
+    }
+
 
     private int cache[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
     private int cacheAge[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
@@ -77,7 +128,7 @@ public class Radio {
     private int typeToInt(RobotType rt) {
         switch (rt) {
             case SCOUT:
-                return 0;
+                return 6;
             case ARCHON:
                 return 1;
             case GARDENER:
@@ -94,7 +145,7 @@ public class Radio {
 
     private RobotType intToType(int num) {
         switch (num) {
-            case 0:
+            case 6:
                 return RobotType.SCOUT;
             case 1:
                 return RobotType.ARCHON;
@@ -107,7 +158,7 @@ public class Radio {
             case 5:
                 return RobotType.TANK;
         }
-        throw new RuntimeException("Welp");
+        return null;
     }
 
 }
