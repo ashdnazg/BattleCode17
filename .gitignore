@@ -26,3 +26,8 @@ battlecode-scaffold.iws
 .classpath
 .project
 .settings/
+
+
+# gradle crap
+build.gradle
+/gradle/

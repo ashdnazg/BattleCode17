@@ -11,6 +11,7 @@ public class Gardener {
 
     Map map;
     Direction[] treeDirs;
+    Team myTeam;
     int lastWatered;
 
     public Gardener(RobotController rc){
@@ -23,6 +24,7 @@ public class Gardener {
             treeDirs[i] = new Direction(angle * i);
         }
         lastWatered = 0;
+        myTeam = rc.getTeam();
     }
 
     public void run(){
@@ -60,9 +62,9 @@ public class Gardener {
             // Try watering trees in some order
             if (tis.length > 0) {
                 lastWatered = (lastWatered + 1) % tis.length;
-                int id = tis[lastWatered].ID;
-                if (rc.canWater(id)) {
-                    rc.water(id);
+                TreeInfo ti = tis[lastWatered];
+                if (ti.team == myTeam && rc.canWater(ti.ID)) {
+                    rc.water(ti.ID);
                 }
             }
 
