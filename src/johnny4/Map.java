@@ -17,14 +17,13 @@ public class Map {
     }
 
     public void sense(){
-        System.out.println(Clock.getBytecodeNum());
         int clocks = Clock.getBytecodeNum();
         for (RobotInfo r : rc.senseNearbyRobots()){
             if (!r.getTeam().equals(rc.getTeam())) {
                 new Intel(r);
             }
         }
-        System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
+        //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
     }
 
     public Optional<MapLocation> getTarget(MapLocation myLoc){
@@ -45,15 +44,12 @@ public class Map {
 
         public Intel(int creationTime, int robotId, MapLocation location, RobotType robotType){
 
-            System.out.println(Clock.getBytecodeNum());
             this.creationTime = creationTime;
             this.robotId = robotId;
             this.location = location;
             this.robotType = robotType;
 
-            System.out.println(Clock.getBytecodeNum());
-            toremove.clear();
-            System.out.println(Clock.getBytecodeNum());
+            toremove.clear();;
             Intel bestprev = null;
             for (Intel i : intel) {
                 if (i.equalRobot(this)){
@@ -63,16 +59,14 @@ public class Map {
                     }
                 }
             }
-            System.out.println(Clock.getBytecodeNum());
             previousIntel = bestprev;
             //register
             if (previousIntel == null || previousIntel.creationTime < creationTime){
                 intel.removeAll(toremove);
                 intel.add(this);
-                System.out.println("Sensed enemy at " + location);
-                System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
+                //System.out.println("Sensed enemy at " + location);
+                //System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
             }
-            System.out.println(Clock.getBytecodeNum());
         }
 
         public Intel(RobotInfo r) {

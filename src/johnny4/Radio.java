@@ -73,6 +73,7 @@ public class Radio {
     }
     public void incrementUnitCounter() {
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
+        System.out.println("Unit counter is now " + getUnitCounter());
     }
     public void incrementEnemyCounter() {
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
