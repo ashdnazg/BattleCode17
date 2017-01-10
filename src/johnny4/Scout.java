@@ -16,8 +16,8 @@ public class Scout {
 
     public Scout(RobotController rc) {
         this.rc = rc;
-        this.map = new Map(rc);
         this.radio = new Radio(rc);
+        this.map = new Map(rc, radio);
     }
 
     public void run() {

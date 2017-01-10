@@ -7,10 +7,12 @@ public class Lumberjack {
 
     RobotController rc;
     Map map;
+    Radio radio;
 
     public Lumberjack(RobotController rc){
         this.rc = rc;
-        this.map = new Map(rc);
+        this.radio = new Radio(rc);
+        this.map = new Map(rc, radio);
     }
 
     public void run(){

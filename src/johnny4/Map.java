@@ -7,30 +7,50 @@ import java.util.*;
 public class Map {
 
     RobotController rc;
-    Set<Intel> intel = new HashSet<>();
+    Radio radio;
 
-    public Map(RobotController rc){
+    public Map(RobotController rc, Radio radio) {
         this.rc = rc;
+        this.radio = radio;
 
         // init vision
-        System.out.println(rc.getInitialArchonLocations(rc.getTeam())[0].toString());
     }
 
-    public void sense(){
+    public void sense() {
+        int frame = rc.getRoundNum();
         int clocks = Clock.getBytecodeNum();
-        for (RobotInfo r : rc.senseNearbyRobots()){
+        for (RobotInfo r : rc.senseNearbyRobots()) {
             if (!r.getTeam().equals(rc.getTeam())) {
-                new Intel(r);
+                radio.reportEnemy(r.getLocation(), r.getType(), frame);
             }
         }
         //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
     }
 
-    public Optional<MapLocation> getTarget(MapLocation myLoc){
-        final int round = rc.getRoundNum();
-        return intel.stream().filter(i -> round - i.creationTime < 10).min(Comparator.comparing(i -> myLoc.distanceTo(i.location))).map(i -> i.location);
-    }
 
+    public MapLocation getTarget(MapLocation myLoc) {
+        float cx, cy;
+        cx = cy = 0;
+        float mx = myLoc.x;
+        float my = myLoc.y;
+        float mindist = Float.MAX_VALUE;
+        int frame = rc.getRoundNum();
+        for (int i = 0; i < 100; i++) {
+            if (frame - radio.getUnitAge(i) >= 8) continue;
+            if (radio.getUnitType(i) == null) continue;
+            float x = radio.getUnitX(i);
+            float y = radio.getUnitY(i);
+            float dist = (mx - x) * (mx - x) + (my - y) * (my - y);
+            if (dist < mindist){
+                mindist = dist;
+                cx = x;
+                cy = y;
+            }
+        }
+        if (mindist > 1e6f) return null;
+        return new MapLocation(cx, cy);
+    }
+/*
     private static List<Intel> toremove = new ArrayList();
 
     public class Intel{
@@ -77,5 +97,5 @@ public class Map {
             return other.robotId == this.robotId ||
                     (other.robotId | robotId) < 0 && location.distanceTo(other.location) < Math.abs(creationTime - other.creationTime) * RobotType.SCOUT.strideRadius;
         }
-    }
+    }*/
 }

@@ -16,8 +16,8 @@ public class Gardener {
 
     public Gardener(RobotController rc){
         this.rc = rc;
-        this.map = new Map(rc);
         this.radio = new Radio(rc);
+        this.map = new Map(rc, radio);
         treeDirs = new Direction[6];
         float angle = (float)Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {

@@ -41,8 +41,8 @@ public class Radio {
         MapLocation[] result = new MapLocation[100];
         for (int pos = 1; pos < getUnitCounter() + 4; pos++){
             if (pos == myId) continue;
-            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getAge(pos) < 20){
-                result[found++] = new MapLocation(getX(pos), getY(pos));
+            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20){
+                result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
             }
         }
         return result;
@@ -54,8 +54,8 @@ public class Radio {
         MapLocation[] result = new MapLocation[100];
         for (int pos = 1; pos < getUnitCounter() + 4; pos++){
             if (pos == myId) continue;
-            if (frame - getAge(pos) < 20){
-                result[found++] = new MapLocation(getX(pos), getY(pos));
+            if (frame - getUnitAge(pos) < 20){
+                result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
             }
         }
         return result;
@@ -88,20 +88,21 @@ public class Radio {
     public void reportEnemy(MapLocation location, RobotType type, int time) {
         int info = ((int)location.x << 22) | ((int)location.y << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
+        System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location);
         incrementEnemyCounter();
     }
 
-    private float getX(int pos){
+    public float getUnitX(int pos){
         return ((read(pos) & 0b11111111110000000000000000000000) >> 22);
     }
-    private float getY(int pos) {
+    public float getUnitY(int pos) {
         return ((read(pos) & 0b00000000001111111111000000000000) >> 12);
     }
-    private float getAge(int pos) {
+    public float getUnitAge(int pos) {
         return ((read(pos) & 0b00000000000000000000000111111111)) * 8;
     }
 
-    private RobotType getType(int pos){
+    public RobotType getUnitType(int pos){
         return intToType((read(pos) & 0b00000000000000000000111000000000) >> 9);
     }
 

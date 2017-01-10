@@ -3,7 +3,6 @@ import battlecode.common.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
-    static Map map;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -16,7 +15,6 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
         Util.rc = rc;
-        map = new Map(rc);
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
