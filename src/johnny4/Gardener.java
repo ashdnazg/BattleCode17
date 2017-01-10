@@ -57,8 +57,9 @@ public class Gardener {
             }
 
             for (int i = 0; i < 6; i++) {
-                if (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i])) {
-                    rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
+                if (rc.canBuildRobot(RobotType.TANK, treeDirs[i])) {
+                    if (Math.random()> 0.5) rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
+                    else rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
                     break;
                 }
             }

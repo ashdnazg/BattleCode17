@@ -29,6 +29,11 @@ public class Map {
 
 
     public MapLocation getTarget(MapLocation myLoc) {
+        return getTarget(myLoc, 0);
+    }
+
+    //type: 0=any, 1=military, 2=civilian
+    public MapLocation getTarget(MapLocation myLoc, int type) {
         float cx, cy;
         cx = cy = 0;
         float mx = myLoc.x;
@@ -37,7 +42,10 @@ public class Map {
         int frame = rc.getRoundNum();
         for (int i = 101; i <= 200; i++) {
             if (frame - radio.getUnitAge(i) >= 8) continue;
-            if (radio.getUnitType(i) == null) continue;
+            RobotType ut = radio.getUnitType(i);
+            if (ut == null) continue;
+            if (type == 1 && (ut == RobotType.ARCHON || ut == RobotType.GARDENER)) continue;
+            if (type == 2 && (ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT)) continue;
             float x = radio.getUnitX(i);
             float y = radio.getUnitY(i);
             float dist = (mx - x) * (mx - x) + (my - y) * (my - y);
