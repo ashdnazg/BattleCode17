@@ -33,13 +33,28 @@ public class Radio {
         write(myId, info);
     }
 
+    public int countAllies(RobotType robotType){
+        int shiftedType = typeToInt(robotType) << 9;
+        int found = 0;
+        int frame = rc.getRoundNum();
+        int uc = getUnitCounter() + 4;
+        for (int pos = 1; pos < uc; pos++){
+            if (pos == myId) continue;
+            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20){
+                found++;
+            }
+        }
+        return found;
+    }
+
     //very expensive, use sparingly
     public MapLocation[] getAllyPositions(RobotType robotType){
         int shiftedType = typeToInt(robotType) << 9;
         int found = 0;
         int frame = rc.getRoundNum();
         MapLocation[] result = new MapLocation[100];
-        for (int pos = 1; pos < getUnitCounter() + 4; pos++){
+        int uc = getUnitCounter() + 4;
+        for (int pos = 1; pos < uc; pos++){
             if (pos == myId) continue;
             if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20){
                 result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
@@ -52,7 +67,8 @@ public class Radio {
         int found = 0;
         int frame = rc.getRoundNum();
         MapLocation[] result = new MapLocation[100];
-        for (int pos = 1; pos < getUnitCounter() + 4; pos++){
+        int uc = getUnitCounter() + 4;
+        for (int pos = 1; pos < uc; pos++){
             if (pos == myId) continue;
             if (frame - getUnitAge(pos) < 20){
                 result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
