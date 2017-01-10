@@ -18,13 +18,13 @@ public class Gardener {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
-        treeDirs = new Direction[6];
+        this.treeDirs = new Direction[6];
         float angle = (float)Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
-            treeDirs[i] = new Direction(angle * i);
+            this.treeDirs[i] = new Direction(angle * i);
         }
-        lastWatered = 0;
-        myTeam = rc.getTeam();
+        this.lastWatered = 0;
+        this.myTeam = rc.getTeam();
     }
 
     public void run(){

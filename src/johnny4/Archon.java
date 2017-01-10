@@ -11,11 +11,13 @@ public class Archon {
     RobotController rc;
     Map map;
     Radio radio;
+    Direction lastDirection;
 
     public Archon(RobotController rc){
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        this.lastDirection = randomDirection();
     }
 
     public void run(){
@@ -38,17 +40,23 @@ public class Archon {
             }
 
             // Generate a random direction
-            Direction dir = randomDirection();
 
             // Randomly attempt to build a gardener in this direction
-            if (rc.canHireGardener(dir) && Math.random() < .01) {
-                rc.hireGardener(dir);
+            Direction r = lastDirection.rotateLeftDegrees(90.0f);
+            Direction l = lastDirection.rotateLeftDegrees(90.0f);
+
+            if (rc.canHireGardener(r)) {
+                rc.hireGardener(r);
+            } else if (rc.canHireGardener(l)) {
+                rc.hireGardener(l);
             }
 
             // Move randomly
-            tryMove(randomDirection());
+            if (tryMove(lastDirection)) {
 
-
+            } else {
+                lastDirection = randomDirection();
+            }
         } catch (Exception e) {
             System.out.println("Archon Exception");
             e.printStackTrace();
