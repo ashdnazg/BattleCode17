@@ -27,7 +27,9 @@ public class Archon {
 
     protected void tick(){
         try {
-
+            if (rc.getTeamBullets() >= 10000f){
+                rc.donate(10000f);
+            }
 
             int frame = rc.getRoundNum();
             MapLocation myLocation = rc.getLocation();

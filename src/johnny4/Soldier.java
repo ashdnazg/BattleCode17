@@ -25,6 +25,9 @@ public class Soldier {
 
     protected void tick(){
         try {
+            if (rc.getTeamBullets() >= 10000f){
+                rc.donate(10000f);
+            }
             map.sense();
 
             MapLocation myLocation = rc.getLocation();
