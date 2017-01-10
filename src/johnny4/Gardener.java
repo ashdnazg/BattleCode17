@@ -48,18 +48,16 @@ public class Gardener {
 
             TreeInfo[] tis = rc.senseNearbyTrees(2.0f);
             if (tis.length < 5) {
+                boolean freePos = false;
                 for (int i = 0; i < 6; i++) {
                     if (rc.canPlantTree(treeDirs[i])) {
+                        if (!freePos) {
+                            freePos = true;
+                            continue;
+                        }
                         rc.plantTree(treeDirs[i]);
                         break;
                     }
-                }
-            }
-
-            for (int i = 0; i < 6; i++) {
-                if (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i])) {
-                    rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
-                    break;
                 }
             }
 
@@ -71,6 +69,22 @@ public class Gardener {
                     rc.water(ti.ID);
                 }
             }
+
+            for (int i = 0; i < 6; i++) {
+                if (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i])) {
+                    if (radio.countAllies(RobotType.SCOUT) < 10) {
+                        rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
+                    }
+                }
+            }
+
+            for (int i = 0; i < 6; i++) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) {
+                    rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
+                }
+            }
+
+
 
 
             // Generate a random direction
