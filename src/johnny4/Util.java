@@ -8,10 +8,11 @@ public class Util {
 
     /**
      * Returns a random Direction
+     *
      * @return a random Direction
      */
     static Direction randomDirection() {
-        return new Direction((float)Math.random() * 2 * (float)Math.PI);
+        return new Direction((float) Math.random() * 2 * (float) Math.PI);
     }
 
     /**
@@ -22,14 +23,14 @@ public class Util {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        return tryMove(dir,20,3);
+        return tryMove(dir, 20, 3);
     }
 
     /**
      * Attempts to move in a given direction, while avoiding small obstacles direction in the path.
      *
-     * @param dir The intended direction of movement
-     * @param degreeOffset Spacing between checked directions (degrees)
+     * @param dir           The intended direction of movement
+     * @param degreeOffset  Spacing between checked directions (degrees)
      * @param checksPerSide Number of extra directions checked on each side, if intended direction was unavailable
      * @return true if a move was performed
      * @throws GameActionException
@@ -46,16 +47,19 @@ public class Util {
         boolean moved = false;
         int currentCheck = 1;
 
-        while(currentCheck<=checksPerSide) {
+        while (currentCheck <= checksPerSide) {
             // Try the offset of the left side
-            if(rc.canMove(dir.rotateLeftDegrees(degreeOffset*currentCheck))) {
-                rc.move(dir.rotateLeftDegrees(degreeOffset*currentCheck));
-                return true;
-            }
-            // Try the offset on the right side
-            if(rc.canMove(dir.rotateRightDegrees(degreeOffset*currentCheck))) {
-                rc.move(dir.rotateRightDegrees(degreeOffset*currentCheck));
-                return true;
+            try {
+                if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
+                    rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+                    return true;
+                }
+                // Try the offset on the right side
+                if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
+                    rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
+                    return true;
+                }
+            } catch (Exception ex) {
             }
             // No move performed, try slightly further
             currentCheck++;
@@ -72,6 +76,7 @@ public class Util {
      * @param bullet The bullet in question
      * @return True if the line of the bullet's path intersects with this robot's current position.
      */
+
     static boolean willCollideWithMe(BulletInfo bullet) {
         MapLocation myLocation = rc.getLocation();
 
@@ -85,7 +90,7 @@ public class Util {
         float theta = propagationDirection.radiansBetween(directionToRobot);
 
         // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-        if (Math.abs(theta) > Math.PI/2) {
+        if (Math.abs(theta) > Math.PI / 2) {
             return false;
         }
 
@@ -93,7 +98,7 @@ public class Util {
         // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
         // This corresponds to the smallest radius circle centered at our location that would intersect with the
         // line that is the path of the bullet.
-        float perpendicularDist = (float)Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
+        float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
         return (perpendicularDist <= rc.getType().bodyRadius);
     }

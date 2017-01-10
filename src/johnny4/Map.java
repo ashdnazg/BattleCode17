@@ -35,7 +35,7 @@ public class Map {
         float my = myLoc.y;
         float mindist = Float.MAX_VALUE;
         int frame = rc.getRoundNum();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 101; i <= 200; i++) {
             if (frame - radio.getUnitAge(i) >= 8) continue;
             if (radio.getUnitType(i) == null) continue;
             float x = radio.getUnitX(i);

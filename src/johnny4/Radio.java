@@ -86,9 +86,9 @@ public class Radio {
     }
 
     public void reportEnemy(MapLocation location, RobotType type, int time) {
-        int info = ((int)location.x << 22) | ((int)location.y << 12) | (typeToInt(type) << 9) | (time / 8);
+        int info = ((int)Math.round(location.x) << 22) | ((int)Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
-        System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location);
+        //System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location);
         incrementEnemyCounter();
     }
 

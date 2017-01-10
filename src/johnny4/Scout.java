@@ -31,7 +31,7 @@ public class Scout {
 
     protected void tick() {
         try {
-            if (rc.getTeamBullets() >= 10000f){
+            if (rc.getTeamBullets() >= 10000f) {
                 rc.donate(10000f);
             }
 
@@ -51,22 +51,35 @@ public class Scout {
             //System.out.println("Im at " + myLocation);
             for (int i = 0; i < otherScouts.length; i++) {
                 if (otherScouts[i] == null) {
-                    System.out.println(i + " other scouts");
+                    //System.out.println(i + " other scouts");
                     break;
                 }
                 //System.out.println("Ohter scout at " + otherScouts[i]);
                 float dist = myLocation.distanceTo(otherScouts[i]);
                 if (dist > 2 * RobotType.SCOUT.sensorRadius) continue;
-                dx =  (myLocation.x - otherScouts[i].x);
-                dy =  (myLocation.y - otherScouts[i].y);
+                dx = (myLocation.x - otherScouts[i].x);
+                dy = (myLocation.y - otherScouts[i].y);
                 mag = (float) Math.sqrt(dx * dx + dy * dy);
-                fx +=  dx / mag / dist;
-                fy +=  dy / mag / dist;
+                fx += dx / mag / dist;
+                fy += dy / mag / dist;
 
                 //System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
             }
             mag = (float) Math.sqrt(fx * fx + fy * fy);
-            if (mag < 1e-20f) {
+            MapLocation nextEnemy = map.getTarget(myLocation);
+            float dist = 10000f;
+            if (nextEnemy != null){
+                dist = myLocation.distanceTo(nextEnemy);
+            }
+            if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
+                if (dist < RobotType.SOLDIER.sensorRadius ){
+                    tryMove(nextEnemy.directionTo(myLocation));
+                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                }else {
+                //System.out.println("Moving towards enemy at distance " + dist);
+                    tryMove(myLocation.directionTo(nextEnemy));
+                }
+            } else if (mag < 1e-20f) {
                 tryMove(randomDirection());
             } else {
                 tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
