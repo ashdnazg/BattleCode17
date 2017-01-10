@@ -70,7 +70,7 @@ public class Radio {
     }
 
     public int getArchonCounter() {
-        return (read(0) & 0x00FF0000) >> 24;
+        return (read(0) & 0xFF000000) >> 24;
     }
 
     public void incrementArchonCounter() {
