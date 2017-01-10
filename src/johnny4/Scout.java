@@ -27,6 +27,7 @@ public class Scout {
         }
     }
 
+    float fx, fy, dx, dy, mag;
     MapLocation[] otherScouts = new MapLocation[100];
 
     protected void tick() {
@@ -44,27 +45,27 @@ public class Scout {
                 radio.reportMyPosition(myLocation);
                 otherScouts = radio.getAllyPositions();
                 //System.out.println(Clock.getBytecodesLeft() + " for scout");
-            }
+                fx = fy = 0;
+                //System.out.println("Im at " + myLocation);
+                for (int i = 0; i < otherScouts.length; i++) {
+                    if (otherScouts[i] == null) {
+                        //System.out.println(i + " other scouts");
+                        break;
+                    }
+                    //System.out.println("Ohter scout at " + otherScouts[i]);
+                    float dist = myLocation.distanceTo(otherScouts[i]);
+                    if (dist > 2 * RobotType.SCOUT.sensorRadius) continue;
+                    dx = (myLocation.x - otherScouts[i].x);
+                    dy = (myLocation.y - otherScouts[i].y);
+                    mag = (float) Math.sqrt(dx * dx + dy * dy);
+                    fx += dx / mag / dist;
+                    fy += dy / mag / dist;
 
-            float fx, fy, dx, dy, mag;
-            fx = fy = 0;
-            //System.out.println("Im at " + myLocation);
-            for (int i = 0; i < otherScouts.length; i++) {
-                if (otherScouts[i] == null) {
-                    //System.out.println(i + " other scouts");
-                    break;
+                    //System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
                 }
-                //System.out.println("Ohter scout at " + otherScouts[i]);
-                float dist = myLocation.distanceTo(otherScouts[i]);
-                if (dist > 2 * RobotType.SCOUT.sensorRadius) continue;
-                dx = (myLocation.x - otherScouts[i].x);
-                dy = (myLocation.y - otherScouts[i].y);
-                mag = (float) Math.sqrt(dx * dx + dy * dy);
-                fx += dx / mag / dist;
-                fy += dy / mag / dist;
-
-                //System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
             }
+
+
             mag = (float) Math.sqrt(fx * fx + fy * fy);
             MapLocation nextEnemy = map.getTarget(myLocation);
             float dist = 10000f;
@@ -73,10 +74,10 @@ public class Scout {
             }
             if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
                 if (dist < RobotType.SOLDIER.sensorRadius ){
-                    tryMove(nextEnemy.directionTo(myLocation));
                     if (rc.canFireSingleShot()) {
                         rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     }
+                    tryMove(nextEnemy.directionTo(myLocation));
                 }else {
                 //System.out.println("Moving towards enemy at distance " + dist);
                     tryMove(myLocation.directionTo(nextEnemy));
@@ -85,6 +86,9 @@ public class Scout {
                 tryMove(randomDirection());
             } else {
                 tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
+            }
+            if (rc.getRoundNum() - frame > 1){
+                System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
             }
 
 

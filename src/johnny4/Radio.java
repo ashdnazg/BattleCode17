@@ -78,6 +78,7 @@ public class Radio {
         System.out.println("Archon counter is now " + getArchonCounter());
     }
     public void incrementUnitCounter() {
+        if (getUnitCounter() == 95) return;
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
         System.out.println("Unit counter is now " + getUnitCounter());
     }
