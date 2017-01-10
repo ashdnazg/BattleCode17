@@ -34,6 +34,9 @@ public strictfp class RobotPlayer {
             case LUMBERJACK:
                 new Lumberjack(rc).run();
                 break;
+            case TANK:
+                new Tank(rc).run();
+                break;
         }
 	}
 
