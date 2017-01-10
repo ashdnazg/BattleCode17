@@ -18,14 +18,19 @@ public class Radio {
 
     public Radio(RobotController rc) {
         this.rc = rc;
-        myId = getUnitCounter();
-        incrementUnitCounter();
+        if (rc.getType() == RobotType.ARCHON){
+            myId = getArchonCounter() + 1;
+            incrementArchonCounter();
+        }else {
+            myId = getUnitCounter() + 4;
+            incrementUnitCounter();
+        }
         myType = typeToInt(rc.getType());
     }
 
     public void reportMyPosition(MapLocation location){
         int info = ((int)location.x << 22) | ((int)location.y << 12) | (myType << 9) | (rc.getRoundNum() / 8);
-        write(myId + 4, info);
+        write(myId, info);
     }
 
     //very expensive, use sparingly
@@ -34,8 +39,8 @@ public class Radio {
         int found = 0;
         int frame = rc.getRoundNum();
         MapLocation[] result = new MapLocation[100];
-        for (int pos = 4; pos < getUnitCounter() + 4; pos++){
-            if (pos == myId + 4) continue;
+        for (int pos = 1; pos < getUnitCounter() + 4; pos++){
+            if (pos == myId) continue;
             if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getAge(pos) < 20){
                 result[found++] = new MapLocation(getX(pos), getY(pos));
             }
@@ -47,8 +52,8 @@ public class Radio {
         int found = 0;
         int frame = rc.getRoundNum();
         MapLocation[] result = new MapLocation[100];
-        for (int pos = 4; pos < getUnitCounter() + 4; pos++){
-            if (pos == myId + 4) continue;
+        for (int pos = 1; pos < getUnitCounter() + 4; pos++){
+            if (pos == myId) continue;
             if (frame - getAge(pos) < 20){
                 result[found++] = new MapLocation(getX(pos), getY(pos));
             }
@@ -70,6 +75,7 @@ public class Radio {
 
     public void incrementArchonCounter() {
         write(0, (((getArchonCounter() + 1) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
+        System.out.println("Archon counter is now " + getArchonCounter());
     }
     public void incrementUnitCounter() {
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));

@@ -44,10 +44,10 @@ public class Scout {
 
             float fx, fy, dx, dy, mag;
             fx = fy = 0;
-            System.out.println("Im at " + myLocation);
+            //System.out.println("Im at " + myLocation);
             for (int i = 0; i < otherScouts.length; i++) {
                 if (otherScouts[i] == null) {
-                    //System.out.println(i + " other scouts");
+                    System.out.println(i + " other scouts");
                     break;
                 }
                 //System.out.println("Ohter scout at " + otherScouts[i]);

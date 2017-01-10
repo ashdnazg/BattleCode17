@@ -10,10 +10,12 @@ public class Archon {
 
     RobotController rc;
     Map map;
+    Radio radio;
 
     public Archon(RobotController rc){
         this.rc = rc;
         this.map = new Map(rc);
+        this.radio = new Radio(rc);
     }
 
     public void run(){
@@ -26,6 +28,13 @@ public class Archon {
     protected void tick(){
         try {
 
+
+            int frame = rc.getRoundNum();
+            MapLocation myLocation = rc.getLocation();
+            if (frame % 8 == 0) {
+                radio.reportMyPosition(myLocation);
+            }
+
             // Generate a random direction
             Direction dir = randomDirection();
 
@@ -36,9 +45,6 @@ public class Archon {
 
             // Move randomly
             tryMove(randomDirection());
-
-            // Broadcast archon's location for other robots on the team to know
-            MapLocation myLocation = rc.getLocation();
 
 
         } catch (Exception e) {

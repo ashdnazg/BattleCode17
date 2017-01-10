@@ -7,6 +7,8 @@ import static johnny4.Util.*;
 public class Gardener {
 
     RobotController rc;
+    Radio radio;
+
     Map map;
     Direction[] treeDirs;
     int lastWatered;
@@ -14,6 +16,7 @@ public class Gardener {
     public Gardener(RobotController rc){
         this.rc = rc;
         this.map = new Map(rc);
+        this.radio = new Radio(rc);
         treeDirs = new Direction[6];
         float angle = (float)Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -31,6 +34,12 @@ public class Gardener {
 
     protected void tick(){
         try {
+            int frame = rc.getRoundNum();
+            MapLocation myLocation = rc.getLocation();
+            if (frame % 8 == 0) {
+                radio.reportMyPosition(myLocation);
+            }
+
             TreeInfo[] tis = rc.senseNearbyTrees(2.0f);
             if (tis.length < 5) {
                 for (int i = 0; i < 6; i++) {
