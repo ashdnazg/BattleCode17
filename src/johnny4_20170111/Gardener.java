@@ -1,15 +1,13 @@
-package johnny4;
+package johnny4_20170111;
 
 import battlecode.common.*;
-
-import static johnny4.Util.*;
 
 public class Gardener {
 
     RobotController rc;
-    Radio radio;
+    johnny4_20170111.Radio radio;
 
-    Map map;
+    johnny4_20170111.Map map;
     Direction[] treeDirs;
     Team myTeam;
     int lastWatered;
@@ -17,8 +15,8 @@ public class Gardener {
 
     public Gardener(RobotController rc){
         this.rc = rc;
-        this.radio = new Radio(rc);
-        this.map = new Map(rc, radio);
+        this.radio = new johnny4_20170111.Radio(rc);
+        this.map = new johnny4_20170111.Map(rc, radio);
         this.treeDirs = new Direction[6];
         float angle = (float)Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -52,7 +50,7 @@ public class Gardener {
             if (tis.length < 5) {
                 boolean freePos = false;
                 for (int i = 0; i < 6; i++) {
-                    if (rc.canPlantTree(treeDirs[i]) && radio.getUnitCounter() >= 3) {
+                    if (rc.canPlantTree(treeDirs[i])) {
                         if (!freePos) {
                             freePos = true;
                             continue;
@@ -74,7 +72,7 @@ public class Gardener {
 
             for (int i = 0; i < 6; i++) {
                 // Check for soldier on purpose to allow the Archon to build gardeners
-                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && radio.getUnitCounter() < 3)) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) {
                     int scoutCount = radio.countAllies(RobotType.SCOUT);
                     if (scoutCount < 3) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
