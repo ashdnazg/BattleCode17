@@ -92,12 +92,12 @@ public class Radio {
 
     public void incrementArchonCounter() {
         write(0, (((getArchonCounter() + 1) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
-        System.out.println("Archon counter is now " + getArchonCounter());
+        //System.out.println("Archon counter is now " + getArchonCounter());
     }
     public void incrementUnitCounter() {
         if (getUnitCounter() == 95) return;
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
-        System.out.println("Unit counter is now " + getUnitCounter());
+        //System.out.println("Unit counter is now " + getUnitCounter());
     }
     public void incrementEnemyCounter() {
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
@@ -106,7 +106,7 @@ public class Radio {
     public void reportEnemy(MapLocation location, RobotType type, int time) {
         int info = ((int)Math.round(location.x) << 22) | ((int)Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
-        //System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location);
+        ////System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location);
         incrementEnemyCounter();
     }
 

@@ -52,8 +52,8 @@ public class Lumberjack {
             }*/
 
         } catch (Exception e) {
-            System.out.println("Lumberjack Exception");
-            e.printStackTrace();
+            //System.out.println("Lumberjack Exception");
+            //e.printStackTrace();
         }
     }
 }

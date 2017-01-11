@@ -57,13 +57,13 @@ public class Tank {
                 tryMove(randomDirection());
             }
             if (rc.getRoundNum() - frame > 0){
-                System.out.println("Tank took " + (rc.getRoundNum() - frame) + " frames at " + frame);
+                //System.out.println("Tank took " + (rc.getRoundNum() - frame) + " frames at " + frame);
             }
 
 
         } catch (Exception e) {
-            System.out.println("Tank Exception");
-            e.printStackTrace();
+            //System.out.println("Tank Exception");
+            //e.printStackTrace();
         }
     }
 }

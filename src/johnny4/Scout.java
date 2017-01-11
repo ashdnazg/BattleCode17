@@ -5,19 +5,20 @@ import battlecode.common.*;
 import java.awt.*;
 import java.util.Optional;
 
-import static johnny4.Util.randomDirection;
-import static johnny4.Util.tryMove;
+import static johnny4.Util.*;
 
 public class Scout {
 
     RobotController rc;
     Map map;
     Radio radio;
+    final boolean isShaker;
 
     public Scout(RobotController rc) {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        isShaker = rc.getID() % 3 == 0;
     }
 
     public void run() {
@@ -31,6 +32,7 @@ public class Scout {
     MapLocation[] otherScouts = new MapLocation[100];
     Direction lastDirection = randomDirection();
     TreeInfo toShake = null;
+    MapLocation lastCivilian = null;
 
 
     float circleDir = 0f;
@@ -47,13 +49,17 @@ public class Scout {
             MapLocation nextEnemy = null;
             MapLocation nextCivilian = null;
             float civSize = 0;
+            float civMinDist = 10000f;
 
-            for (RobotInfo r : map.sense()) {
+            RobotInfo nearbyRobots[] = map.sense();
+            TreeInfo trees[] = rc.senseNearbyTrees();
+            for (RobotInfo r : nearbyRobots) {
 
                 if (!r.getTeam().equals(rc.getTeam())) {
                     RobotType ut = r.getType();
-                    if ((ut == RobotType.ARCHON || ut == RobotType.GARDENER) && (nextCivilian == null || nextCivilian.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
+                    if ((ut == RobotType.GARDENER) && (civMinDist > r.location.distanceTo(myLocation) ) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3 ) {
                         nextCivilian = r.location;
+                        civMinDist = (lastCivilian != null && r.location.distanceTo(lastCivilian) < 3) ? 0f : (r.location.distanceTo(myLocation) );
                         civSize = ut.bodyRadius;
                     }
                     if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
@@ -61,6 +67,13 @@ public class Scout {
                     }
                 }
             }
+            if (nextCivilian == null) {
+                nextCivilian = map.getTarget(myLocation, 2);
+            }
+            if (nextCivilian == null) {
+                System.out.println("No civ");
+            }
+            lastCivilian = nextCivilian;
 
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
@@ -92,52 +105,67 @@ public class Scout {
                 nextEnemy = map.getTarget(myLocation);
             }
             float dist = 100000f;
+            boolean hasMoved = tryEvade();
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
             }
             if (toShake != null && dist > RobotType.SOLDIER.sensorRadius) {
-                if (!tryMove(myLocation.directionTo(toShake.getLocation()))){
+                //System.out.println("Shaking " + toShake.getLocation());
+                if (!hasMoved && !tryMove(myLocation.directionTo(toShake.getLocation()))) {
                     if (rc.canMove(myLocation.directionTo(toShake.getLocation()), 0.5f)) {
                         rc.move(myLocation.directionTo(toShake.getLocation()), 0.5f);
-                    }else{
+                        hasMoved = true;
+                    } else {
                         toShake = null;
                     }
                 }
-                if (rc.canShake(toShake.getID())){
+                if (rc.canShake(toShake.getID())) {
                     rc.shake(toShake.getID());
+                    System.out.println("Shaken " + toShake.getLocation());
                     toShake = null;
                 }
             } else {
                 toShake = null;
-                if (nextCivilian != null && dist > RobotType.SOLDIER.sensorRadius) {
+                if (nextCivilian != null && dist > 3) {
 
-                    boolean hasMoved = false;
+                    System.out.println(myLocation);
+                    System.out.println("Scorching " + nextCivilian + " | " + hasMoved);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
-                        if (!tryMove(myLocation.directionTo(nextCivilian))) {
+                        if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
                             if (rc.canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
                                 rc.move(myLocation.directionTo(nextCivilian), 0.5f);
                                 hasMoved = true;
+                                System.out.println("i tried");
+                            } else {
+
+                                System.out.println("i failed");
                             }
                         } else {
                             hasMoved = true;
+
+                            System.out.println("maybe?");
                         }
                     }
                     if (nextCivilian.distanceTo(myLocation) - civSize < 5.4) {
+                        System.out.println("circling?");
                     /*if (rc.canFirePentadShot()) {
                         rc.firePentadShot(myLocation.directionTo(nextCivilian));
                     }else if (rc.canFireTriadShot()) {
                         rc.fireTriadShot(myLocation.directionTo(nextCivilian));
                     } else*/
-                        if (rc.canFireSingleShot()) {
-                            rc.fireSingleShot(myLocation.directionTo(nextCivilian));
+                        if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
+                            if (rc.canFireSingleShot()) {
+                                rc.fireSingleShot(myLocation.directionTo(nextCivilian));
+                            }
+                        } else {
+                            //System.out.println("Don't shoot");
                         }
                         Direction dir;
-                        while (!hasMoved && Math.random() > 0.05f) {
+                        while (!hasMoved && Math.random() > 0.03f) {
                             if (circleDir > 0.5) {
-                                dir = myLocation.directionTo(nextCivilian).rotateRightDegrees(2 * 42);
+                                dir = myLocation.directionTo(nextCivilian).rotateRightDegrees((float) Math.random() * 42 + 42);
                             } else {
-
-                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(42 * 2);
+                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees((float) Math.random() * 42 + 42);
                             }
                             if (!hasMoved && rc.canMove(dir, 2f)) {
                                 rc.move(dir, 2f);
@@ -149,32 +177,39 @@ public class Scout {
                     }
                 } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
                     if (dist < RobotType.SOLDIER.sensorRadius) {
-                        if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
-                            rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                        if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
+                            if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
+                                rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                            }
+                        } else {
+                            System.out.println("Don't shoot");
                         }
-                        tryMove(nextEnemy.directionTo(myLocation));
+                        if (!hasMoved) tryMove(nextEnemy.directionTo(myLocation));
                     } else {
                         //System.out.println("Moving towards enemy at distance " + dist);
-                        tryMove(myLocation.directionTo(nextEnemy));
+                        if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy));
                     }
                 } else if (mag < 1e-20f) {
-                    while (!rc.canMove(lastDirection)) {
-                        lastDirection = randomDirection();
+                    if (!hasMoved) {
+                        while (!rc.canMove(lastDirection)) {
+                            lastDirection = randomDirection();
+                        }
+                        rc.move(lastDirection);
                     }
-                    rc.move(lastDirection);
                 } else {
-                    tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
+                    if (!hasMoved)
+                        tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
                 }
-                if (rc.getRoundNum() - frame > 0 && frame % 8 != 0) {
-                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
-                }
-                if (Clock.getBytecodesLeft() > 1000 && toShake == null) {
-                    for (TreeInfo t : rc.senseNearbyTrees()) {
-                        if (t.getContainedBullets() > 0) {
+                if (toShake == null && isShaker) {
+                    for (TreeInfo t : trees) {
+                        if (t.getContainedBullets() > 10) {
                             toShake = t;
                             break;
                         }
                     }
+                }
+                if (rc.getRoundNum() - frame > 0 && frame % 8 != 0) {
+                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
                 }
             }
 

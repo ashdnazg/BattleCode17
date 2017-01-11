@@ -1,9 +1,7 @@
 package johnny4;
 
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
+
 import static johnny4.Util.*;
 
 public class Archon {
@@ -18,6 +16,11 @@ public class Archon {
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
         this.lastDirection = randomDirection();
+        if (radio.getEnemyCounter() == 0){
+            for (MapLocation m : rc.getInitialArchonLocations(rc.getTeam().opponent())){
+                radio.reportEnemy(m, RobotType.ARCHON, 0);
+            }
+        }
     }
 
     public void run(){
@@ -56,7 +59,9 @@ public class Archon {
             while (!rc.canMove(lastDirection) && Math.random() > 0.01) {
                 lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 60);
             }
-            rc.move(lastDirection);
+            if (rc.canMove(lastDirection)) {
+                rc.move(lastDirection);
+            }
         } catch (Exception e) {
             System.out.println("Archon Exception");
             e.printStackTrace();

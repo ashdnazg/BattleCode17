@@ -65,15 +65,15 @@ public class Scout {
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
                 otherScouts = radio.getAllyPositions();
-                //System.out.println(Clock.getBytecodesLeft() + " for scout");
+                ////System.out.println(Clock.getBytecodesLeft() + " for scout");
                 fx = fy = 0;
-                //System.out.println("Im at " + myLocation);
+                ////System.out.println("Im at " + myLocation);
                 for (int i = 0; i < otherScouts.length; i++) {
                     if (otherScouts[i] == null) {
-                        //System.out.println(i + " other scouts");
+                        ////System.out.println(i + " other scouts");
                         break;
                     }
-                    //System.out.println("Ohter scout at " + otherScouts[i]);
+                    ////System.out.println("Ohter scout at " + otherScouts[i]);
                     float dist = myLocation.distanceTo(otherScouts[i]);
                     if (dist > 2 * RobotType.SCOUT.sensorRadius) continue;
                     dx = (myLocation.x - otherScouts[i].x);
@@ -82,7 +82,7 @@ public class Scout {
                     fx += dx / mag / dist;
                     fy += dy / mag / dist;
 
-                    //System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
+                    ////System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
                 }
             }
 
@@ -154,7 +154,7 @@ public class Scout {
                         }
                         tryMove(nextEnemy.directionTo(myLocation));
                     } else {
-                        //System.out.println("Moving towards enemy at distance " + dist);
+                        ////System.out.println("Moving towards enemy at distance " + dist);
                         tryMove(myLocation.directionTo(nextEnemy));
                     }
                 } else if (mag < 1e-20f) {
@@ -166,7 +166,7 @@ public class Scout {
                     tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
                 }
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0) {
-                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
+                    //System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
                 }
                 if (Clock.getBytecodesLeft() > 1000 && toShake == null) {
                     for (TreeInfo t : rc.senseNearbyTrees()) {
@@ -179,8 +179,8 @@ public class Scout {
             }
 
         } catch (Exception e) {
-            System.out.println("Scout Exception");
-            e.printStackTrace();
+            //System.out.println("Scout Exception");
+            //e.printStackTrace();
         }
     }
 }

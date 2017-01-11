@@ -64,12 +64,109 @@ public class Util {
                     return true;
                 }
             } catch (Exception ex) {
+                ex.printStackTrace();
             }
             // No move performed, try slightly further
             currentCheck++;
         }
 
         // A move never happened, so return false.
+        return false;
+    }
+
+    static private float[] px = new float[10];
+    static private float[] py = new float[10];
+    static private float[] pr = new float[10];
+    static private boolean[] pg = new boolean[10];
+    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius){
+        float cx = 0.5f * (start.x + target.x);
+        float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
+        double rs = Math.sqrt((cx - target.x) * (cx - target.x) + (cy - target.y) * (cy - target.y));
+        float x,y,r;
+        int cnt = 0;
+        Team enemy = rc.getTeam().opponent();
+        for (TreeInfo t : trees){
+            if (cnt >= px.length) break;
+            x = t.location.x;
+            y = t.location.y;
+            r = t.radius;
+            if (Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) < rs + r){
+                px[cnt] = x;
+                py[cnt] = y;
+                pr[cnt] = r;
+                pg[cnt++] = false;
+            }
+        }
+        for (RobotInfo rb : robots){
+            if (cnt >= px.length) break;
+            x = rb.location.x;
+            y = rb.location.y;
+            r = rb.type.bodyRadius;
+            if (Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) < rs + r){
+                px[cnt] = x;
+                py[cnt] = y;
+                pr[cnt] = r;
+                pg[cnt++] = rb.getTeam() == enemy;
+            }
+        }
+        if (cnt >= px.length){
+            System.out.println("Exhausted array length");
+        }
+
+        double toTrgX = target.x - start.x;
+        double toTrgY = target.y - start.y;
+        double mag = Math.sqrt(toTrgX*toTrgX + toTrgY*toTrgY);
+        toTrgX /= mag;
+        toTrgY /= mag;
+        double dx,dy,distParallel, distPerpendicular, perpx, perpy;
+        for (int i = 0; i < cnt; i++){
+            dx = px[i] - start.x;
+            dy = py[i] - start.y;
+            distParallel = toTrgX * dx + toTrgY * dy;
+            perpx = dx - distParallel * toTrgX;
+            perpy = dy - distParallel * toTrgY;
+            distPerpendicular = (perpx * perpx + perpy * perpy);
+            if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i]){
+                return pg[i];
+            }
+        }
+        System.out.println("No collision found");
+        return true;
+    }
+
+    static boolean tryEvade() {
+        try {
+            boolean moved = false;
+            int clock = Clock.getBytecodeNum();
+
+            MapLocation myLocation = rc.getLocation();
+            BulletInfo closest = null;
+            for (BulletInfo bi : rc.senseNearbyBullets()) {
+                if (willCollideWithMe(myLocation, bi) && (closest == null || closest.location.distanceTo(myLocation) > bi.location.distanceTo(myLocation))) {
+                    closest = bi;
+                }
+            }
+            if (closest != null) {
+                Direction dir = closest.dir;
+                if (rc.canMove(dir.rotateLeftDegrees(90))) {
+                    rc.move(dir.rotateLeftDegrees(90));
+                    moved = true;
+                } else if (rc.canMove(dir.rotateRightDegrees(90))) {
+                    rc.move(dir.rotateRightDegrees(90));
+                    moved = true;
+                }
+            }
+            clock = Clock.getBytecodeNum() - clock;
+            if (clock > 1000) {
+                System.out.println("Evade took " + clock);
+            }
+            if (moved){
+                System.out.println("Evaded bullet");
+            }
+            return moved;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         return false;
     }
 
@@ -81,8 +178,7 @@ public class Util {
      * @return True if the line of the bullet's path intersects with this robot's current position.
      */
 
-    static boolean willCollideWithMe(BulletInfo bullet) {
-        MapLocation myLocation = rc.getLocation();
+    static boolean willCollideWithMe(MapLocation myLocation, BulletInfo bullet) {
 
         // Get relevant bullet information
         Direction propagationDirection = bullet.dir;
