@@ -76,10 +76,11 @@ public class Soldier {
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
-//                nextEnemy = map.getTarget(myLocation);
+                nextEnemy = map.getTarget(myLocation, 0, 10);
                 if (nextEnemy == null) {
 
-                    nextEnemy = map.getTarget(myLocation, 0, 100, RobotType.SOLDIER.sensorRadius);
+                    nextEnemy = map.getTarget(myLocation, 0, 90);
+                    //System.out.println("Soldier at " + myLocation + " attacking " + nextEnemy);
                 }
             }
             BulletInfo[] bullets = rc.senseNearbyBullets();

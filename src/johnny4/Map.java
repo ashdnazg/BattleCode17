@@ -41,7 +41,7 @@ public class Map {
     }
 
     public MapLocation getTarget(MapLocation myLoc, int type, int maxAge) {
-        return getTarget(myLoc, type, maxAge, -1e10f);
+        return getTarget(myLoc, type, maxAge, 0);
     }
 
     final int LUMBERJACK = Radio.typeToInt(RobotType.LUMBERJACK);
@@ -72,7 +72,7 @@ public class Map {
                 unitData = //radio.read(i);
                         rc.readBroadcast(i);
                 //System.out.println("1.2: " + Clock.getBytecodeNum());
-                if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || found > 8 || (ecnt + 101 - i) > 30)
+                if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || found > 8 || (ecnt + 101 - i) > 40)
                     break;
                 ut = (unitData & 0b00000000000000000000111000000000) >> 9;
                 //System.out.println("2: " + Clock.getBytecodeNum());
@@ -95,7 +95,7 @@ public class Map {
             if (clock > 1500 && frame == rc.getRoundNum()) {
                 //System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i) + " found " + found);
             }
-            if (maxAge > 50) {
+            if (maxAge > 100) {
                 for (MapLocation m : archonPos) {
                     dist = m.distanceSquaredTo(myLoc) * tmul;
                     if (dist < mindist && dist * tmul > minDist) {
