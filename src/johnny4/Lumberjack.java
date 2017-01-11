@@ -8,11 +8,14 @@ public class Lumberjack {
     RobotController rc;
     Map map;
     Radio radio;
+    MapLocation currentTreeTarget;
+    Team enemy;
 
     public Lumberjack(RobotController rc){
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        this.enemy = rc.getTeam().opponent();
     }
 
     public void run(){
@@ -27,7 +30,34 @@ public class Lumberjack {
             if (rc.getTeamBullets() >= 10000f){
                 rc.donate(10000f);
             }
-/*
+
+            // acquire tree cutting requests
+            if (currentTreeTarget == null) {
+                currentTreeTarget = radio.findTreeToCut();
+            }
+            MapLocation myLocation = rc.getLocation();
+
+            if (currentTreeTarget != null) {
+                if (rc.canChop(currentTreeTarget)) {
+                    rc.chop(currentTreeTarget);
+                } else if (rc.canSenseLocation(currentTreeTarget)) {
+                    TreeInfo ti = rc.senseTreeAtLocation(currentTreeTarget);
+                    if (ti != null) {
+                        Direction toTree = myLocation.directionTo(currentTreeTarget);
+                        tryMove(toTree);
+                        if (rc.canChop(currentTreeTarget)) {
+                            rc.chop(currentTreeTarget);
+                        }
+                    } else {
+                        currentTreeTarget = null;
+                    }
+                } else {
+                    Direction toTree = myLocation.directionTo(currentTreeTarget);
+                    tryMove(toTree);
+                }
+                return;
+            }
+
             // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
             RobotInfo[] robots = rc.senseNearbyRobots(RobotType.LUMBERJACK.bodyRadius+ GameConstants.LUMBERJACK_STRIKE_RADIUS, enemy);
 
@@ -40,7 +70,6 @@ public class Lumberjack {
 
                 // If there is a robot, move towards it
                 if(robots.length > 0) {
-                    MapLocation myLocation = rc.getLocation();
                     MapLocation enemyLocation = robots[0].getLocation();
                     Direction toEnemy = myLocation.directionTo(enemyLocation);
 
@@ -49,7 +78,7 @@ public class Lumberjack {
                     // Move Randomly
                     tryMove(randomDirection());
                 }
-            }*/
+            }
 
         } catch (Exception e) {
             System.out.println("Lumberjack Exception");
