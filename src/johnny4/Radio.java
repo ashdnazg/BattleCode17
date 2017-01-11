@@ -175,18 +175,21 @@ public class Radio {
     // returns the index, so you can mark it as cut later
     public boolean requestTreeCut(TreeInfo ti) {
         int index = rc.getType() == RobotType.ARCHON ? 301 : 304;
+        int zero_index = -1;
         for (; index <= 320; ++index) {
             int data = read(index);
             if (data == 0) {
-                //ignore some bits in tree ID so it fits.
-                int info = ((int)Math.round(ti.location.x) << 22) | ((int)Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
-                write(index, info);
-                return true;
+                zero_index = index;
             } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0){
                 return true;
             }
         }
-        return false;
+        if (zero_index < 0) {
+            return false;
+        }
+        int info = ((int)Math.round(ti.location.x) << 22) | ((int)Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
+        write(zero_index, info);
+        return true;
     }
 
     public MapLocation findTreeToCut() {
