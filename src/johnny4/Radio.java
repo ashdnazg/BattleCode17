@@ -9,7 +9,7 @@ public class Radio {
     //Integer 4-100:    Unit Info
     //Integer 101-200:  Enemy Info
     //Integer 201-300:  Enemy Trees
-    //Integer 301-400:  Shaken Trees Info
+    //Integer 301-320:  Requested trees to remove according to priority
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
@@ -149,6 +149,43 @@ public class Radio {
             throw new RuntimeException("write failed");
         }
 
+    }
+
+    // returns the index, so you can mark it as cut later
+    public boolean requestTreeCut(TreeInfo ti) {
+        int index = rc.getType() == RobotType.ARCHON ? 301 : 304;
+        for (; index <= 320; ++index) {
+            int data = read(index);
+            if (data == 0) {
+                //ignore some bits in tree ID so it fits.
+                int info = ((int)ti.location.x << 22) | ((int)ti.location.y << 12) | (ti.ID & 0b00000000000000000000111111111111);
+                write(index, info);
+                return true;
+            } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public MapLocation findTreeToCut() {
+        for (int index = 301; index <= 320; ++index) {
+            int data = read(index);
+            if (data != 0) {
+                return new MapLocation(getUnitX(index), getUnitY(index));
+            }
+        }
+        return null;
+    }
+
+    public void reportTreeCut(MapLocation location) {
+        int loc = ((int)location.x << 22) | ((int)location.y << 12);
+        for (int index = 301; index <= 320; ++index) {
+            int data = read(index);
+            if (((data ^ loc) & 0b11111111111111111111000000000000) == 0) {
+                write(index, 0);
+            }
+        }
     }
 
     private int typeToInt(RobotType rt) {
