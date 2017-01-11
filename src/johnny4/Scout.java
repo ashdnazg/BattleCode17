@@ -51,6 +51,7 @@ public class Scout {
             float civSize = 0;
             float civMinDist = 10000f;
             boolean longRangeCiv = false;
+            boolean longRangeEnemy = false;
 
             RobotInfo nearbyRobots[] = map.sense();
             TreeInfo trees[] = rc.senseNearbyTrees();
@@ -106,6 +107,7 @@ public class Scout {
 
             mag = (float) Math.sqrt(fx * fx + fy * fy);
             if (nextEnemy == null && nextCivilian == null) {
+                longRangeEnemy = true;
                 nextEnemy = map.getTarget(myLocation, 0, 9, 0.8f * RobotType.SCOUT.sensorRadius);
                 if (nextEnemy == null) {
                     nextEnemy = map.getTarget(myLocation, 3, 80);
@@ -113,6 +115,10 @@ public class Scout {
             }
             float dist = 100000f;
             boolean hasMoved = tryEvade();
+            if (hasMoved && Clock.getBytecodesLeft() < 2000){
+                System.out.println("Aborting scout early on " + frame);
+                return;
+            }
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
             }
@@ -134,7 +140,7 @@ public class Scout {
             } else {
                 toShake = null;
                 if (nextCivilian != null && dist > 3) {
-                    System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
+                    //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
                             if (rc.canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
@@ -212,8 +218,8 @@ public class Scout {
                         }
                     }
                 }
-                if (rc.getRoundNum() - frame > 0 && frame % 8 != 0) {
-                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
+                if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
+                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy );
                 }
             }
 

@@ -25,6 +25,8 @@ public class Soldier {
         }
     }
 
+    float circleDir = 0f;
+
     protected void tick() {
         try {
             if (rc.getTeamBullets() >= 10000f) {
@@ -36,7 +38,9 @@ public class Soldier {
 
 
             MapLocation nextEnemy = null;
-            for (RobotInfo r : rc.senseNearbyRobots()) {
+            RobotInfo nearbyRobots[] = rc.senseNearbyRobots();
+            TreeInfo trees[] = rc.senseNearbyTrees();
+            for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
                     nextEnemy = r.location;
                 }
@@ -45,29 +49,72 @@ public class Soldier {
             if (nextEnemy == null) {
                 longrange = true;
                 nextEnemy = map.getTarget(myLocation);
+                if (nextEnemy == null) {
+
+                    nextEnemy = map.getTarget(myLocation, 0, 100);
+                }
             }
+            boolean hasMoved = tryEvade();
             float dist = 10000f;
-            if (nextEnemy != null){
+            if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
-                if (dist < 0.5 * RobotType.SCOUT.sensorRadius ){
-                    if (!longrange && rc.getTeamBullets() > 400 && rc.canFirePentadShot()) {
+                boolean hasFired = longrange;
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius)) {
+                    if (rc.canFireSingleShot()) {
+                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                        hasFired = true;
+                    }
+                }
+                if (dist < 0.5 * RobotType.SCOUT.sensorRadius) {
+                    /*if (!hasFired && rc.getTeamBullets() > 400 && rc.canFirePentadShot()) {
                         rc.firePentadShot(myLocation.directionTo(nextEnemy));
+                        hasFired = true;
                     }
-                    if(!longrange && rc.getTeamBullets() > 100 && rc.canFireTriadShot()){
+                    if (!hasFired && rc.getTeamBullets() > 100 && rc.canFireTriadShot()) {
                         rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+                        hasFired = true;
+                    }*/
+                    if (!hasMoved && tryMove(nextEnemy.directionTo(myLocation))){
+                        hasMoved = true;
                     }
-                    tryMove(nextEnemy.directionTo(myLocation));
-                }else {
-                    tryMove(myLocation.directionTo(nextEnemy));
+
+
+
+                } else {
+                    if (!hasMoved) {
+                        if (longrange) {
+                            tryMove(myLocation.directionTo(nextEnemy));
+                        } else {
+                            Direction dir;
+                            int tries = 0;
+                            while (!hasMoved && tries++ < 30) {
+                                if (circleDir > 0.5) {
+                                    dir = myLocation.directionTo(nextEnemy).rotateRightDegrees(2 * tries + 50);
+                                } else {
+                                    dir = myLocation.directionTo(nextEnemy).rotateLeftDegrees(2 * tries + 50);
+                                }
+                                if (!hasMoved && rc.canMove(dir, 2f)) {
+                                    rc.move(dir, 2f);
+                                    hasMoved = true;
+                                } else {
+                                    circleDir = (float) Math.random();
+                                }
+                            }
+                        }
+
+                    }
                 }
 
-                if (!longrange && rc.canFireSingleShot()) {
-                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius)) {
+                    if (rc.canFireSingleShot()) {
+                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                        hasFired = true;
+                    }
                 }
-            } else  {
+            } else if (!hasMoved) {
                 tryMove(randomDirection());
             }
-            if (rc.getRoundNum() - frame > 0 && !longrange){
+            if (rc.getRoundNum() - frame > 0 && !longrange) {
                 System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 

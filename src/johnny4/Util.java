@@ -74,10 +74,10 @@ public class Util {
         return false;
     }
 
-    static private float[] px = new float[10];
-    static private float[] py = new float[10];
-    static private float[] pr = new float[10];
-    static private boolean[] pg = new boolean[10];
+    static private float[] px = new float[15];
+    static private float[] py = new float[15];
+    static private float[] pr = new float[15];
+    static private boolean[] pg = new boolean[15];
     static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius){
         float cx = 0.5f * (start.x + target.x);
         float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
@@ -134,21 +134,29 @@ public class Util {
         return true;
     }
 
+    static private BulletInfo getMostDangerousBullet(MapLocation myLocation, BulletInfo[] bullets){
+        BulletInfo closest = null;
+        for (BulletInfo bi : bullets) {
+            if (willCollideWithMe(myLocation, bi) && (closest == null || closest.location.distanceTo(myLocation) > bi.location.distanceTo(myLocation))) {
+                closest = bi;
+            }
+        }
+        return closest;
+    }
+
     static boolean tryEvade() {
         try {
             boolean moved = false;
             int clock = Clock.getBytecodeNum();
 
             MapLocation myLocation = rc.getLocation();
-            BulletInfo closest = null;
-            for (BulletInfo bi : rc.senseNearbyBullets()) {
-                if (willCollideWithMe(myLocation, bi) && (closest == null || closest.location.distanceTo(myLocation) > bi.location.distanceTo(myLocation))) {
-                    closest = bi;
-                }
-            }
+            BulletInfo[] bullets = rc.senseNearbyBullets();
+            BulletInfo closest = getMostDangerousBullet(myLocation, bullets);
             if (closest != null) {
                 Direction dir = closest.dir;
-                if (rc.canMove(dir.rotateLeftDegrees(90))) {
+                boolean leftSafe = getMostDangerousBullet(myLocation.add(dir.rotateLeftDegrees(90), rc.getType().strideRadius), bullets) == null;
+                boolean rightSafe = leftSafe ? true : (getMostDangerousBullet(myLocation.add(dir.rotateRightDegrees(90), rc.getType().strideRadius), bullets) == null);
+                if (rc.canMove(dir.rotateLeftDegrees(90)) && (leftSafe || !rightSafe)) {
                     rc.move(dir.rotateLeftDegrees(90));
                     moved = true;
                 } else if (rc.canMove(dir.rotateRightDegrees(90))) {
