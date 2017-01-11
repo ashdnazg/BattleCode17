@@ -87,8 +87,6 @@ public class Scout {
             boolean longRangeEnemy = false;
             int nearbyAllies = 0;
 
-            boolean canFire = !radio.getAlarm() || rc.getTeamBullets() > 250;
-
             RobotInfo nearbyRobots[] = map.sense();
             TreeInfo trees[] = rc.senseNearbyTrees();
             bullets = rc.senseNearbyBullets();
@@ -226,7 +224,7 @@ public class Scout {
                         rc.fireTriadShot(myLocation.directionTo(nextCivilian));
                     } else*/
                         boolean hasFired = longRangeCiv;
-                        if (canFire && !hasFired && checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
+                        if (!hasFired && checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
                             if (rc.canFireSingleShot()) {
                                 rc.fireSingleShot(myLocation.directionTo(nextCivilian));
                                 hasFired = true;
@@ -271,7 +269,7 @@ public class Scout {
                                 circleDir = (float) Math.random();
                             }
                         }
-                        if (canFire && !hasFired && checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
+                        if (!hasFired && checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
                             if (rc.canFireSingleShot()) {
                                 rc.fireSingleShot(myLocation.directionTo(nextCivilian));
                             }
@@ -279,7 +277,7 @@ public class Scout {
                     }
                 } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f) && nearbyAllies < 5 + rc.getID() % 5) {
                     if (dist < RobotType.SOLDIER.sensorRadius) {
-                        if (canFire && !longRangeEnemy && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
+                        if (!longRangeEnemy && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
                             if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
                                 rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                             }
