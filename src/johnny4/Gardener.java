@@ -43,6 +43,7 @@ public class Gardener {
             }
 
             int frame = rc.getRoundNum();
+            radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
@@ -79,16 +80,16 @@ public class Gardener {
                     if (scoutCount < 3) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
-                    } else if (scoutCount < 15 && lastBuilt == RobotType.SOLDIER) {
+                    } else if (scoutCount < 9 && lastBuilt == RobotType.SOLDIER) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
-                    } else if (lastBuilt != RobotType.LUMBERJACK) {               // UNCOMMENT WHEN LUMBERJACK HAS AI
-                        if (radio.countAllies(RobotType.LUMBERJACK) < 10) {
+                    } else if (lastBuilt != RobotType.LUMBERJACK && Math.random() > 0.6d) {               // UNCOMMENT WHEN LUMBERJACK HAS AI
+                        if (radio.countAllies(RobotType.LUMBERJACK) < 7) {
                             rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
                         }
                         lastBuilt = RobotType.LUMBERJACK;
                     } else {
-                        if (radio.countAllies(RobotType.SOLDIER) < 20) {
+                        if (radio.countAllies(RobotType.SOLDIER) < 22) {
                             rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
                         }
                         lastBuilt = RobotType.SOLDIER;

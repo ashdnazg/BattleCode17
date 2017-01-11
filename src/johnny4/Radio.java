@@ -16,6 +16,7 @@ public class Radio {
     RobotController rc;
     final int myId;
     final int myType;
+    int frame = 0;
 
     public Radio(RobotController rc) {
         this.rc = rc;
@@ -39,6 +40,10 @@ public class Radio {
                 myId = getUnitCounter() + 4;
                 incrementUnitCounter();
             }
+            /*System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
+            System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
+            System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
+            System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));*/
         }
         myType = typeToInt(rc.getType());
         reportMyPosition(rc.getLocation());
@@ -143,7 +148,7 @@ public class Radio {
     private int cache[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
     private int cacheAge[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
 
-    private int read(int pos) {
+    int read(int pos) {
         if (cacheAge[pos] != rc.getRoundNum()) {
             try {
                 cache[pos] = rc.readBroadcast(pos);
@@ -155,7 +160,7 @@ public class Radio {
         return cache[pos];
     }
 
-    private void write(int pos, int value) {
+    void write(int pos, int value) {
         cache[pos] = value;
         cacheAge[pos] = rc.getRoundNum();
         try {
@@ -203,7 +208,7 @@ public class Radio {
         }
     }
 
-    private int typeToInt(RobotType rt) {
+    static int typeToInt(RobotType rt) {
         switch (rt) {
             case SCOUT:
                 return 6;
@@ -238,5 +243,7 @@ public class Radio {
         }
         return null;
     }
+
+
 
 }

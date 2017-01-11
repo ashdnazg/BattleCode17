@@ -18,25 +18,29 @@ public strictfp class RobotPlayer {
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
-        switch (rc.getType()) {
-            case ARCHON:
-                new Archon(rc).run();
-                break;
-            case GARDENER:
-                new Gardener(rc).run();
-                break;
-            case SOLDIER:
-                new Soldier(rc).run();
-                break;
-            case SCOUT:
-                new Scout(rc).run();
-                break;
-            case LUMBERJACK:
-                new Lumberjack(rc).run();
-                break;
-            case TANK:
-                new Tank(rc).run();
-                break;
+        try {
+            switch (rc.getType()) {
+                case ARCHON:
+                    new Archon(rc).run();
+                    break;
+                case GARDENER:
+                    new Gardener(rc).run();
+                    break;
+                case SOLDIER:
+                    new Soldier(rc).run();
+                    break;
+                case SCOUT:
+                    new Scout(rc).run();
+                    break;
+                case LUMBERJACK:
+                    new Lumberjack(rc).run();
+                    break;
+                case TANK:
+                    new Tank(rc).run();
+                    break;
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
         }
 	}
 

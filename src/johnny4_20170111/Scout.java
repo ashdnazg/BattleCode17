@@ -80,15 +80,15 @@ public class Scout {
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
                 otherScouts = radio.getAllyPositions();
-                //System.out.println(Clock.getBytecodesLeft() + " for scout");
+                ////System.out.println(Clock.getBytecodesLeft() + " for scout");
                 fx = fy = 0;
-                //System.out.println("Im at " + myLocation);
+                ////System.out.println("Im at " + myLocation);
                 for (int i = 0; i < otherScouts.length; i++) {
                     if (otherScouts[i] == null) {
-                        //System.out.println(i + " other scouts");
+                        ////System.out.println(i + " other scouts");
                         break;
                     }
-                    //System.out.println("Ohter scout at " + otherScouts[i]);
+                    ////System.out.println("Ohter scout at " + otherScouts[i]);
                     float dist = myLocation.distanceTo(otherScouts[i]);
                     if (dist > 2 * RobotType.SCOUT.sensorRadius) continue;
                     dx = (myLocation.x - otherScouts[i].x);
@@ -97,7 +97,7 @@ public class Scout {
                     fx += dx / mag / dist;
                     fy += dy / mag / dist;
 
-                    //System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
+                    ////System.out.println("Moving " + weight * dx / mag + " | " + weight * dy / mag);
                 }
             }
 
@@ -113,14 +113,14 @@ public class Scout {
             float dist = 100000f;
             boolean hasMoved = tryEvade();
             if (hasMoved && Clock.getBytecodesLeft() < 2000){
-                System.out.println("Aborting scout early on " + frame);
+                //System.out.println("Aborting scout early on " + frame);
                 return;
             }
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
             }
             if (toShake != null && dist > 5) {
-                //System.out.println("Shaking " + toShake.getLocation());
+                ////System.out.println("Shaking " + toShake.getLocation());
                 if (!hasMoved && !tryMove(myLocation.directionTo(toShake.getLocation()))) {
                     if (rc.canMove(myLocation.directionTo(toShake.getLocation()), 0.5f)) {
                         rc.move(myLocation.directionTo(toShake.getLocation()), 0.5f);
@@ -131,13 +131,13 @@ public class Scout {
                 }
                 if (rc.canShake(toShake.getID())) {
                     rc.shake(toShake.getID());
-                    System.out.println("Shaken " + toShake.getLocation());
+                    //System.out.println("Shaken " + toShake.getLocation());
                     toShake = null;
                 }
             } else {
                 toShake = null;
                 if (nextCivilian != null && dist > 3) {
-                    //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
+                    ////System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
                             if (rc.canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
@@ -193,7 +193,7 @@ public class Scout {
                         }
                         if (!hasMoved) tryMove(nextEnemy.directionTo(myLocation));
                     } else {
-                        //System.out.println("Moving towards enemy at distance " + dist);
+                        ////System.out.println("Moving towards enemy at distance " + dist);
                         if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy));
                     }
                 } else if (mag < 1e-20f) {
@@ -216,12 +216,12 @@ public class Scout {
                     }
                 }
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
-                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy );
+                    //System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy );
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("Scout Exception");
+            //System.out.println("Scout Exception");
             e.printStackTrace();
         }
     }

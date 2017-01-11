@@ -37,36 +37,66 @@ public class Map {
     public MapLocation getTarget(MapLocation myLoc, int type) {
         return getTarget(myLoc, type, 9);
     }
+
     public MapLocation getTarget(MapLocation myLoc, int type, int maxAge) {
         return getTarget(myLoc, type, maxAge, -1e10f);
     }
 
+    final int LUMBERJACK = Radio.typeToInt(RobotType.LUMBERJACK);
+    final int SOLDIER = Radio.typeToInt(RobotType.SOLDIER);
+    final int TANK = Radio.typeToInt(RobotType.TANK);
+    final int SCOUT = Radio.typeToInt(RobotType.SCOUT);
+    final int ARCHON = Radio.typeToInt(RobotType.ARCHON);
+    final int GARDENER = Radio.typeToInt(RobotType.GARDENER);
+
     //type: 0=any, 1=military, 2=civilian, 3=archon
-    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge, float minDist) {
-        float cx, cy;
-        cx = cy = 0;
-        float mx = myLoc.x;
-        float my = myLoc.y;
-        float mindist = 1e10f;
-        int frame = rc.getRoundNum();
-        for (int i = radio.getEnemyCounter() + 101; i >= 101; i--) {
-            if (frame - radio.getUnitAge(i) >= maxAge) break;
-            RobotType ut = radio.getUnitType(i);
-            if (ut == null) continue;
-            if (type == 1 && !(ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT)) continue;
-            if (type == 2 && !( ut == RobotType.GARDENER)) continue;
-            if (type == 3 && !( ut == RobotType.ARCHON)) continue;
-            float x = radio.getUnitX(i);
-            float y = radio.getUnitY(i);
-            float dist = ((mx - x) * (mx - x) + (my - y) * (my - y)) * (type == 3 ? -1 : 1);
-            if (dist < mindist && dist > minDist){
-                mindist = dist;
-                cx = x;
-                cy = y;
+    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge, float minDist){
+        try {
+            float cx, cy;
+            cx = cy = 0;
+            float mx = myLoc.x;
+            float my = myLoc.y;
+            float mindist = 1e10f;
+            int frame = rc.getRoundNum();
+            int ecnt = radio.getEnemyCounter();
+            int clock = Clock.getBytecodeNum();
+            int i;
+            float x, y, dist;
+            int unitData, age, ut;
+            float tmul = (type == 3 ? -1 : 1);
+            for (i = ecnt + 101; i >= 101; i--) {
+                //System.out.println("1: " + Clock.getBytecodeNum());
+                unitData = //radio.read(i);
+                        rc.readBroadcast(i);
+                //System.out.println("1.2: " + Clock.getBytecodeNum());
+                if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || ecnt + 101 - i > 14) break;
+                ut = (unitData & 0b00000000000000000000111000000000) >> 9;
+                //System.out.println("2: " + Clock.getBytecodeNum());
+                if (ut == 0) continue;
+                if (type == 1 && !(ut == LUMBERJACK || ut == SOLDIER || ut == TANK || ut == SCOUT))
+                    continue;
+                if (type == 2 && !(ut == GARDENER)) continue;
+                if (type == 3 && !(ut == ARCHON)) continue;
+                x = (unitData & 0b11111111110000000000000000000000) >> 22;
+                y = (unitData & 0b00000000001111111111000000000000) >> 12;
+                dist = ((mx - x) * (mx - x) + (my - y) * (my - y)) * tmul;
+                if (dist < mindist && dist > minDist) {
+                    mindist = dist;
+                    cx = x;
+                    cy = y;
+                }
             }
+            clock = Clock.getBytecodeNum() - clock;
+            if (clock > 1500 && frame == rc.getRoundNum()) {
+                System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i));
+            }
+            if (mindist > 1e6f) return null;
+            return new MapLocation(cx, cy);
+        }catch(Exception ex)
+        {
+            ex.printStackTrace();
+            return null;
         }
-        if (mindist > 1e6f) return null;
-        return new MapLocation(cx, cy);
     }
 /*
     private static List<Intel> toremove = new ArrayList();

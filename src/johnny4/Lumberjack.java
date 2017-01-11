@@ -34,11 +34,16 @@ public class Lumberjack {
             }
 
             int frame = rc.getRoundNum();
+            radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
+            RobotInfo nearbyRobots[] = null;
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
+                nearbyRobots = map.sense();
             }
-            RobotInfo nearbyRobots[] = rc.senseNearbyRobots();
+            if (nearbyRobots == null) {
+               nearbyRobots = rc.senseNearbyRobots();
+            }
             TreeInfo trees[] = rc.senseNearbyTrees();
 
             // acquire tree cutting requests
@@ -80,8 +85,8 @@ public class Lumberjack {
             boolean treeenemy = false;
             boolean longrange = false;
             for (RobotInfo ri : nearbyRobots) {
-                if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.001f) {
-                    if (ri.getTeam() == rc.getTeam()) {
+                if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + ri.type.bodyRadius + 0.001f) {
+                    if (ri.getTeam().equals(rc.getTeam())) {
                         friendlies++;
                     } else {
                         enemies++;
@@ -113,8 +118,10 @@ public class Lumberjack {
                 }
             }
 
-            if (enemies > friendlies && !rc.hasAttacked()) {
+            if (enemies * 2 > friendlies && !rc.hasAttacked()) {
                 rc.strike();
+                //System.out.println(enemies + " > " + friendlies);
+                //System.out.println("Striking");
             }
             boolean hasMoved = tryEvade();
             if (!hasMoved) {
@@ -128,13 +135,15 @@ public class Lumberjack {
                     } else {
                         hasMoved = true;
                     }
-                } else {
-                    while (!rc.canMove(lastDirection) && Math.random() > 0.01) {
-                        lastDirection = lastDirection.rotateRightDegrees((float) Math.random() * 60);
-                    }
-                    if (rc.canMove(lastDirection)) {
-                        rc.move(lastDirection);
-                    }
+                }
+            }
+            if (!hasMoved){
+                while (!rc.canMove(lastDirection) && Math.random() > 0.1) {
+                    lastDirection = lastDirection.rotateRightDegrees((float) Math.random() * 60);
+                }
+                if (rc.canMove(lastDirection)) {
+                    rc.move(lastDirection);
+                    hasMoved = true;
                 }
             }
 

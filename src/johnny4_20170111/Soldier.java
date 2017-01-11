@@ -116,12 +116,12 @@ public class Soldier {
                 tryMove(randomDirection());
             }
             if (rc.getRoundNum() - frame > 0 && !longrange) {
-                System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                //System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 
 
         } catch (Exception e) {
-            System.out.println("Soldier Exception");
+            //System.out.println("Soldier Exception");
             e.printStackTrace();
         }
     }

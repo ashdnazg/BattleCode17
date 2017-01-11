@@ -32,6 +32,7 @@ public class Tank {
             }
 
             int frame = rc.getRoundNum();
+            radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
 
 

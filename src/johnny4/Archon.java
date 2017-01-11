@@ -37,6 +37,7 @@ public class Archon {
             }
 
             int frame = rc.getRoundNum();
+            radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
             map.sense();
             if (frame % 8 == 0) {

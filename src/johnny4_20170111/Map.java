@@ -28,7 +28,7 @@ public class Map {
             }
         }
         return ret;
-        //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
+        ////System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
     }
 
 
@@ -104,8 +104,8 @@ public class Map {
             if (previousIntel == null || previousIntel.creationTime < creationTime){
                 intel.removeAll(toremove);
                 intel.add(this);
-                //System.out.println("Sensed enemy at " + location);
-                //System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
+                ////System.out.println("Sensed enemy at " + location);
+                ////System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
             }
         }
 

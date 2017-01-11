@@ -66,7 +66,7 @@ public class Archon {
                 rc.move(lastDirection);
             }
         } catch (Exception e) {
-            System.out.println("Archon Exception");
+            //System.out.println("Archon Exception");
             e.printStackTrace();
         }
     }

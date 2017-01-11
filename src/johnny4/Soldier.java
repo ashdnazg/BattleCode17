@@ -34,14 +34,18 @@ public class Soldier {
             }
 
             int frame = rc.getRoundNum();
+            radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
-            if (frame % 8 == 0){
+            RobotInfo nearbyRobots[] = null;
+            if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
+                nearbyRobots = map.sense();
+            }
+            if (nearbyRobots == null) {
+                nearbyRobots = rc.senseNearbyRobots();
             }
 
-
             MapLocation nextEnemy = null;
-            RobotInfo nearbyRobots[] = rc.senseNearbyRobots();
             TreeInfo trees[] = rc.senseNearbyTrees();
             for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
@@ -51,10 +55,10 @@ public class Soldier {
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
-                nextEnemy = map.getTarget(myLocation);
+//                nextEnemy = map.getTarget(myLocation);
                 if (nextEnemy == null) {
 
-                    nextEnemy = map.getTarget(myLocation, 0, 100);
+                    nextEnemy = map.getTarget(myLocation, 0, 100, RobotType.SOLDIER.sensorRadius);
                 }
             }
             boolean hasMoved = tryEvade();
@@ -77,10 +81,9 @@ public class Soldier {
                         rc.fireTriadShot(myLocation.directionTo(nextEnemy));
                         hasFired = true;
                     }*/
-                    if (!hasMoved && tryMove(nextEnemy.directionTo(myLocation))){
+                    if (!hasMoved && tryMove(nextEnemy.directionTo(myLocation))) {
                         hasMoved = true;
                     }
-
 
 
                 } else {
@@ -117,7 +120,7 @@ public class Soldier {
             } else if (!hasMoved) {
                 tryMove(randomDirection());
             }
-            if (rc.getRoundNum() - frame > 0 && !longrange) {
+            if (rc.getRoundNum() - frame > 0) {
                 System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 

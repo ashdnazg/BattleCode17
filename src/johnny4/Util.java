@@ -76,10 +76,10 @@ public class Util {
         return false;
     }
 
-    static private float[] px = new float[15];
-    static private float[] py = new float[15];
-    static private float[] pr = new float[15];
-    static private boolean[] pg = new boolean[15];
+    static private float[] px = new float[25];
+    static private float[] py = new float[25];
+    static private float[] pr = new float[25];
+    static private boolean[] pg = new boolean[25];
     static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius){
         float cx = 0.5f * (start.x + target.x);
         float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
@@ -95,7 +95,7 @@ public class Util {
             if (Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) < rs + r){
                 px[cnt] = x;
                 py[cnt] = y;
-                pr[cnt] = r;
+                pr[cnt] = r + 0.0001f;
                 pg[cnt++] = false;
             }
         }
@@ -107,8 +107,8 @@ public class Util {
             if (Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) < rs + r){
                 px[cnt] = x;
                 py[cnt] = y;
-                pr[cnt] = r;
-                pg[cnt++] = rb.getTeam() == enemy;
+                pr[cnt] = r + 0.0001f;
+                pg[cnt++] = rb.getTeam().equals(enemy);
             }
         }
         if (cnt >= px.length){
@@ -121,6 +121,8 @@ public class Util {
         toTrgX /= mag;
         toTrgY /= mag;
         double dx,dy,distParallel, distPerpendicular, perpx, perpy;
+        double mindist = 100000d;
+        boolean outcome = true;
         for (int i = 0; i < cnt; i++){
             dx = px[i] - start.x;
             dy = py[i] - start.y;
@@ -128,12 +130,15 @@ public class Util {
             perpx = dx - distParallel * toTrgX;
             perpy = dy - distParallel * toTrgY;
             distPerpendicular = (perpx * perpx + perpy * perpy);
-            if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i]){
-                return pg[i];
+            if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i] && distParallel < mindist){
+                mindist = distParallel;
+                outcome = pg[i];
             }
         }
-        System.out.println("No collision found");
-        return true;
+        if (mindist > 99999d) {
+            System.out.println("No collision found");
+        }
+        return outcome;
     }
 
     static private BulletInfo getMostDangerousBullet(MapLocation myLocation, BulletInfo[] bullets){
@@ -156,7 +161,7 @@ public class Util {
             BulletInfo closest = getMostDangerousBullet(myLocation, bullets);
             if (closest != null) {
                 Direction dir = closest.dir;
-                boolean leftSafe = (Clock.getBytecodeNum() - clock > 1500) ? true : getMostDangerousBullet(myLocation.add(dir.rotateLeftDegrees(90), rc.getType().strideRadius), bullets) == null;
+                boolean leftSafe = (Clock.getBytecodeNum() - clock > 1500 || Clock.getBytecodesLeft() < 5000) ? true : getMostDangerousBullet(myLocation.add(dir.rotateLeftDegrees(90), rc.getType().strideRadius), bullets) == null;
                 boolean rightSafe = leftSafe ? true : (getMostDangerousBullet(myLocation.add(dir.rotateRightDegrees(90), rc.getType().strideRadius), bullets) == null);
                 if (rc.canMove(dir.rotateLeftDegrees(90)) && (leftSafe || !rightSafe)) {
                     rc.move(dir.rotateLeftDegrees(90));

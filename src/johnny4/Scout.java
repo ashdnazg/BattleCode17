@@ -1,6 +1,7 @@
 package johnny4;
 
 import battlecode.common.*;
+import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
 
 import java.awt.*;
 import java.util.Optional;
@@ -44,6 +45,7 @@ public class Scout {
             }
 
             int frame = rc.getRoundNum();
+            radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
 
             MapLocation nextEnemy = null;
@@ -52,6 +54,7 @@ public class Scout {
             float civMinDist = 10000f;
             boolean longRangeCiv = false;
             boolean longRangeEnemy = false;
+            int nearbyAllies = 0;
 
             RobotInfo nearbyRobots[] = map.sense();
             TreeInfo trees[] = rc.senseNearbyTrees();
@@ -67,16 +70,20 @@ public class Scout {
                     if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation)) && r.moveCount + r.attackCount > 0) {
                         nextEnemy = r.location;
                     }
+                } else {
+                    nearbyAllies++;
                 }
             }
             if (nextCivilian == null) {
-                nextCivilian = map.getTarget(myLocation, 2, 9, 0.8f * RobotType.SCOUT.sensorRadius);
+                if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
+                    nextCivilian = lastCivilian;
+                } else {
+                    nextCivilian = map.getTarget(myLocation, 2, 9, 0.8f * RobotType.SCOUT.sensorRadius);
+                }
                 longRangeCiv = true;
             }
             if (nextCivilian == null) {
-                if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius)
-                    nextCivilian = lastCivilian;
-                else nextCivilian = map.getTarget(myLocation, 3, 80);
+                nextCivilian = map.getTarget(myLocation, 3, 250, 0.8f * RobotType.SCOUT.sensorRadius);
             }
             lastCivilian = nextCivilian;
 
@@ -115,7 +122,7 @@ public class Scout {
             }
             float dist = 100000f;
             boolean hasMoved = tryEvade();
-            if (hasMoved && Clock.getBytecodesLeft() < 2000){
+            if (hasMoved && Clock.getBytecodesLeft() < 2000) {
                 System.out.println("Aborting scout early on " + frame);
                 return;
             }
@@ -139,7 +146,13 @@ public class Scout {
                 }
             } else {
                 toShake = null;
-                if (nextCivilian != null && dist > 3) {
+                if (nearbyAllies > 5 + rc.getID() % 5) {
+                    //System.out.println("Too many allies.");
+                }
+                if (dist < 3.8) {
+                    //System.out.println("Scary enemy");
+                }
+                if (nextCivilian != null && dist > 3.8 && nearbyAllies < 5 + rc.getID() % 5) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
@@ -167,14 +180,17 @@ public class Scout {
                         }
                         Direction dir;
                         int tries = 0;
-                        while (!hasMoved && tries ++ < 30) {
+                        while (!hasMoved && tries++ < 30) {
                             if (circleDir > 0.5) {
                                 dir = myLocation.directionTo(nextCivilian).rotateRightDegrees(2 * tries + 42);
                             } else {
-                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(2 * tries+ 42);
+                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(2 * tries + 42);
                             }
                             if (!hasMoved && rc.canMove(dir, 2f)) {
-                                rc.move(dir, 2f);
+                                try {
+                                    rc.move(dir, 2f);
+                                } catch (Exception ex) {
+                                }
                                 hasMoved = true;
                             } else {
                                 circleDir = (float) Math.random();
@@ -186,7 +202,7 @@ public class Scout {
                             }
                         }
                     }
-                } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
+                } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f) && nearbyAllies < 5 + rc.getID() % 5) {
                     if (dist < RobotType.SOLDIER.sensorRadius) {
                         if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
                             if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
@@ -197,7 +213,7 @@ public class Scout {
                         if (!hasMoved) tryMove(nextEnemy.directionTo(myLocation));
                     } else {
                         //System.out.println("Moving towards enemy at distance " + dist);
-                        if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy));
+                        if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy), 70, 1);
                     }
                 } else if (mag < 1e-20f) {
                     if (!hasMoved) {
@@ -219,7 +235,7 @@ public class Scout {
                     }
                 }
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
-                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy );
+                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy);
                 }
             }
 

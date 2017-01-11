@@ -139,11 +139,11 @@ public class Lumberjack {
             }
 
             if (rc.getRoundNum() - frame > 0 && !longrange) {
-                System.out.println("Lumberjack took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                //System.out.println("Lumberjack took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 
         } catch (Exception e) {
-            System.out.println("Lumberjack Exception");
+            //System.out.println("Lumberjack Exception");
             e.printStackTrace();
         }
     }
