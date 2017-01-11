@@ -35,6 +35,9 @@ public class Soldier {
 
             int frame = rc.getRoundNum();
             MapLocation myLocation = rc.getLocation();
+            if (frame % 8 == 0){
+                radio.reportMyPosition(myLocation);
+            }
 
 
             MapLocation nextEnemy = null;

@@ -34,13 +34,14 @@ public class Radio {
             }
             if (id > 0){
                 myId = id;
-                System.out.println("Reused unit slot " + myId);
+                System.out.println("Reused unit slot " + myId + " / " + uc);
             }else {
                 myId = getUnitCounter() + 4;
                 incrementUnitCounter();
             }
         }
         myType = typeToInt(rc.getType());
+        reportMyPosition(rc.getLocation());
     }
 
     public void reportMyPosition(MapLocation location){

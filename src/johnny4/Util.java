@@ -54,13 +54,15 @@ public class Util {
         while (currentCheck <= checksPerSide) {
             // Try the offset of the left side
             try {
-                if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
-                    rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+                Direction d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
+                if (rc.canMove(d)) {
+                    rc.move(d);
                     return true;
                 }
                 // Try the offset on the right side
-                if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
-                    rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
+                d = dir.rotateRightDegrees(degreeOffset * currentCheck);
+                if (rc.canMove(d)) {
+                    rc.move(d);
                     return true;
                 }
             } catch (Exception ex) {
