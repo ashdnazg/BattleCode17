@@ -22,8 +22,12 @@ public class Util {
      * @return true if a move was performed
      * @throws GameActionException
      */
-    static boolean tryMove(Direction dir) throws GameActionException {
-        return tryMove(dir, 35, 3);
+    static boolean tryMove(Direction dir) {
+        try {
+            return tryMove(dir, 35, 3);
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     /**

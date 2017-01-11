@@ -54,7 +54,7 @@ public class Archon {
 
             // Move randomly
             while (!tryMove(lastDirection) && Math.random() > 0.02) {
-                lastDirection = randomDirection();
+                lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 60);
             }
         } catch (Exception e) {
             System.out.println("Archon Exception");

@@ -30,6 +30,8 @@ public class Scout {
     float fx, fy, dx, dy, mag;
     MapLocation[] otherScouts = new MapLocation[100];
     Direction lastDirection = randomDirection();
+    TreeInfo toShake = null;
+
 
     float circleDir = 0f;
 
@@ -93,65 +95,88 @@ public class Scout {
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
             }
-            if (nextCivilian != null && dist > RobotType.SOLDIER.sensorRadius) {
-
-                boolean hasMoved = false;
-                if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
-                    if (!tryMove(myLocation.directionTo(nextCivilian))) {
-                        if (rc.canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
-                            rc.move(myLocation.directionTo(nextCivilian), 0.5f);
-                            hasMoved = true;
-                        }
+            if (toShake != null && dist > RobotType.SOLDIER.sensorRadius) {
+                if (!tryMove(myLocation.directionTo(toShake.getLocation()))){
+                    if (rc.canMove(myLocation.directionTo(toShake.getLocation()), 0.5f)) {
+                        rc.move(myLocation.directionTo(toShake.getLocation()), 0.5f);
                     }else{
-                        hasMoved = true;
+                        toShake = null;
                     }
                 }
-                if (nextCivilian.distanceTo(myLocation) - civSize < 5.4) {
+                if (rc.canShake(toShake.getID())){
+                    rc.shake(toShake.getID());
+                    toShake = null;
+                }
+            } else {
+                toShake = null;
+                if (nextCivilian != null && dist > RobotType.SOLDIER.sensorRadius) {
+
+                    boolean hasMoved = false;
+                    if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
+                        if (!tryMove(myLocation.directionTo(nextCivilian))) {
+                            if (rc.canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
+                                rc.move(myLocation.directionTo(nextCivilian), 0.5f);
+                                hasMoved = true;
+                            }
+                        } else {
+                            hasMoved = true;
+                        }
+                    }
+                    if (nextCivilian.distanceTo(myLocation) - civSize < 5.4) {
                     /*if (rc.canFirePentadShot()) {
                         rc.firePentadShot(myLocation.directionTo(nextCivilian));
                     }else if (rc.canFireTriadShot()) {
                         rc.fireTriadShot(myLocation.directionTo(nextCivilian));
-                    } else*/ if (rc.canFireSingleShot()) {
-                        rc.fireSingleShot(myLocation.directionTo(nextCivilian));
-                    }
-                    Direction dir;
-                    while (!hasMoved && Math.random() > 0.05f) {
-                        if (circleDir > 0.5) {
-                            dir = myLocation.directionTo(nextCivilian).rotateRightDegrees(2 * 42);
-                        } else {
+                    } else*/
+                        if (rc.canFireSingleShot()) {
+                            rc.fireSingleShot(myLocation.directionTo(nextCivilian));
+                        }
+                        Direction dir;
+                        while (!hasMoved && Math.random() > 0.05f) {
+                            if (circleDir > 0.5) {
+                                dir = myLocation.directionTo(nextCivilian).rotateRightDegrees(2 * 42);
+                            } else {
 
-                            dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(42 * 2);
-                        }
-                        if (!hasMoved && rc.canMove(dir, 2f)) {
-                            rc.move(dir, 2f);
-                            hasMoved = true;
-                        }else{
-                            circleDir = (float)Math.random();
+                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(42 * 2);
+                            }
+                            if (!hasMoved && rc.canMove(dir, 2f)) {
+                                rc.move(dir, 2f);
+                                hasMoved = true;
+                            } else {
+                                circleDir = (float) Math.random();
+                            }
                         }
                     }
-                }
-            } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
-                if (dist < RobotType.SOLDIER.sensorRadius) {
-                    if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
-                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f)) {
+                    if (dist < RobotType.SOLDIER.sensorRadius) {
+                        if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
+                            rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                        }
+                        tryMove(nextEnemy.directionTo(myLocation));
+                    } else {
+                        //System.out.println("Moving towards enemy at distance " + dist);
+                        tryMove(myLocation.directionTo(nextEnemy));
                     }
-                    tryMove(nextEnemy.directionTo(myLocation));
+                } else if (mag < 1e-20f) {
+                    while (!rc.canMove(lastDirection)) {
+                        lastDirection = randomDirection();
+                    }
+                    rc.move(lastDirection);
                 } else {
-                    //System.out.println("Moving towards enemy at distance " + dist);
-                    tryMove(myLocation.directionTo(nextEnemy));
+                    tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
                 }
-            } else if (mag < 1e-20f) {
-                while (!rc.canMove(lastDirection)) {
-                    lastDirection = randomDirection();
+                if (rc.getRoundNum() - frame > 0 && frame % 8 != 0) {
+                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
                 }
-                rc.move(lastDirection);
-            } else {
-                tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
+                if (Clock.getBytecodesLeft() > 1000 && toShake == null) {
+                    for (TreeInfo t : rc.senseNearbyTrees()) {
+                        if (t.getContainedBullets() > 0) {
+                            toShake = t;
+                            break;
+                        }
+                    }
+                }
             }
-            if (rc.getRoundNum() - frame > 0 && frame % 8 != 0) {
-                System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame);
-            }
-
 
         } catch (Exception e) {
             System.out.println("Scout Exception");

@@ -9,6 +9,7 @@ public class Radio {
     //Integer 4-100:    Unit Info
     //Integer 101-200:  Enemy Info
     //Integer 201-300:  Enemy Trees
+    //Integer 301-400:  Shaken Trees Info
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
