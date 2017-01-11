@@ -10,6 +10,7 @@ public class Archon {
     Map map;
     Radio radio;
     Direction lastDirection;
+    Team enemyTeam;
 
     public Archon(RobotController rc){
         this.rc = rc;
@@ -21,6 +22,7 @@ public class Archon {
                 radio.reportEnemy(m, RobotType.ARCHON, 0);
             }
         }
+        this.enemyTeam = rc.getTeam().opponent();
     }
 
     public void run(){
@@ -43,7 +45,8 @@ public class Archon {
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
             }
-            boolean alarm = radio.getAlarm();
+
+            boolean alarm = radio.getAlarm() || rc.senseNearbyRobots(RobotType.ARCHON.sensorRadius, enemyTeam).length > 0;
             boolean rich = rc.getTeamBullets() > 400;
 
             Direction oppositeDir = lastDirection.opposite();

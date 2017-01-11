@@ -30,7 +30,7 @@ public class Gardener {
         this.lastWatered = 0;
         this.myTeam = rc.getTeam();
         this.enemyTeam = rc.getTeam().opponent();
-        this.lastBuilt = RobotType.GARDENER;
+        this.lastBuilt = RobotType.LUMBERJACK;
         this.health = rc.getHealth();
         this.roundsSinceAttack = 999999;
     }
@@ -72,7 +72,7 @@ public class Gardener {
             if (!inDanger && (!alarm || rich) && tis.length < 5) {
                 boolean freePos = false;
                 for (int i = 0; i < 6; i++) {
-                    if (rc.canPlantTree(treeDirs[i]) && radio.getUnitCounter() >= 3) {
+                    if (rc.canPlantTree(treeDirs[i]) && radio.getUnitCounter() >= 4) {
                         if (!freePos) {
                             freePos = true;
                             continue;
@@ -102,6 +102,10 @@ public class Gardener {
                         break;
                     }
                     int scoutCount = radio.countAllies(RobotType.SCOUT);
+                    if (scoutCount < 2 && lastBuilt != RobotType.LUMBERJACK) {
+                        rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
+                        lastBuilt = RobotType.LUMBERJACK;
+                    }
                     if (scoutCount < 3) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
