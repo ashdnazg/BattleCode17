@@ -151,13 +151,13 @@ public class Util {
         return closest;
     }
 
-    static boolean tryEvade() {
+    static boolean tryEvade(BulletInfo[] bullets) {
         try {
             boolean moved = false;
             int clock = Clock.getBytecodeNum();
 
             MapLocation myLocation = rc.getLocation();
-            BulletInfo[] bullets = rc.senseNearbyBullets();
+            ;
             BulletInfo closest = getMostDangerousBullet(myLocation, bullets);
             if (closest != null) {
                 Direction dir = closest.dir;

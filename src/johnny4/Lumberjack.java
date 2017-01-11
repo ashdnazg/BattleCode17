@@ -123,7 +123,8 @@ public class Lumberjack {
                 //System.out.println(enemies + " > " + friendlies);
                 //System.out.println("Striking");
             }
-            boolean hasMoved = tryEvade();
+            BulletInfo[] bullets = rc.senseNearbyBullets();
+            boolean hasMoved = tryEvade(bullets);
             if (!hasMoved) {
                 if (nextEnemy != null) {
                     Direction toe = myLocation.directionTo(nextEnemy);

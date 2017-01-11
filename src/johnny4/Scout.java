@@ -34,6 +34,28 @@ public class Scout {
     Direction lastDirection = randomDirection();
     TreeInfo toShake = null;
     MapLocation lastCivilian = null;
+    BulletInfo[] bullets;
+
+    private boolean canMove(Direction dir){
+        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        float br = RobotType.SCOUT.bodyRadius;
+        for (BulletInfo bi : bullets){
+            if (bi.location.distanceTo(nloc) < br){
+                return false;
+            }
+        }
+        return rc.canMove(dir);
+    }
+    private boolean canMove(Direction dir, float dist){
+        MapLocation nloc = rc.getLocation().add(dir, dist);
+        float br = RobotType.SCOUT.bodyRadius;
+        for (BulletInfo bi : bullets){
+            if (bi.location.distanceTo(nloc) < br){
+                return false;
+            }
+        }
+        return rc.canMove(dir, dist);
+    }
 
 
     float circleDir = 0f;
@@ -58,6 +80,7 @@ public class Scout {
 
             RobotInfo nearbyRobots[] = map.sense();
             TreeInfo trees[] = rc.senseNearbyTrees();
+            bullets = rc.senseNearbyBullets();
             for (RobotInfo r : nearbyRobots) {
 
                 if (!r.getTeam().equals(rc.getTeam())) {
@@ -121,7 +144,8 @@ public class Scout {
                 }
             }
             float dist = 100000f;
-            boolean hasMoved = tryEvade();
+            boolean hasMoved = tryEvade(bullets);
+            myLocation = rc.getLocation();
             if (hasMoved && Clock.getBytecodesLeft() < 2000) {
                 System.out.println("Aborting scout early on " + frame);
                 return;
@@ -132,9 +156,10 @@ public class Scout {
             if (toShake != null && dist > 5) {
                 //System.out.println("Shaking " + toShake.getLocation());
                 if (!hasMoved && !tryMove(myLocation.directionTo(toShake.getLocation()))) {
-                    if (rc.canMove(myLocation.directionTo(toShake.getLocation()), 0.5f)) {
+                    if (canMove(myLocation.directionTo(toShake.getLocation()), 0.5f)) {
                         rc.move(myLocation.directionTo(toShake.getLocation()), 0.5f);
                         hasMoved = true;
+                        myLocation = rc.getLocation();
                     } else {
                         toShake = null;
                     }
@@ -156,13 +181,15 @@ public class Scout {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 5.4) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
-                            if (rc.canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
+                            if (canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
                                 rc.move(myLocation.directionTo(nextCivilian), 0.5f);
                                 hasMoved = true;
+                                myLocation = rc.getLocation();
                             } else {
                             }
                         } else {
                             hasMoved = true;
+                            myLocation = rc.getLocation();
                         }
                     }
                     if (nextCivilian.distanceTo(myLocation) - civSize < 5.4) {
@@ -186,12 +213,13 @@ public class Scout {
                             } else {
                                 dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(2 * tries + 42);
                             }
-                            if (!hasMoved && rc.canMove(dir, 2f)) {
+                            if (!hasMoved && canMove(dir, 2f)) {
                                 try {
                                     rc.move(dir, 2f);
                                 } catch (Exception ex) {
                                 }
                                 hasMoved = true;
+                                myLocation = rc.getLocation();
                             } else {
                                 circleDir = (float) Math.random();
                             }
@@ -211,20 +239,24 @@ public class Scout {
                         } else {
                         }
                         if (!hasMoved) tryMove(nextEnemy.directionTo(myLocation));
+                        myLocation = rc.getLocation();
                     } else {
                         //System.out.println("Moving towards enemy at distance " + dist);
                         if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy), 70, 1);
+                        myLocation = rc.getLocation();
                     }
                 } else if (mag < 1e-20f) {
                     if (!hasMoved) {
-                        while (!rc.canMove(lastDirection)) {
+                        while (!canMove(lastDirection)) {
                             lastDirection = randomDirection();
                         }
                         rc.move(lastDirection);
+                        myLocation = rc.getLocation();
                     }
                 } else {
                     if (!hasMoved)
                         tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
+                    myLocation = rc.getLocation();
                 }
                 if (toShake == null && isShaker) {
                     for (TreeInfo t : trees) {

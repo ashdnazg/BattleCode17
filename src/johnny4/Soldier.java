@@ -61,7 +61,9 @@ public class Soldier {
                     nextEnemy = map.getTarget(myLocation, 0, 100, RobotType.SOLDIER.sensorRadius);
                 }
             }
-            boolean hasMoved = tryEvade();
+            BulletInfo[] bullets = rc.senseNearbyBullets();
+            boolean hasMoved = tryEvade(bullets);
+            myLocation = rc.getLocation();
             float dist = 10000f;
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
@@ -83,6 +85,7 @@ public class Soldier {
                     }*/
                     if (!hasMoved && tryMove(nextEnemy.directionTo(myLocation))) {
                         hasMoved = true;
+                        myLocation = rc.getLocation();
                     }
 
 
@@ -90,6 +93,7 @@ public class Soldier {
                     if (!hasMoved) {
                         if (longrange) {
                             tryMove(myLocation.directionTo(nextEnemy));
+                            myLocation = rc.getLocation();
                         } else {
                             Direction dir;
                             int tries = 0;
@@ -102,6 +106,7 @@ public class Soldier {
                                 if (!hasMoved && rc.canMove(dir, 2f)) {
                                     rc.move(dir, 2f);
                                     hasMoved = true;
+                                    myLocation = rc.getLocation();
                                 } else {
                                     circleDir = (float) Math.random();
                                 }
@@ -119,6 +124,7 @@ public class Soldier {
                 }
             } else if (!hasMoved) {
                 tryMove(randomDirection());
+                myLocation = rc.getLocation();
             }
             if (rc.getRoundNum() - frame > 0) {
                 System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
