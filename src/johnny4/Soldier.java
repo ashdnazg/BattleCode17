@@ -27,9 +27,38 @@ public class Soldier {
         }
     }
 
+    private boolean canMove(Direction dir){
+        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        float br = rc.getType().bodyRadius;
+        for (BulletInfo bi : bullets){
+            if (bi.location.distanceTo(nloc) < br){
+                return false;
+            }
+        }
+        return rc.canMove(dir);
+    }
+    private boolean canMove(Direction dir, float dist){
+        try {
+            MapLocation nloc = rc.getLocation().add(dir, dist);
+            float br = rc.getType().bodyRadius;
+            for (BulletInfo bi : bullets) {
+                if (bi.location.distanceTo(nloc) < br) {
+                    return false;
+                }
+            }
+            return rc.canMove(dir, dist);
+        }catch(Exception ex){
+
+            System.out.println("canMove exception with args " + dir + ": " + dist);
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
     float circleDir = 0f;
     MapLocation stuckLocation;
     int stuckSince;
+    BulletInfo bullets[];
 
     protected void tick() {
         try {
@@ -40,13 +69,14 @@ public class Soldier {
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
+            bullets = rc.senseNearbyBullets();
             RobotInfo nearbyRobots[] = null;
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
                 nearbyRobots = map.sense();
             }
             if (nearbyRobots == null) {
-                nearbyRobots = rc.senseNearbyRobots();
+                nearbyRobots = map.sense(); //rc.senseNearbyRobots();
             }
 
             MapLocation nextEnemy = null;
@@ -83,7 +113,6 @@ public class Soldier {
                     //System.out.println("Soldier at " + myLocation + " attacking " + nextEnemy);
                 }
             }
-            BulletInfo[] bullets = rc.senseNearbyBullets();
             boolean hasMoved = tryEvade(bullets);
             myLocation = rc.getLocation();
             float dist = 10000f;
@@ -125,7 +154,7 @@ public class Soldier {
                                 } else {
                                     dir = myLocation.directionTo(nextEnemy).rotateLeftDegrees(2 * tries + 50);
                                 }
-                                if (!hasMoved && rc.canMove(dir, 2f)) {
+                                if (!hasMoved && canMove(dir, 2f)) {
                                     rc.move(dir, 2f);
                                     hasMoved = true;
                                     myLocation = rc.getLocation();

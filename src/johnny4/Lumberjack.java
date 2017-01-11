@@ -27,7 +27,36 @@ public class Lumberjack {
         }
     }
 
+    private boolean canMove(Direction dir){
+        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        float br = rc.getType().bodyRadius;
+        for (BulletInfo bi : bullets){
+            if (bi.location.distanceTo(nloc) < br){
+                return false;
+            }
+        }
+        return rc.canMove(dir);
+    }
+    private boolean canMove(Direction dir, float dist){
+        try {
+            MapLocation nloc = rc.getLocation().add(dir, dist);
+            float br = rc.getType().bodyRadius;
+            for (BulletInfo bi : bullets) {
+                if (bi.location.distanceTo(nloc) < br) {
+                    return false;
+                }
+            }
+            return rc.canMove(dir, dist);
+        }catch(Exception ex){
+
+            System.out.println("canMove exception with args " + dir + ": " + dist);
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
     int treeInSenseSince = 100000;
+    BulletInfo bullets[];
 
     protected void tick() {
         try {
@@ -38,6 +67,7 @@ public class Lumberjack {
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
+            bullets = rc.senseNearbyBullets();
             RobotInfo nearbyRobots[] = null;
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
@@ -70,13 +100,13 @@ public class Lumberjack {
                     rc.chop(currentTreeTarget);
                 } else if (toBeCut != null) {
                     Direction toTree = myLocation.directionTo(currentTreeTarget);
-                    tryMove(toTree);
+                    LJ_tryMove(toTree);
                     if (rc.canChop(currentTreeTarget)) {
                         rc.chop(currentTreeTarget);
                     }
                 } else {
                     Direction toTree = myLocation.directionTo(currentTreeTarget);
-                    tryMove(toTree);
+                    LJ_tryMove(toTree);
                 }
                 if (myLocation.distanceTo(currentTreeTarget) < RobotType.LUMBERJACK.sensorRadius) {
                     if (treeInSenseSince > frame)
@@ -103,9 +133,9 @@ public class Lumberjack {
             for (RobotInfo ri : nearbyRobots) {
                 if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + ri.type.bodyRadius + 0.001f) {
                     if (ri.getTeam().equals(rc.getTeam())) {
-                        friendlies++;
+                        friendlies+= getWeight(ri.type);
                     } else {
-                        enemies++;
+                        enemies+= getWeight(ri.type);
                     }
                 }
                 if (ri.getTeam() == rc.getTeam().opponent() && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
@@ -138,22 +168,21 @@ public class Lumberjack {
                 }
             }
 
-            if (enemies * 2 > friendlies && !rc.hasAttacked()) {
+            if (enemies > friendlies && !rc.hasAttacked()) {
                 rc.strike();
             }
-            BulletInfo[] bullets = rc.senseNearbyBullets();
             boolean hasMoved = tryEvade(bullets);
             myLocation = rc.getLocation();
             if (!hasMoved) {
                 if (nextEnemy != null) {
                     Direction toe = myLocation.directionTo(nextEnemy);
-                    if (rc.canMove(toe, Math.min(RobotType.LUMBERJACK.strideRadius - 0.001f, myLocation.distanceTo(nextEnemy) - RobotType.LUMBERJACK.bodyRadius - enemyRadius - 0.01f))) {
+                    if (canMove(toe, Math.min(RobotType.LUMBERJACK.strideRadius - 0.001f, myLocation.distanceTo(nextEnemy) - RobotType.LUMBERJACK.bodyRadius - enemyRadius - 0.01f))) {
                         rc.move(toe,  Math.min(RobotType.LUMBERJACK.strideRadius - 0.001f, myLocation.distanceTo(nextEnemy)- RobotType.LUMBERJACK.bodyRadius - enemyRadius - 0.01f));
                         hasMoved = true;
                         myLocation = rc.getLocation();
                     }else
-                    if (!tryMove(toe)) {
-                        if (rc.canMove(toe, 0.5f)) {
+                    if (!LJ_tryMove(toe)) {
+                        if (canMove(toe, 0.5f)) {
                             rc.move(toe, 0.5f);
                             hasMoved = true;
                             myLocation = rc.getLocation();
@@ -165,10 +194,10 @@ public class Lumberjack {
                 }
             }
             if (!hasMoved && !rc.hasAttacked() && !hasChopped) {
-                while (!rc.canMove(lastDirection) && Math.random() > 0.1) {
+                while (!canMove(lastDirection) && Math.random() > 0.1) {
                     lastDirection = lastDirection.rotateRightDegrees((float) Math.random() * 60);
                 }
-                if (rc.canMove(lastDirection)) {
+                if (canMove(lastDirection)) {
                     rc.move(lastDirection);
                     hasMoved = true;
                     myLocation = rc.getLocation();
@@ -179,13 +208,13 @@ public class Lumberjack {
                 for (RobotInfo ri : nearbyRobots) {
                     if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + ri.type.bodyRadius + 0.001f) {
                         if (ri.getTeam().equals(rc.getTeam())) {
-                            friendlies++;
+                            friendlies+= getWeight(ri.type);
                         } else {
-                            enemies++;
+                            enemies+= getWeight(ri.type);
                         }
                     }
                 }
-                if (enemies * 2 > friendlies) {
+                if (enemies > friendlies) {
                     rc.strike();
                 }
             }
@@ -198,5 +227,64 @@ public class Lumberjack {
             System.out.println("Lumberjack Exception");
             e.printStackTrace();
         }
+    }
+
+    private static int getWeight(RobotType rt){
+        switch (rt) {
+            case SCOUT:
+                return 4;
+            case ARCHON:
+                return 1;
+            case GARDENER:
+                return 3;
+            case LUMBERJACK:
+                return 2;
+            case SOLDIER:
+                return 2;
+            case TANK:
+                return 1;
+        }
+        return 0;
+    }
+
+    boolean LJ_tryMove(Direction dir) {
+        try {
+            return LJ_tryMove(dir, 42, 2);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    boolean LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
+
+        if (canMove(dir)) {
+            rc.move(dir);
+            return true;
+        }
+
+        boolean moved = false;
+        int currentCheck = 1;
+
+        while (currentCheck <= checksPerSide) {
+            try {
+                Direction d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
+                if (canMove(d)) {
+                    rc.move(d);
+                    return true;
+                }
+                d = dir.rotateRightDegrees(degreeOffset * currentCheck);
+                if (canMove(d)) {
+                    rc.move(d);
+                    return true;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            // No move performed, try slightly further
+            currentCheck++;
+        }
+
+        // A move never happened, so return false.
+        return false;
     }
 }

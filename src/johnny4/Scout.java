@@ -122,7 +122,7 @@ public class Scout {
                         }
                     }
                 }else{
-                    nextCivilian = map.getTarget(myLocation, 2, 50, 0.8f * RobotType.SCOUT.sensorRadius);
+                    nextCivilian = map.getTarget(myLocation, 2, 20, 0.8f * RobotType.SCOUT.sensorRadius);
                     if (nextCivilian == null) {
                         if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
                             nextCivilian = lastCivilian;
@@ -130,7 +130,8 @@ public class Scout {
                             lastCivilian = null;
                             MapLocation[] broadcasts = rc.senseBroadcastingRobotLocations();
                             if (broadcasts.length > 0) {
-                                lastCivilian = broadcasts[(int) (Math.random() * broadcasts.length)];
+                                nextCivilian = broadcasts[(int) (Math.random() * broadcasts.length)];
+                                System.out.println("Going to broadcaster at " + nextCivilian);
                             }
                         }
                     }
@@ -204,7 +205,7 @@ public class Scout {
                 }
                 if (nextCivilian != null && dist > 4.2 && nearbyAllies < 5 + rc.getID() % 5) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
-                    if (nextCivilian.distanceTo(myLocation) - civSize > 7.1) {
+                    if (nextCivilian.distanceTo(myLocation) - civSize > 6.1) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
                             if (canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
                                 rc.move(myLocation.directionTo(nextCivilian), 0.5f);
@@ -217,7 +218,7 @@ public class Scout {
                             myLocation = rc.getLocation();
                         }
                     }
-                    if (nextCivilian.distanceTo(myLocation) - civSize < 7.1) {
+                    if (nextCivilian.distanceTo(myLocation) - civSize < 6.1) {
                     /*if (rc.canFirePentadShot()) {
                         rc.firePentadShot(myLocation.directionTo(nextCivilian));
                     }else if (rc.canFireTriadShot()) {
