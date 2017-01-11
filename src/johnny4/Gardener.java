@@ -12,6 +12,7 @@ public class Gardener {
     Map map;
     Direction[] treeDirs;
     Team myTeam;
+    Team enemyTeam;
     int lastWatered;
     RobotType lastBuilt;
     float health;
@@ -28,6 +29,7 @@ public class Gardener {
         }
         this.lastWatered = 0;
         this.myTeam = rc.getTeam();
+        this.enemyTeam = rc.getTeam().opponent();
         this.lastBuilt = RobotType.GARDENER;
         this.health = rc.getHealth();
         this.roundsSinceAttack = 999999;
@@ -45,12 +47,10 @@ public class Gardener {
             if (rc.getTeamBullets() >= 10000f){
                 rc.donate(10000f);
             }
-            if (roundsSinceAttack > 0) {
-                roundsSinceAttack--;
-            }
+            roundsSinceAttack++;
 
             float newHealth = rc.getHealth();
-            if (newHealth < health) {
+            if (newHealth < health || rc.senseNearbyRobots(RobotType.GARDENER.sensorRadius, enemyTeam).length > 0) {
                 roundsSinceAttack = 0;
                 radio.setAlarm();
             }

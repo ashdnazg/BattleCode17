@@ -48,6 +48,8 @@ public class Lumberjack {
             }
             TreeInfo trees[] = rc.senseNearbyTrees();
 
+            boolean alarm = radio.getAlarm();
+
             // acquire tree cutting requests
             if (currentTreeTarget == null) {
                 currentTreeTarget = radio.findTreeToCut();
@@ -55,7 +57,7 @@ public class Lumberjack {
             }
 
 
-            if (currentTreeTarget != null) {
+            if (!alarm && currentTreeTarget != null) {
 
                 TreeInfo toBeCut = null;
                 for (TreeInfo ti : trees) {
