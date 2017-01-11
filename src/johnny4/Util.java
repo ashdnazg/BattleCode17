@@ -154,7 +154,7 @@ public class Util {
             BulletInfo closest = getMostDangerousBullet(myLocation, bullets);
             if (closest != null) {
                 Direction dir = closest.dir;
-                boolean leftSafe = getMostDangerousBullet(myLocation.add(dir.rotateLeftDegrees(90), rc.getType().strideRadius), bullets) == null;
+                boolean leftSafe = (Clock.getBytecodeNum() - clock > 1500) ? true : getMostDangerousBullet(myLocation.add(dir.rotateLeftDegrees(90), rc.getType().strideRadius), bullets) == null;
                 boolean rightSafe = leftSafe ? true : (getMostDangerousBullet(myLocation.add(dir.rotateRightDegrees(90), rc.getType().strideRadius), bullets) == null);
                 if (rc.canMove(dir.rotateLeftDegrees(90)) && (leftSafe || !rightSafe)) {
                     rc.move(dir.rotateLeftDegrees(90));
@@ -169,7 +169,7 @@ public class Util {
                 System.out.println("Evade took " + clock);
             }
             if (moved){
-                System.out.println("Evaded bullet");
+                //System.out.println("Evaded bullet");
             }
             return moved;
         } catch (Exception ex) {
