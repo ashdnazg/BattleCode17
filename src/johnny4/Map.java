@@ -34,25 +34,32 @@ public class Map {
         return getTarget(myLoc, 0);
     }
 
-    //type: 0=any, 1=military, 2=civilian, 3=archon
     public MapLocation getTarget(MapLocation myLoc, int type) {
+        return getTarget(myLoc, type, 9);
+    }
+    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge) {
+        return getTarget(myLoc, type, maxAge, -1e10f);
+    }
+
+    //type: 0=any, 1=military, 2=civilian, 3=archon
+    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge, float minDist) {
         float cx, cy;
         cx = cy = 0;
         float mx = myLoc.x;
         float my = myLoc.y;
-        float mindist = Float.MAX_VALUE;
+        float mindist = 1e10f;
         int frame = rc.getRoundNum();
         for (int i = radio.getEnemyCounter() + 101; i >= 101; i--) {
-            if (frame - radio.getUnitAge(i) >= 80) break;
+            if (frame - radio.getUnitAge(i) >= maxAge) break;
             RobotType ut = radio.getUnitType(i);
             if (ut == null) continue;
             if (type == 1 && !(ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT)) continue;
-            if (type == 3 && !( ut == RobotType.ARCHON)) continue;
             if (type == 2 && !( ut == RobotType.GARDENER)) continue;
+            if (type == 3 && !( ut == RobotType.ARCHON)) continue;
             float x = radio.getUnitX(i);
             float y = radio.getUnitY(i);
-            float dist = (mx - x) * (mx - x) + (my - y) * (my - y);
-            if (dist < mindist){
+            float dist = ((mx - x) * (mx - x) + (my - y) * (my - y)) * (type == 3 ? -1 : 1);
+            if (dist < mindist && dist > minDist){
                 mindist = dist;
                 cx = x;
                 cy = y;
