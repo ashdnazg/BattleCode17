@@ -261,7 +261,6 @@ public class Lumberjack {
             rc.move(dir);
             return true;
         }
-
         boolean moved = false;
         int currentCheck = 1;
 
@@ -280,11 +279,8 @@ public class Lumberjack {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            // No move performed, try slightly further
             currentCheck++;
         }
-
-        // A move never happened, so return false.
         return false;
     }
 }

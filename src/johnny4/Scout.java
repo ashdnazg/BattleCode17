@@ -111,7 +111,7 @@ public class Scout {
                     if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
                         nextCivilian = lastCivilian;
                     } else {
-                        nextCivilian = map.getTarget(myLocation, 2, 50, 0.8f * RobotType.SCOUT.sensorRadius);
+                        nextCivilian = map.getTarget(myLocation, 2, 30, 0.8f * RobotType.SCOUT.sensorRadius);
                         lastCivilian = null;
                     }
                     longRangeCiv = true;
@@ -203,7 +203,7 @@ public class Scout {
                 if (nearbyAllies > 5 + rc.getID() % 5) {
                     //System.out.println("Too many allies.");
                 }
-                if (nextCivilian != null && dist > 4.2 && nearbyAllies < 5 + rc.getID() % 5) {
+                if (nextCivilian != null && dist > 3.5 && nearbyAllies < 5 + rc.getID() % 5) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 6.1) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
@@ -276,6 +276,14 @@ public class Scout {
                             }
                         }
                     }
+                }else if (dist > 3.5) {
+                    if (!hasMoved) {
+                        while (!canMove(lastDirection)) {
+                            lastDirection = randomDirection();
+                        }
+                        rc.move(lastDirection);
+                        myLocation = rc.getLocation();
+                    }
                 } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f) && nearbyAllies < 5 + rc.getID() % 5) {
                     if (dist < RobotType.SOLDIER.sensorRadius) {
                         if (!longRangeEnemy && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
@@ -291,15 +299,7 @@ public class Scout {
                         if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy), 70, 1);
                         myLocation = rc.getLocation();
                     }
-                } else if (mag < 1e-20f) {
-                    if (!hasMoved) {
-                        while (!canMove(lastDirection)) {
-                            lastDirection = randomDirection();
-                        }
-                        rc.move(lastDirection);
-                        myLocation = rc.getLocation();
-                    }
-                } else {
+                }  else {
                     if (!hasMoved)
                         tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
                     myLocation = rc.getLocation();

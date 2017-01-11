@@ -143,4 +143,69 @@ public class Gardener {
             e.printStackTrace();
         }
     }
+
+    private boolean canMove(Direction dir){
+        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        float br = rc.getType().bodyRadius;
+        for (BulletInfo bi : bullets){
+            if (bi.location.distanceTo(nloc) < br){
+                return false;
+            }
+        }
+        return rc.canMove(dir);
+    }
+    private boolean canMove(Direction dir, float dist){
+        try {
+            MapLocation nloc = rc.getLocation().add(dir, dist);
+            float br = rc.getType().bodyRadius;
+            for (BulletInfo bi : bullets) {
+                if (bi.location.distanceTo(nloc) < br) {
+                    return false;
+                }
+            }
+            return rc.canMove(dir, dist);
+        }catch(Exception ex){
+
+            System.out.println("canMove exception with args " + dir + ": " + dist);
+            ex.printStackTrace();
+            return false;
+        }
+    }
+
+    boolean LJ_tryMove(Direction dir) {
+        try {
+            return LJ_tryMove(dir, 42, 2);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    boolean LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
+
+        if (canMove(dir)) {
+            rc.move(dir);
+            return true;
+        }
+        boolean moved = false;
+        int currentCheck = 1;
+
+        while (currentCheck <= checksPerSide) {
+            try {
+                Direction d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
+                if (canMove(d)) {
+                    rc.move(d);
+                    return true;
+                }
+                d = dir.rotateRightDegrees(degreeOffset * currentCheck);
+                if (canMove(d)) {
+                    rc.move(d);
+                    return true;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            currentCheck++;
+        }
+        return false;
+    }
 }
