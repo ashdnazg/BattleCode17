@@ -67,7 +67,7 @@ public class Map {
             float x, y, dist;
             int unitData, age, ut, found = 0;
             float tmul = (type == 3 ? -1 : 1);
-            for (i = ecnt + 101; i >= 101; i--) {
+            for (i = ecnt + 100; i >= 101; i--) {
                 //System.out.println("1: " + Clock.getBytecodeNum());
                 unitData = //radio.read(i);
                         rc.readBroadcast(i);

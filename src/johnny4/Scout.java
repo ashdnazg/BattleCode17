@@ -202,10 +202,7 @@ public class Scout {
                 if (nearbyAllies > 5 + rc.getID() % 5) {
                     //System.out.println("Too many allies.");
                 }
-                if (dist < 3.8) {
-                    //System.out.println("Scary enemy");
-                }
-                if (nextCivilian != null && dist > 3.8 && nearbyAllies < 5 + rc.getID() % 5) {
+                if (nextCivilian != null && dist > 4.2 && nearbyAllies < 5 + rc.getID() % 5) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 7.1) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
@@ -280,7 +277,7 @@ public class Scout {
                     }
                 } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f) && nearbyAllies < 5 + rc.getID() % 5) {
                     if (dist < RobotType.SOLDIER.sensorRadius) {
-                        if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
+                        if (!longRangeEnemy && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
                             if (rc.getTeamBullets() > 150 && rc.canFireSingleShot()) {
                                 rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                             }
