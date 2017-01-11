@@ -49,7 +49,7 @@ public class Archon {
             MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
             boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f);
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
-            if (eligibleSpot && rc.canHireGardener(oppositeDir)) {
+            if (eligibleSpot && rc.canHireGardener(oppositeDir) && (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0)) {
                 rc.hireGardener(oppositeDir);
             }
 
