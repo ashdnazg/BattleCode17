@@ -1,10 +1,10 @@
-package johnny4;
+package johnny4_20170110;
 
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
-import static johnny4.Util.*;
+import static johnny4_20170110.Util.*;
 
 public class Archon {
 

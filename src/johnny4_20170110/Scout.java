@@ -1,12 +1,12 @@
-package johnny4;
+package johnny4_20170110;
 
 import battlecode.common.*;
 
 import java.awt.*;
 import java.util.Optional;
 
-import static johnny4.Util.randomDirection;
-import static johnny4.Util.tryMove;
+import static johnny4_20170110.Util.randomDirection;
+import static johnny4_20170110.Util.tryMove;
 
 public class Scout {
 

@@ -1,8 +1,8 @@
-package johnny4;
+package johnny4_20170110;
 
 import battlecode.common.*;
 
-import static johnny4.Util.*;
+import static johnny4_20170110.Util.*;
 
 public class Gardener {
 
