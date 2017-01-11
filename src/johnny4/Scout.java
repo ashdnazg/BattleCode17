@@ -107,6 +107,7 @@ public class Scout {
                 }
             }
             if (nextCivilian == null) {
+                longRangeCiv = true;
                 if (!isRoamer) {
                     if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
                         nextCivilian = lastCivilian;
@@ -114,9 +115,8 @@ public class Scout {
                         nextCivilian = map.getTarget(myLocation, 2, 30, 0.8f * RobotType.SCOUT.sensorRadius);
                         lastCivilian = null;
                     }
-                    longRangeCiv = true;
                     if (nextCivilian == null) {
-                        nextCivilian = map.getTarget(myLocation, 3, 250, 0.8f * RobotType.SCOUT.sensorRadius);
+                        nextCivilian = map.getTarget(myLocation, 3, 90, 3.5f * RobotType.SCOUT.sensorRadius);
                         if (nextCivilian == null) {
                             System.out.println("no target");
                         }
@@ -130,7 +130,11 @@ public class Scout {
                             lastCivilian = null;
                             MapLocation[] broadcasts = rc.senseBroadcastingRobotLocations();
                             if (broadcasts.length > 0) {
-                                nextCivilian = broadcasts[(int) (Math.random() * broadcasts.length)];
+                                for (MapLocation bc : broadcasts){
+                                    if (nextCivilian == null || nextCivilian.distanceTo(myLocation) < bc.distanceTo(myLocation)){
+                                        nextCivilian = bc;
+                                    }
+                                }
                                 System.out.println("Going to broadcaster at " + nextCivilian);
                             }
                         }

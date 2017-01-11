@@ -168,7 +168,7 @@ public class Lumberjack {
                 }
             }
 
-            if (enemies > friendlies && !rc.hasAttacked()) {
+            if (1.1f * enemies > friendlies && !rc.hasAttacked()) {
                 rc.strike();
             }
             boolean hasMoved = tryEvade(bullets);
@@ -214,7 +214,7 @@ public class Lumberjack {
                         }
                     }
                 }
-                if (enemies > friendlies) {
+                if (1.1f * enemies > friendlies) {
                     rc.strike();
                 }
             }

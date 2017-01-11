@@ -28,7 +28,7 @@ public class Map {
             }
         }
         return ret;
-        //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
+        ////System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
     }
 
 
@@ -68,14 +68,14 @@ public class Map {
             int unitData, age, ut, found = 0;
             float tmul = (type == 3 ? -1 : 1);
             for (i = ecnt + 101; i >= 101; i--) {
-                //System.out.println("1: " + Clock.getBytecodeNum());
+                ////System.out.println("1: " + Clock.getBytecodeNum());
                 unitData = //radio.read(i);
                         rc.readBroadcast(i);
-                //System.out.println("1.2: " + Clock.getBytecodeNum());
+                ////System.out.println("1.2: " + Clock.getBytecodeNum());
                 if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || found > 8 || (ecnt + 101 - i) > 30)
                     break;
                 ut = (unitData & 0b00000000000000000000111000000000) >> 9;
-                //System.out.println("2: " + Clock.getBytecodeNum());
+                ////System.out.println("2: " + Clock.getBytecodeNum());
                 if (ut == 0) continue;
                 if (type == 1 && !(ut == LUMBERJACK || ut == SOLDIER || ut == TANK || ut == SCOUT))
                     continue;
@@ -93,7 +93,7 @@ public class Map {
             }
             clock = Clock.getBytecodeNum() - clock;
             if (clock > 1500 && frame == rc.getRoundNum()) {
-                //System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i) + " found " + found);
+                ////System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i) + " found " + found);
             }
             if (maxAge > 50) {
                 for (MapLocation m : archonPos) {
@@ -110,7 +110,7 @@ public class Map {
             }
             return new MapLocation(cx, cy);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            //ex.printStackTrace();
             return null;
         }
     }
@@ -148,8 +148,8 @@ public class Map {
             if (previousIntel == null || previousIntel.creationTime < creationTime){
                 intel.removeAll(toremove);
                 intel.add(this);
-                //System.out.println("Sensed enemy at " + location);
-                //System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
+                ////System.out.println("Sensed enemy at " + location);
+                ////System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
             }
         }
 

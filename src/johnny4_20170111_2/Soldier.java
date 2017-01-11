@@ -62,12 +62,12 @@ public class Soldier {
                 stuckLocation = myLocation;
             }
             if (rc.getRoundNum() - stuckSince > 50){
-                System.out.println("Stuck soldier reporting trees");
+                //System.out.println("Stuck soldier reporting trees");
                 stuckSince = 100000;
                 for (TreeInfo t : trees){
                     if (t.getTeam().equals(rc.getTeam())) continue;
                     if (t.location.distanceTo(myLocation) < 5){
-                        System.out.println("Reported tree at " + t.location);
+                        //System.out.println("Reported tree at " + t.location);
                         radio.requestTreeCut(t);
                     }
                 }
@@ -148,13 +148,13 @@ public class Soldier {
                 myLocation = rc.getLocation();
             }
             if (rc.getRoundNum() - frame > 0) {
-                System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                //System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 
 
         } catch (Exception e) {
-            System.out.println("Soldier Exception");
-            e.printStackTrace();
+            //System.out.println("Soldier Exception");
+            //e.printStackTrace();
         }
     }
 }

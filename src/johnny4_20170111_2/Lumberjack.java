@@ -62,7 +62,7 @@ public class Lumberjack {
 
                 TreeInfo toBeCut = null;
                 for (TreeInfo ti : trees) {
-                    //System.out.println(ti.location + " -> " + currentTreeTarget + " : " + ti.location.distanceTo(currentTreeTarget));
+                    ////System.out.println(ti.location + " -> " + currentTreeTarget + " : " + ti.location.distanceTo(currentTreeTarget));
                     if (ti.location.distanceTo(currentTreeTarget) < 2.5 || (toBeCut != null && ti.location.distanceTo(currentTreeTarget) < toBeCut.location.distanceTo(currentTreeTarget))) {
                         toBeCut = ti;
                     }
@@ -87,7 +87,7 @@ public class Lumberjack {
                 }
                 if (frame - treeInSenseSince > 10 && toBeCut == null) {
                     radio.reportTreeCut(currentTreeTarget);
-                    System.out.println("Cut tree at " + currentTreeTarget);
+                    //System.out.println("Cut tree at " + currentTreeTarget);
                     currentTreeTarget = null;
                     treeInSenseSince = 100000;
                 }
@@ -192,12 +192,12 @@ public class Lumberjack {
             }
 
             if (rc.getRoundNum() - frame > 0 && !longrange) {
-                System.out.println("Lumberjack took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                //System.out.println("Lumberjack took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 
         } catch (Exception e) {
-            System.out.println("Lumberjack Exception");
-            e.printStackTrace();
+            //System.out.println("Lumberjack Exception");
+            //e.printStackTrace();
         }
     }
 }

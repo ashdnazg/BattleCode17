@@ -40,7 +40,7 @@ public strictfp class RobotPlayer {
                     break;
             }
         }catch (Exception ex){
-            ex.printStackTrace();
+            //ex.printStackTrace();
         }
 	}
 

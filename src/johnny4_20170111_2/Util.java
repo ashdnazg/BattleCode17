@@ -66,7 +66,7 @@ public class Util {
                     return true;
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                //ex.printStackTrace();
             }
             // No move performed, try slightly further
             currentCheck++;
@@ -112,7 +112,7 @@ public class Util {
             }
         }
         if (cnt >= px.length){
-            System.out.println("Exhausted array length");
+            //System.out.println("Exhausted array length");
         }
 
         double toTrgX = target.x - start.x;
@@ -136,7 +136,7 @@ public class Util {
             }
         }
         if (mindist > 99999d) {
-            System.out.println("No collision found");
+            //System.out.println("No collision found");
         }
         return outcome;
     }
@@ -173,14 +173,14 @@ public class Util {
             }
             clock = Clock.getBytecodeNum() - clock;
             if (clock > 4000) {
-                System.out.println("Evade took " + clock);
+                //System.out.println("Evade took " + clock);
             }
             if (moved){
-                //System.out.println("Evaded bullet");
+                ////System.out.println("Evaded bullet");
             }
             return moved;
         } catch (Exception ex) {
-            ex.printStackTrace();
+            //ex.printStackTrace();
         }
         return false;
     }

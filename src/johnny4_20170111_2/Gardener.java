@@ -133,8 +133,8 @@ public class Gardener {
             // }
 
         } catch (Exception e) {
-            System.out.println("Gardener Exception");
-            e.printStackTrace();
+            //System.out.println("Gardener Exception");
+            //e.printStackTrace();
         }
     }
 }
