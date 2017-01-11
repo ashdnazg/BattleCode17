@@ -13,6 +13,7 @@ public class Gardener {
     Direction[] treeDirs;
     Team myTeam;
     int lastWatered;
+    RobotType lastBuilt;
 
     public Gardener(RobotController rc){
         this.rc = rc;
@@ -25,6 +26,7 @@ public class Gardener {
         }
         this.lastWatered = 0;
         this.myTeam = rc.getTeam();
+        this.lastBuilt = RobotType.GARDENER;
     }
 
     public void run(){
@@ -71,21 +73,24 @@ public class Gardener {
             }
 
             for (int i = 0; i < 6; i++) {
-                if (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i])) {
-                    if (radio.countAllies(RobotType.SCOUT) < 3 || (radio.countAllies(RobotType.SCOUT) < 10 && Math.random() < 0.2)) {
+                // Check for soldier on purpose to allow the Archon to build gardeners
+                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) {
+                    int scoutCount = radio.countAllies(RobotType.SCOUT);
+                    if (scoutCount < 3) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
+                        lastBuilt = RobotType.SCOUT;
+                    } else if (scoutCount < 10 && lastBuilt == RobotType.SOLDIER) {
+                        rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
+                        lastBuilt = RobotType.SCOUT;
+                    // } else if (lastBuilt != RobotType.LUMBERJACK) {               // UNCOMMENT WHEN LUMBERJACK HAS AI
+                        // rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
+                        // lastBuilt = RobotType.LUMBERJACK;
+                    } else {
+                        rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
+                        lastBuilt = RobotType.SOLDIER;
                     }
                 }
             }
-
-            for (int i = 0; i < 6; i++) {
-                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) {
-                    rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
-                }
-            }
-
-
-
 
             // Generate a random direction
             // Direction dir = randomDirection();
