@@ -46,9 +46,9 @@ public class Archon {
             Direction oppositeDir = lastDirection.opposite();
             MapLocation potentialSpot = myLocation.add(oppositeDir, 3.0f);
             MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
-            boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f) &&
-                                rc.onTheMap(forwardSpot, 2.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f);
-            if (rc.canHireGardener(oppositeDir)) {
+            boolean eligibleSpot = rc.onTheMap(forwardSpot, 2.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f);
+            boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
+            if (eligibleSpot && rc.canHireGardener(oppositeDir)) {
                 rc.hireGardener(oppositeDir);
             }
 
