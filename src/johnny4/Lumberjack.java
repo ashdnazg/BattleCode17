@@ -27,6 +27,8 @@ public class Lumberjack {
         }
     }
 
+    int treeInSenseSince = 100000;
+
     protected void tick() {
         try {
             if (rc.getTeamBullets() >= 10000f) {
@@ -42,13 +44,14 @@ public class Lumberjack {
                 nearbyRobots = map.sense();
             }
             if (nearbyRobots == null) {
-               nearbyRobots = rc.senseNearbyRobots();
+                nearbyRobots = rc.senseNearbyRobots();
             }
             TreeInfo trees[] = rc.senseNearbyTrees();
 
             // acquire tree cutting requests
             if (currentTreeTarget == null) {
                 currentTreeTarget = radio.findTreeToCut();
+                treeInSenseSince = 100000;
             }
 
 
@@ -56,7 +59,8 @@ public class Lumberjack {
 
                 TreeInfo toBeCut = null;
                 for (TreeInfo ti : trees) {
-                    if (ti.location.distanceTo(currentTreeTarget) < 1) {
+                    //System.out.println(ti.location + " -> " + currentTreeTarget + " : " + ti.location.distanceTo(currentTreeTarget));
+                    if (ti.location.distanceTo(currentTreeTarget) < 2.5 || (toBeCut != null && ti.location.distanceTo(currentTreeTarget) < toBeCut.location.distanceTo(currentTreeTarget))) {
                         toBeCut = ti;
                     }
                 }
@@ -72,8 +76,17 @@ public class Lumberjack {
                     Direction toTree = myLocation.directionTo(currentTreeTarget);
                     tryMove(toTree);
                 }
-                if (myLocation.distanceTo(currentTreeTarget) < 0.95 * RobotType.LUMBERJACK.sensorRadius && toBeCut == null) {
+                if (myLocation.distanceTo(currentTreeTarget) < RobotType.LUMBERJACK.sensorRadius) {
+                    if (treeInSenseSince > frame)
+                        treeInSenseSince = frame;
+                } else {
+                    treeInSenseSince = 100000;
+                }
+                if (frame - treeInSenseSince > 10 && toBeCut == null) {
+                    radio.reportTreeCut(currentTreeTarget);
+                    System.out.println("Cut tree at " + currentTreeTarget);
                     currentTreeTarget = null;
+                    treeInSenseSince = 100000;
                 }
                 return;
             }
@@ -82,6 +95,7 @@ public class Lumberjack {
             int friendlies = 0;
             int enemies = 0;
             MapLocation nextEnemy = null;
+            float enemyRadius = 1;
             boolean treeenemy = false;
             boolean longrange = false;
             for (RobotInfo ri : nearbyRobots) {
@@ -94,18 +108,22 @@ public class Lumberjack {
                 }
                 if (ri.getTeam() == rc.getTeam().opponent() && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
                     nextEnemy = ri.location;
+                    enemyRadius = ri.type.bodyRadius;
                 }
             }
 
+            boolean hasChopped = false;
             for (TreeInfo ti : trees) {
                 if (ti.team == rc.getTeam().opponent() && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ti.location.distanceTo(myLocation))) {
                     nextEnemy = ti.location;
+                    enemyRadius = ti.radius;
                     treeenemy = true;
                 }
-                if (rc.canChop(ti.location) && !(ti.getTeam() == rc.getTeam())){
+                if (rc.canChop(ti.location) && !(ti.getTeam() == rc.getTeam())) {
                     rc.chop(ti.location);
+                    hasChopped = true;
                 }
-                if (ti.containedBullets > 0 && rc.canShake(ti.location)){
+                if (ti.containedBullets > 0 && rc.canShake(ti.location)) {
                     rc.shake(ti.location);
                 }
             }
@@ -120,31 +138,53 @@ public class Lumberjack {
 
             if (enemies * 2 > friendlies && !rc.hasAttacked()) {
                 rc.strike();
-                //System.out.println(enemies + " > " + friendlies);
-                //System.out.println("Striking");
             }
             BulletInfo[] bullets = rc.senseNearbyBullets();
             boolean hasMoved = tryEvade(bullets);
+            myLocation = rc.getLocation();
             if (!hasMoved) {
                 if (nextEnemy != null) {
                     Direction toe = myLocation.directionTo(nextEnemy);
+                    if (rc.canMove(toe, Math.min(RobotType.LUMBERJACK.strideRadius - 0.001f, myLocation.distanceTo(nextEnemy) - RobotType.LUMBERJACK.bodyRadius - enemyRadius - 0.01f))) {
+                        rc.move(toe,  Math.min(RobotType.LUMBERJACK.strideRadius - 0.001f, myLocation.distanceTo(nextEnemy)- RobotType.LUMBERJACK.bodyRadius - enemyRadius - 0.01f));
+                        hasMoved = true;
+                        myLocation = rc.getLocation();
+                    }else
                     if (!tryMove(toe)) {
                         if (rc.canMove(toe, 0.5f)) {
                             rc.move(toe, 0.5f);
                             hasMoved = true;
+                            myLocation = rc.getLocation();
                         }
                     } else {
                         hasMoved = true;
+                        myLocation = rc.getLocation();
                     }
                 }
             }
-            if (!hasMoved){
+            if (!hasMoved && !rc.hasAttacked() && !hasChopped) {
                 while (!rc.canMove(lastDirection) && Math.random() > 0.1) {
                     lastDirection = lastDirection.rotateRightDegrees((float) Math.random() * 60);
                 }
                 if (rc.canMove(lastDirection)) {
                     rc.move(lastDirection);
                     hasMoved = true;
+                    myLocation = rc.getLocation();
+                }
+            }
+            //try to strike again
+            if (!rc.hasAttacked()) {
+                for (RobotInfo ri : nearbyRobots) {
+                    if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + ri.type.bodyRadius + 0.001f) {
+                        if (ri.getTeam().equals(rc.getTeam())) {
+                            friendlies++;
+                        } else {
+                            enemies++;
+                        }
+                    }
+                }
+                if (enemies * 2 > friendlies) {
+                    rc.strike();
                 }
             }
 

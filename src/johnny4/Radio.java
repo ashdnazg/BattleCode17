@@ -179,7 +179,7 @@ public class Radio {
             int data = read(index);
             if (data == 0) {
                 //ignore some bits in tree ID so it fits.
-                int info = ((int)ti.location.x << 22) | ((int)ti.location.y << 12) | (ti.ID & 0b00000000000000000000111111111111);
+                int info = ((int)Math.round(ti.location.x) << 22) | ((int)Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
                 write(index, info);
                 return true;
             } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0){

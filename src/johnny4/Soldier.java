@@ -16,6 +16,8 @@ public class Soldier {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        stuckLocation = rc.getLocation();
+        stuckSince = rc.getRoundNum();
     }
 
     public void run() {
@@ -26,6 +28,8 @@ public class Soldier {
     }
 
     float circleDir = 0f;
+    MapLocation stuckLocation;
+    int stuckSince;
 
     protected void tick() {
         try {
@@ -52,6 +56,23 @@ public class Soldier {
                     nextEnemy = r.location;
                 }
             }
+
+            if (myLocation.distanceTo(stuckLocation) > 5){
+                stuckSince = frame;
+                stuckLocation = myLocation;
+            }
+            if (rc.getRoundNum() - stuckSince > 50){
+                System.out.println("Stuck soldier reporting trees");
+                stuckSince = 100000;
+                for (TreeInfo t : trees){
+                    if (t.getTeam().equals(rc.getTeam())) continue;
+                    if (t.location.distanceTo(myLocation) < 5){
+                        System.out.println("Reported tree at " + t.location);
+                        radio.requestTreeCut(t);
+                    }
+                }
+            }
+
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
