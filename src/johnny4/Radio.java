@@ -23,8 +23,22 @@ public class Radio {
             myId = getArchonCounter() + 1;
             incrementArchonCounter();
         }else {
-            myId = getUnitCounter() + 4;
-            incrementUnitCounter();
+            int frame = rc.getRoundNum();
+            int uc = getUnitCounter() + 4;
+            int id = -1;
+            for (int pos = 4; pos < uc; pos++){
+                if (frame - getUnitAge(pos) > 40){
+                    id = pos;
+                    break;
+                }
+            }
+            if (id > 0){
+                myId = id;
+                System.out.println("Reused unit slot " + myId);
+            }else {
+                myId = getUnitCounter() + 4;
+                incrementUnitCounter();
+            }
         }
         myType = typeToInt(rc.getType());
     }

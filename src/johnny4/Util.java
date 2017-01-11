@@ -165,7 +165,7 @@ public class Util {
                 }
             }
             clock = Clock.getBytecodeNum() - clock;
-            if (clock > 1000) {
+            if (clock > 4000) {
                 System.out.println("Evade took " + clock);
             }
             if (moved){
