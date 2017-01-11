@@ -8,10 +8,12 @@ public class Map {
 
     RobotController rc;
     Radio radio;
+    MapLocation[] archonPos;
 
     public Map(RobotController rc, Radio radio) {
         this.rc = rc;
         this.radio = radio;
+        archonPos = rc.getInitialArchonLocations(rc.getTeam().opponent());
 
         // init vision
     }
@@ -50,8 +52,9 @@ public class Map {
     final int GARDENER = Radio.typeToInt(RobotType.GARDENER);
 
     //type: 0=any, 1=military, 2=civilian, 3=archon
-    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge, float minDist){
+    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge, float minDist) {
         try {
+            minDist *= minDist; //square distances
             float cx, cy;
             cx = cy = 0;
             float mx = myLoc.x;
@@ -62,14 +65,15 @@ public class Map {
             int clock = Clock.getBytecodeNum();
             int i;
             float x, y, dist;
-            int unitData, age, ut;
+            int unitData, age, ut, found = 0;
             float tmul = (type == 3 ? -1 : 1);
             for (i = ecnt + 101; i >= 101; i--) {
                 //System.out.println("1: " + Clock.getBytecodeNum());
                 unitData = //radio.read(i);
                         rc.readBroadcast(i);
                 //System.out.println("1.2: " + Clock.getBytecodeNum());
-                if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || ecnt + 101 - i > 14) break;
+                if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || found > 8 || (ecnt + 101 - i) > 30)
+                    break;
                 ut = (unitData & 0b00000000000000000000111000000000) >> 9;
                 //System.out.println("2: " + Clock.getBytecodeNum());
                 if (ut == 0) continue;
@@ -80,7 +84,8 @@ public class Map {
                 x = (unitData & 0b11111111110000000000000000000000) >> 22;
                 y = (unitData & 0b00000000001111111111000000000000) >> 12;
                 dist = ((mx - x) * (mx - x) + (my - y) * (my - y)) * tmul;
-                if (dist < mindist && dist > minDist) {
+                if (dist < mindist && dist * tmul > minDist) {
+                    found++;
                     mindist = dist;
                     cx = x;
                     cy = y;
@@ -88,12 +93,23 @@ public class Map {
             }
             clock = Clock.getBytecodeNum() - clock;
             if (clock > 1500 && frame == rc.getRoundNum()) {
-                System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i));
+                //System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i) + " found " + found);
             }
-            if (mindist > 1e6f) return null;
+            if (maxAge > 50) {
+                for (MapLocation m : archonPos) {
+                    dist = m.distanceSquaredTo(myLoc) * tmul;
+                    if (dist < mindist && dist * tmul > minDist) {
+                        mindist = dist;
+                        cx = m.x;
+                        cy = m.y;
+                    }
+                }
+            }
+            if (mindist > 1e6f) {
+                return null;
+            }
             return new MapLocation(cx, cy);
-        }catch(Exception ex)
-        {
+        } catch (Exception ex) {
             ex.printStackTrace();
             return null;
         }

@@ -19,7 +19,7 @@ public class Scout {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
-        isShaker = rc.getID() % 3 == 0;
+        isShaker = rc.getID() % 4 == 0;
     }
 
     public void run() {
@@ -102,11 +102,15 @@ public class Scout {
                     nextCivilian = lastCivilian;
                 } else {
                     nextCivilian = map.getTarget(myLocation, 2, 9, 0.8f * RobotType.SCOUT.sensorRadius);
+                    lastCivilian = null;
                 }
                 longRangeCiv = true;
             }
             if (nextCivilian == null) {
                 nextCivilian = map.getTarget(myLocation, 3, 250, 0.8f * RobotType.SCOUT.sensorRadius);
+                if (nextCivilian == null){
+                    System.out.println("no target");
+                }
             }
             lastCivilian = nextCivilian;
 
@@ -257,6 +261,12 @@ public class Scout {
                     if (!hasMoved)
                         tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
                     myLocation = rc.getLocation();
+                }
+                if (Clock.getBytecodesLeft() < 1000) return;
+                for (TreeInfo t : trees) {
+                    if (rc.canShake(t.location)){
+                        rc.shake(t.location);
+                    }
                 }
                 if (toShake == null && isShaker) {
                     for (TreeInfo t : trees) {
