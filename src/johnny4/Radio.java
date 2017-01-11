@@ -10,6 +10,7 @@ public class Radio {
     //Integer 101-200:  Enemy Info
     //Integer 201-300:  Enemy Trees
     //Integer 301-320:  Requested trees to remove according to priority
+    //Integer 321:      ALARM ALARM
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
@@ -206,6 +207,15 @@ public class Radio {
                 write(index, 0);
             }
         }
+    }
+
+    public void setAlarm() {
+        write(321, rc.getRoundNum());
+    }
+
+    public boolean getAlarm() {
+        int lastAlarm = read(321);
+        return lastAlarm != 0 && (rc.getRoundNum() - lastAlarm) < 10;
     }
 
     static int typeToInt(RobotType rt) {

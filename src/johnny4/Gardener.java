@@ -14,6 +14,8 @@ public class Gardener {
     Team myTeam;
     int lastWatered;
     RobotType lastBuilt;
+    float health;
+    int roundsSinceAttack;
 
     public Gardener(RobotController rc){
         this.rc = rc;
@@ -27,6 +29,8 @@ public class Gardener {
         this.lastWatered = 0;
         this.myTeam = rc.getTeam();
         this.lastBuilt = RobotType.GARDENER;
+        this.health = rc.getHealth();
+        this.roundsSinceAttack = 999999;
     }
 
     public void run(){
@@ -41,6 +45,21 @@ public class Gardener {
             if (rc.getTeamBullets() >= 10000f){
                 rc.donate(10000f);
             }
+            if (roundsSinceAttack > 0) {
+                roundsSinceAttack--;
+            }
+
+            float newHealth = rc.getHealth();
+            if (newHealth < health) {
+                roundsSinceAttack = 0;
+                radio.setAlarm();
+            }
+            health = newHealth;
+
+            boolean alarm = radio.getAlarm();
+            boolean inDanger = roundsSinceAttack < 10;
+            boolean rich = rc.getTeamBullets() > 400;
+
 
             int frame = rc.getRoundNum();
             radio.frame = frame;
@@ -50,7 +69,7 @@ public class Gardener {
             }
 
             TreeInfo[] tis = rc.senseNearbyTrees(2.0f);
-            if (tis.length < 5) {
+            if (!inDanger && (!alarm || rich) && tis.length < 5) {
                 boolean freePos = false;
                 for (int i = 0; i < 6; i++) {
                     if (rc.canPlantTree(treeDirs[i]) && radio.getUnitCounter() >= 3) {
@@ -75,24 +94,34 @@ public class Gardener {
 
             for (int i = 0; i < 6; i++) {
                 // Check for soldier on purpose to allow the Archon to build gardeners
-                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && radio.getUnitCounter() < 3)) {
+                if ((rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && radio.getUnitCounter() < 3)) &&
+                    (!alarm || rich || inDanger)) {
+                    if (inDanger) {
+                        rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
+                        lastBuilt = RobotType.LUMBERJACK;
+                        break;
+                    }
                     int scoutCount = radio.countAllies(RobotType.SCOUT);
                     if (scoutCount < 3) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
+                        break;
                     } else if (scoutCount < 9 && lastBuilt == RobotType.SOLDIER) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
+                        break;
                     } else if (lastBuilt != RobotType.LUMBERJACK && Math.random() > 0.6d) {               // UNCOMMENT WHEN LUMBERJACK HAS AI
                         if (radio.countAllies(RobotType.LUMBERJACK) < 7) {
                             rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
                         }
                         lastBuilt = RobotType.LUMBERJACK;
+                        break;
                     } else {
                         if (radio.countAllies(RobotType.SOLDIER) < 22) {
                             rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
                         }
                         lastBuilt = RobotType.SOLDIER;
+                        break;
                     }
                 }
             }

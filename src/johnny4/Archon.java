@@ -43,13 +43,15 @@ public class Archon {
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
             }
+            boolean alarm = radio.getAlarm();
+            boolean rich = rc.getTeamBullets() > 400;
 
             Direction oppositeDir = lastDirection.opposite();
             MapLocation potentialSpot = myLocation.add(oppositeDir, 3.0f);
             MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
             boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f);
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
-            if (eligibleSpot && rc.canHireGardener(oppositeDir) && (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0)) {
+            if (eligibleSpot && rc.canHireGardener(oppositeDir) && (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0) && (!alarm || rich)) {
                 rc.hireGardener(oppositeDir);
             }
 
