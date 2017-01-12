@@ -80,6 +80,7 @@ public class Soldier {
             }
 
             MapLocation nextEnemy = null;
+            MapLocation nextLumberjack = null;
             TreeInfo trees[] = rc.senseNearbyTrees();
             for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {

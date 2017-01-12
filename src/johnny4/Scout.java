@@ -42,9 +42,12 @@ public class Scout {
     BulletInfo[] bullets;
     MapLocation[] visitedBroadcasts = new MapLocation[8];
     int rollingBroadcastIndex = 0;
+    MapLocation nextLumberjack;
+    final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
 
     private boolean canMove(Direction dir){
         MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
         float br = RobotType.SCOUT.bodyRadius;
         for (BulletInfo bi : bullets){
             if (bi.location.distanceTo(nloc) < br){
@@ -56,6 +59,7 @@ public class Scout {
     private boolean canMove(Direction dir, float dist){
         try {
             MapLocation nloc = rc.getLocation().add(dir, dist);
+            if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
             float br = RobotType.SCOUT.bodyRadius;
             for (BulletInfo bi : bullets) {
                 if (bi.location.distanceTo(nloc) < br) {
@@ -95,10 +99,11 @@ public class Scout {
             RobotInfo nearbyRobots[] = map.sense();
             TreeInfo trees[] = rc.senseNearbyTrees();
             bullets = rc.senseNearbyBullets();
+            nextLumberjack = null;
             for (RobotInfo r : nearbyRobots) {
 
+                RobotType ut = r.getType();
                 if (!r.getTeam().equals(rc.getTeam())) {
-                    RobotType ut = r.getType();
                     if ((ut == RobotType.GARDENER) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
                         nextCivilian = r.location;
                         civMinDist = (lastCivilian != null && r.location.distanceTo(lastCivilian) < 3) ? 0f : (r.location.distanceTo(myLocation));
@@ -109,6 +114,11 @@ public class Scout {
                     }
                 } else {
                     nearbyAllies++;
+                }
+                if (ut == RobotType.LUMBERJACK && !r.getTeam().equals(rc.getTeam()) && r.moveCount + r.attackCount > 0){
+                    if (nextLumberjack == null || nextLumberjack.distanceTo(myLocation) > r.location.distanceTo(myLocation)){
+                        nextLumberjack = r.location;
+                    }
                 }
             }
             if (nextCivilian == null) {
@@ -149,6 +159,7 @@ public class Scout {
                                 }
                                 if (nextCivilian != null){
                                     visitedBroadcasts[rollingBroadcastIndex ++] = nextCivilian;
+                                    rollingBroadcastIndex %= visitedBroadcasts.length;
                                 }
                                 System.out.println("Going to broadcaster at " + nextCivilian);
                             }
@@ -201,6 +212,11 @@ public class Scout {
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
             }
+            float lumberDist = 10000f;
+            if (nextLumberjack != null){
+                lumberDist = nextLumberjack.distanceTo(myLocation);
+                System.out.println("Lumberjack at " + nextLumberjack);
+            }
             if (toShake != null && dist > 5) {
                 //System.out.println("Shaking " + toShake.getLocation());
                 if (!hasMoved && !tryMove(myLocation.directionTo(toShake.getLocation()))) {
@@ -222,7 +238,7 @@ public class Scout {
                 if (nearbyAllies > 5 + rc.getID() % 5) {
                     //System.out.println("Too many allies.");
                 }
-                if (nextCivilian != null && dist > 3.5 && nearbyAllies < 5 + rc.getID() % 5) {
+                if (nextCivilian != null && dist > 3.5 && nearbyAllies < 5 + rc.getID() % 5 && lumberDist > MIN_LUMBERJACK_DIST) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 6.1) {
                         if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
@@ -297,11 +313,14 @@ public class Scout {
                     }
                 }else if (dist > 3.5) {
                     if (!hasMoved) {
-                        while (!canMove(lastDirection)) {
-                            lastDirection = randomDirection();
+                        int tries = 0;
+                        while (!canMove(lastDirection) && tries ++ < 10) {
+                            lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 42 + 10);
                         }
-                        rc.move(lastDirection);
-                        myLocation = rc.getLocation();
+                        if (tries < 10) {
+                            rc.move(lastDirection);
+                            myLocation = rc.getLocation();
+                        }
                     }
                 } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f) && nearbyAllies < 5 + rc.getID() % 5) {
                     if (dist < RobotType.SOLDIER.sensorRadius) {

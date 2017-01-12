@@ -145,6 +145,7 @@ public class Lumberjack {
             }
 
             boolean hasChopped = false;
+            TreeInfo choppable = null;
             for (TreeInfo ti : trees) {
                 if (ti.team == rc.getTeam().opponent() && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ti.location.distanceTo(myLocation))) {
                     nextEnemy = ti.location;
@@ -152,8 +153,9 @@ public class Lumberjack {
                     treeenemy = true;
                 }
                 if (rc.canChop(ti.location) && !(ti.getTeam() == rc.getTeam())) {
-                    rc.chop(ti.location);
-                    hasChopped = true;
+                    //rc.chop(ti.location);
+                    //hasChopped = true;
+                    choppable = ti;
                 }
                 if (ti.containedBullets > 0 && rc.canShake(ti.location)) {
                     rc.shake(ti.location);
@@ -193,7 +195,7 @@ public class Lumberjack {
                     }
                 }
             }
-            if (!hasMoved && !rc.hasAttacked() && !hasChopped) {
+            if (!hasMoved && !rc.hasAttacked() && !hasChopped && choppable == null) {
                 while (!canMove(lastDirection) && Math.random() > 0.1) {
                     lastDirection = lastDirection.rotateRightDegrees((float) Math.random() * 60);
                 }
@@ -217,6 +219,9 @@ public class Lumberjack {
                 if (1.1f * enemies > friendlies) {
                     rc.strike();
                 }
+            }
+            if (choppable != null && !rc.hasAttacked() && rc.canChop(choppable.location)){
+                rc.chop(choppable.location);
             }
 
             if (rc.getRoundNum() - frame > 0 && !longrange) {
