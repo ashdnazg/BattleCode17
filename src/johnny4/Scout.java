@@ -203,7 +203,19 @@ public class Scout {
                 }
             }
             float dist = 100000f;
-            boolean hasMoved = tryEvade(bullets);
+
+            boolean safe = false;
+            for (TreeInfo ti : trees){
+                if (ti.location.distanceTo(myLocation) + RobotType.SCOUT.bodyRadius < ti.radius + GameConstants.BULLET_SPAWN_OFFSET){
+                    safe = true;
+                }
+            }
+            boolean hasMoved = false;
+            if (!safe) {
+                hasMoved = tryEvade(bullets);
+            }else{
+                System.out.println("Scout safe, dont evade");
+            }
             myLocation = rc.getLocation();
             if (hasMoved && Clock.getBytecodesLeft() < 2000) {
                 System.out.println("Aborting scout early on " + frame);
@@ -276,7 +288,7 @@ public class Scout {
                                 }
                             }
                             if (best != null) {
-                                MapLocation pos = best.location.add(best.location.directionTo(nextCivilian), best.radius - RobotType.SCOUT.bodyRadius);
+                                MapLocation pos = best.location.add(best.location.directionTo(nextCivilian), best.radius - RobotType.SCOUT.bodyRadius - GameConstants.BULLET_SPAWN_OFFSET / 2);
                                 if (myLocation.equals(pos)){
                                     hasMoved = true;
                                 }else
@@ -356,7 +368,7 @@ public class Scout {
                     }
                     if (t.containedRobot != null){
                         radio.requestTreeCut(t);
-                        System.out.println("Requesting christmas tree to be cut!");
+                        //System.out.println("Requesting christmas tree to be cut!");
                     }
                 }
                 if (toShake == null && isShaker) {
