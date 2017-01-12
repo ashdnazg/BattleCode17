@@ -80,7 +80,7 @@ public class Gardener {
             }
             health = newHealth;
 
-            
+
             boolean alarm = radio.getAlarm();
             boolean inDanger = roundsSinceAttack < 10 || isFleeing;
             boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;
@@ -151,11 +151,11 @@ public class Gardener {
                         break;
                     } else {
                         int ljCount = radio.countAllies(RobotType.LUMBERJACK);
-                        int soldierCount = radio.countAllies(RobotType.LUMBERJACK);
+                        int soldierCount = radio.countAllies(RobotType.SOLDIER);
                         if (ljCount < soldierCount && ljCount < 7) {
                             rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
                             lastBuilt = RobotType.LUMBERJACK;
-                        } else if (soldierCount < ljCount && radio.countAllies(RobotType.SOLDIER) < 22) {
+                        } else if (soldierCount < ljCount && soldierCount < 22) {
                             rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
                             lastBuilt = RobotType.SOLDIER;
                         }
