@@ -98,12 +98,12 @@ public class Archon {
                 Direction alternateBuildDir = null;
                 int freeDirs = 0;
                 for (int i = 0; i < directions.length; i++){
-
+/*
                     if (!blockedDir[i]){
                         buildDir = directions[i];
                         freeDirs ++;
-                        System.out.println("Direction " + directions[i] + " is free");
-                    }else if (rc.canHireGardener(directions[i])){
+                        //System.out.println("Direction " + directions[i] + " is free");
+                    }else */if (rc.canHireGardener(directions[i])){
                         alternateBuildDir = directions[i];
                     }
                 }
@@ -111,8 +111,10 @@ public class Archon {
                     freeDirs = 2;
                     buildDir = alternateBuildDir;
                 }
+                if (alternateBuildDir != null) {
 
-                rc.hireGardener(buildDir);
+                    rc.hireGardener(alternateBuildDir);
+                }
             }
 
             // try to stay in good spots

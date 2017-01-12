@@ -30,7 +30,7 @@ public class Lumberjack {
     }
 
     private boolean canMove(Direction dir) {
-        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        MapLocation nloc = rc.getLocation().add(dir, rc.getType().strideRadius);
         if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
         float br = rc.getType().bodyRadius;
         for (BulletInfo bi : bullets) {

@@ -21,6 +21,7 @@ public class Gardener {
     BulletInfo bullets[];
     boolean isFleeing;
     boolean waitingForScout;
+    int plantedTrees = 0;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
@@ -88,7 +89,10 @@ public class Gardener {
 
             RobotType scouted = null;
             if (waitingForScout){
-                if (map.getTarget(myLocation, 4, 50, 0) != null){
+                if (frame > 100)
+                    waitingForScout = false;
+                MapLocation target = map.getTarget(myLocation, 4, 50, 0);
+                if (target != null && target.distanceTo(myLocation) < 42){
                     scouted = Radio.intToType(map._type);
                     System.out.println("Scouted " + scouted + " rush");
                 }
@@ -100,12 +104,13 @@ public class Gardener {
                 if (!inDanger && (!alarm || rich) && tis.length < 5) {
                     boolean freePos = false;
                     for (int i = 0; i < 6; i++) {
-                        if (rc.canPlantTree(treeDirs[i]) && radio.getUnitCounter() >= 4) {
+                        if (rc.canPlantTree(treeDirs[i]) && (radio.getUnitCounter() >= 4 || plantedTrees <= frame / 200) && frame > 10) {
                             if (!freePos) {
                                 freePos = true;
                                 continue;
                             }
                             rc.plantTree(treeDirs[i]);
+                            plantedTrees++;
                             break;
                         }
                         if (frame % 6 == i) {
@@ -127,10 +132,10 @@ public class Gardener {
                 }
             }
 
-
-            int ownScouts = radio.countAllies(RobotType.SCOUT);
-            int ljCount = radio.countAllies(RobotType.LUMBERJACK);
-            int soldierCount = radio.countAllies(RobotType.SOLDIER);
+            int counts[] = radio.countAllies();
+            int ownScouts = counts[Radio.typeToInt(RobotType.SCOUT)];
+            int ljCount = counts[Radio.typeToInt(RobotType.LUMBERJACK)];
+            int soldierCount = counts[Radio.typeToInt(RobotType.SOLDIER)];
             for (int i = 0; i < 6; i++) {
                 // Check for soldier on purpose to allow the Archon to build gardeners
                 if ((rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && ownScouts < radio.getArchonCounter())) &&
@@ -138,9 +143,14 @@ public class Gardener {
                     if (waitingForScout && scouted != null){
                         if (!rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) break;
 
-                        rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
-                        lastBuilt = RobotType.SOLDIER;
-                        waitingForScout = false;
+                        RobotType response;
+                        if (scouted.equals(RobotType.LUMBERJACK)){
+                            response = RobotType.LUMBERJACK;
+                        }else{
+                            response = RobotType.SOLDIER;
+                        }
+                        rc.buildRobot(response, treeDirs[i]);
+                        lastBuilt = response;
                         break;
                     }
                     if (inDanger) {
@@ -221,7 +231,7 @@ public class Gardener {
     }
 
     private boolean canMove(Direction dir) {
-        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        MapLocation nloc = rc.getLocation().add(dir, rc.getType().strideRadius);
         float br = rc.getType().bodyRadius;
         for (BulletInfo bi : bullets) {
             if (bi.location.distanceTo(nloc) < br) {

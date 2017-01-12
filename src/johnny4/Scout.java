@@ -46,11 +46,20 @@ public class Scout {
     final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
 
     private boolean canMove(Direction dir){
-        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        MapLocation nloc = rc.getLocation().add(dir, rc.getType().strideRadius);
+        MapLocation nloc2 = rc.getLocation().add(dir, rc.getType().strideRadius / 2);
         if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
-        float br = RobotType.SCOUT.bodyRadius;
+        float br = rc.getType().bodyRadius;
+
+        MapLocation b1, b2, b3;
         for (BulletInfo bi : bullets){
-            if (bi.location.distanceTo(nloc) < br){
+            b1 = bi.location;
+            b2 = bi.location.add(bi.dir, bi.speed / 2);
+            b3 = bi.location.add(bi.dir, bi.speed);
+            if (b1.distanceTo(nloc) < br || b2.distanceTo(nloc) < br || b3.distanceTo(nloc) < br){
+                return false;
+            }
+            if (b1.distanceTo(nloc2) < br || b2.distanceTo(nloc2) < br || b3.distanceTo(nloc2) < br){
                 return false;
             }
         }
@@ -59,10 +68,18 @@ public class Scout {
     private boolean canMove(Direction dir, float dist){
         try {
             MapLocation nloc = rc.getLocation().add(dir, dist);
+            MapLocation nloc2 = rc.getLocation().add(dir, dist / 2);
+            MapLocation b1, b2, b3;
             if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
-            float br = RobotType.SCOUT.bodyRadius;
+            float br = rc.getType().bodyRadius;
             for (BulletInfo bi : bullets) {
-                if (bi.location.distanceTo(nloc) < br) {
+                b1 = bi.location;
+                b2 = bi.location.add(bi.dir, bi.speed / 2);
+                b3 = bi.location.add(bi.dir, bi.speed);
+                if (b1.distanceTo(nloc) < br || b2.distanceTo(nloc) < br || b3.distanceTo(nloc) < br){
+                    return false;
+                }
+                if (b1.distanceTo(nloc2) < br || b2.distanceTo(nloc2) < br || b3.distanceTo(nloc2) < br){
                     return false;
                 }
             }

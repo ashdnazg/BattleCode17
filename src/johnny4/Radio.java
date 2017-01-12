@@ -69,6 +69,19 @@ public class Radio {
         return found;
     }
 
+    public int[] countAllies() {
+        int ret[] = new int[8];
+        int frame = rc.getRoundNum();
+        int uc = getUnitCounter() + 4;
+        for (int pos = 1; pos < uc; pos++) {
+            if (pos == myId) continue;
+            if (frame - getUnitAge(pos) < 20) {
+                ret[(read(pos) & 0b00000000000000000000111000000000) >> 9] ++;
+            }
+        }
+        return ret;
+    }
+
     //very expensive, use sparingly
     public MapLocation[] getAllyPositions(RobotType robotType) {
         int shiftedType = typeToInt(robotType) << 9;
