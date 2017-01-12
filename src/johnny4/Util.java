@@ -222,7 +222,7 @@ public class Util {
         if (rc.getTeamBullets() >= 10000f) {
             rc.donate(10000f);
         }
-        if (rc.getRoundNum() > 2980) {
+        if (rc.getRoundNum() > GameConstants.GAME_DEFAULT_ROUNDS - 20) {
             rc.donate(rc.getTeamBullets());
         }
     }
