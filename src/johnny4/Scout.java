@@ -46,9 +46,10 @@ public class Scout {
     final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
 
     private boolean canMove(Direction dir){
-        MapLocation nloc = rc.getLocation().add(dir, rc.getType().strideRadius);
-        MapLocation nloc2 = rc.getLocation().add(dir, rc.getType().strideRadius / 2);
-        if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
+        MapLocation mloc = rc.getLocation();
+        MapLocation nloc = mloc.add(dir, rc.getType().strideRadius);
+        MapLocation nloc2 = mloc.add(dir, rc.getType().strideRadius / 2);
+        if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST && mloc.distanceTo(nextLumberjack) > MIN_LUMBERJACK_DIST) return false;
         float br = rc.getType().bodyRadius;
 
         MapLocation b1, b2, b3;
@@ -67,10 +68,11 @@ public class Scout {
     }
     private boolean canMove(Direction dir, float dist){
         try {
-            MapLocation nloc = rc.getLocation().add(dir, dist);
-            MapLocation nloc2 = rc.getLocation().add(dir, dist / 2);
+            MapLocation mloc = rc.getLocation();
+            MapLocation nloc = mloc.add(dir, rc.getType().strideRadius);
+            MapLocation nloc2 = mloc.add(dir, rc.getType().strideRadius / 2);
+            if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST && mloc.distanceTo(nextLumberjack) > MIN_LUMBERJACK_DIST) return false;
             MapLocation b1, b2, b3;
-            if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
             float br = rc.getType().bodyRadius;
             for (BulletInfo bi : bullets) {
                 b1 = bi.location;
@@ -353,6 +355,8 @@ public class Scout {
                         if (tries < 10) {
                             rc.move(lastDirection);
                             myLocation = rc.getLocation();
+                        }else{
+                            System.out.println("Scout stuck");
                         }
                     }
                 } else if (nextEnemy != null && (Math.random() > 0.4 || dist < RobotType.SOLDIER.sensorRadius || mag < 1e-20f) && nearbyAllies < 5 + rc.getID() % 5) {
@@ -363,7 +367,13 @@ public class Scout {
                             }
                         } else {
                         }
-                        if (!hasMoved) LJ_tryMove(nextEnemy.directionTo(myLocation));
+                        if (!hasMoved) {
+                            if (LJ_tryMove(nextEnemy.directionTo(myLocation))){
+                                hasMoved = true;
+                            }else{
+                                System.out.println("Scout can't run");
+                            }
+                        }
                         myLocation = rc.getLocation();
                     } else {
                         //System.out.println("Moving towards enemy at distance " + dist);

@@ -89,56 +89,6 @@ public class Lumberjack {
                 treeInSenseSince = 100000;
             }
 
-
-            boolean hasChopped = false;
-            boolean hasMoved = tryEvade(bullets);
-            myLocation = rc.getLocation();
-            if (!alarm && currentTreeTarget != null) {
-                rc.setIndicatorDot(currentTreeTarget, 0, 255, 255);
-                //System.out.println("Going for " + currentTreeTarget);
-
-                TreeInfo toBeCut = null;
-                for (TreeInfo ti : trees) {
-                    //System.out.println(ti.location + " -> " + currentTreeTarget + " : " + ti.location.distanceTo(currentTreeTarget));
-                    if (ti.team.equals(rc.getTeam())) continue;
-                    if (ti.location.distanceTo(currentTreeTarget) < 2.5 || (toBeCut != null && ti.location.distanceTo(currentTreeTarget) < toBeCut.location.distanceTo(currentTreeTarget))) {
-                        toBeCut = ti;
-                    }
-                }
-                if (rc.canChop(currentTreeTarget)) {
-                    rc.chop(currentTreeTarget);
-                    hasChopped = true;
-                } else if (toBeCut != null) {
-                    Direction toTree = myLocation.directionTo(currentTreeTarget);
-                    if (!hasMoved && LJ_tryMove(toTree)){
-                        hasMoved = true;
-                        myLocation = rc.getLocation();
-                    }
-                    if (rc.canChop(currentTreeTarget)) {
-                        rc.chop(currentTreeTarget);
-                        hasChopped = true;
-                    }
-                } else {
-                    Direction toTree = myLocation.directionTo(currentTreeTarget);
-                    if (!hasMoved && LJ_tryMove(toTree)){
-                        hasMoved = true;
-                        myLocation = rc.getLocation();
-                    }
-                }
-                if (myLocation.distanceTo(currentTreeTarget) < RobotType.LUMBERJACK.sensorRadius) {
-                    if (treeInSenseSince > frame)
-                        treeInSenseSince = frame;
-                } else {
-                    treeInSenseSince = 100000;
-                }
-                if (frame - treeInSenseSince > 10 && toBeCut == null) {
-                    radio.reportTreeCut(currentTreeTarget);
-                    System.out.println("Cut tree at " + currentTreeTarget);
-                    currentTreeTarget = null;
-                    treeInSenseSince = 100000;
-                }
-            }
-
             // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
             int friendlies = 0;
             int enemies = 0;
@@ -162,6 +112,61 @@ public class Lumberjack {
                     nextLumberjack = ri.location;
                 }
             }
+            boolean hasStriked = false;
+            if (1.1f * enemies > friendlies && !rc.hasAttacked()) {
+                rc.strike();
+                hasStriked = true;
+            }
+
+            boolean hasChopped = false;
+            boolean hasMoved = tryEvade(bullets);
+            myLocation = rc.getLocation();
+            if (!alarm && currentTreeTarget != null) {
+                rc.setIndicatorDot(currentTreeTarget, 0, 255, 255);
+                //System.out.println("Going for " + currentTreeTarget);
+
+                TreeInfo toBeCut = null;
+                for (TreeInfo ti : trees) {
+                    //System.out.println(ti.location + " -> " + currentTreeTarget + " : " + ti.location.distanceTo(currentTreeTarget));
+                    if (ti.team.equals(rc.getTeam())) continue;
+                    if (ti.location.distanceTo(currentTreeTarget) < 2.5 || (toBeCut != null && ti.location.distanceTo(currentTreeTarget) < toBeCut.location.distanceTo(currentTreeTarget))) {
+                        toBeCut = ti;
+                    }
+                }
+                if (rc.canChop(currentTreeTarget)) {
+                    rc.chop(currentTreeTarget);
+                    hasChopped = true;
+                } else if (toBeCut != null) {
+                    Direction toTree = myLocation.directionTo(currentTreeTarget);
+                    if (!hasMoved && LJ_tryMove(toTree)) {
+                        hasMoved = true;
+                        myLocation = rc.getLocation();
+                    }
+                    if (rc.canChop(currentTreeTarget)) {
+                        rc.chop(currentTreeTarget);
+                        hasChopped = true;
+                    }
+                } else {
+                    Direction toTree = myLocation.directionTo(currentTreeTarget);
+                    if (!hasMoved && LJ_tryMove(toTree)) {
+                        hasMoved = true;
+                        myLocation = rc.getLocation();
+                    }
+                }
+                if (myLocation.distanceTo(currentTreeTarget) < RobotType.LUMBERJACK.sensorRadius) {
+                    if (treeInSenseSince > frame)
+                        treeInSenseSince = frame;
+                } else {
+                    treeInSenseSince = 100000;
+                }
+                if (frame - treeInSenseSince > 10 && toBeCut == null) {
+                    radio.reportTreeCut(currentTreeTarget);
+                    System.out.println("Cut tree at " + currentTreeTarget);
+                    currentTreeTarget = null;
+                    treeInSenseSince = 100000;
+                }
+            }
+
 
             TreeInfo choppable = null;
             for (TreeInfo ti : trees) {
@@ -188,14 +193,9 @@ public class Lumberjack {
                 }
             }
 
-            boolean hasStriked = false;
-            if (1.1f * enemies > friendlies && !rc.hasAttacked()) {
-                rc.strike();
-                hasStriked = true;
-            }
             myLocation = rc.getLocation();
-            if (!hasStriked && nextLumberjack != null && nextLumberjack.distanceTo(myLocation) < MIN_LUMBERJACK_DIST && !hasMoved){
-                if (LJ_tryMove(nextLumberjack.directionTo(myLocation))){
+            if (!hasStriked && nextLumberjack != null && nextLumberjack.distanceTo(myLocation) < MIN_LUMBERJACK_DIST && !hasMoved) {
+                if (LJ_tryMove(nextLumberjack.directionTo(myLocation))) {
                     myLocation = rc.getLocation();
                     hasMoved = true;
                 }

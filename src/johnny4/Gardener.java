@@ -165,7 +165,7 @@ public class Gardener {
                         lastBuilt = response;
                         break;
                     }
-                    if (ownScouts < 2 && lastBuilt != RobotType.LUMBERJACK && rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) {
+                    if (ownScouts > 1 && lastBuilt != RobotType.LUMBERJACK && rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) && ljCount < 1) {
                         rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
                         lastBuilt = RobotType.LUMBERJACK;
                         break;

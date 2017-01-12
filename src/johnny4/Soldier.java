@@ -113,7 +113,7 @@ public class Soldier {
             nextLumberjack = null;
             TreeInfo trees[] = rc.senseNearbyTrees();
             for (RobotInfo r : nearbyRobots) {
-                if (!r.getTeam().equals(rc.getTeam()) &&
+                if (!r.getTeam().equals(rc.getTeam()) && (r.type != RobotType.SCOUT || rc.getID() % 7 == 0) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) > r.location.distanceTo(myLocation) * r.type.strideRadius + (r.type == RobotType.ARCHON ? 10 : 0))) {
                     nextEnemy = r.location;
                     enemyType = r.type;
@@ -143,11 +143,11 @@ public class Soldier {
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
-                nextEnemy = map.getTarget(myLocation, 0, 10);
+                nextEnemy = map.getTarget(myLocation, 4, 10);
                 if (nextEnemy == null) {
 
 
-                    nextEnemy = map.getTarget(myLocation, 0, 90);
+                    nextEnemy = map.getTarget(myLocation, 4, 30 + rc.getID() % 60, RobotType.SOLDIER.sensorRadius * 4);
                     if (!isRoamer && nextEnemy == null) {
                         nextEnemy = map.getTarget(myLocation, 3, 300);
                     }
@@ -164,7 +164,7 @@ public class Soldier {
                 dist = myLocation.distanceTo(nextEnemy);
 
                 boolean hasFired = longrange;
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 6f / enemyType.strideRadius) {
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 6f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
                     hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                     if (hasFired) {
                         bullets = rc.senseNearbyBullets();
@@ -218,7 +218,7 @@ public class Soldier {
                     }
                 }
 
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 6f / enemyType.strideRadius) {
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 6f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
                     hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                 }
             } else if (!hasMoved) {
@@ -241,11 +241,12 @@ public class Soldier {
 
     boolean tryFire(MapLocation nextEnemy, float dist, float radius) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
-        if (dist - radius < 1.51 && rc.canFirePentadShot()) {
+        float bullets = rc.getTeamBullets();
+        if (dist - radius < 1.51 +  bullets / 100f && rc.canFirePentadShot()) {
             System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (dist - radius < 2.11 && rc.canFireTriadShot()) {
+        } else if (dist - radius < 2.11 +  bullets / 100f && rc.canFireTriadShot()) {
             System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
