@@ -88,7 +88,7 @@ public class Lumberjack {
 
             // acquire tree cutting requests
             if (currentTreeTarget == null) {
-                currentTreeTarget = radio.findTreeToCut();
+                currentTreeTarget = radio.findClosestTreeToCut(myLocation);
                 treeInSenseSince = 100000;
             }
 
@@ -97,10 +97,13 @@ public class Lumberjack {
             boolean hasMoved = tryEvade(bullets);
             myLocation = rc.getLocation();
             if (!alarm && currentTreeTarget != null) {
+                rc.setIndicatorDot(currentTreeTarget, 0, 255, 255);
+                //System.out.println("Going for " + currentTreeTarget);
 
                 TreeInfo toBeCut = null;
                 for (TreeInfo ti : trees) {
                     //System.out.println(ti.location + " -> " + currentTreeTarget + " : " + ti.location.distanceTo(currentTreeTarget));
+                    if (ti.team.equals(rc.getTeam())) continue;
                     if (ti.location.distanceTo(currentTreeTarget) < 2.5 || (toBeCut != null && ti.location.distanceTo(currentTreeTarget) < toBeCut.location.distanceTo(currentTreeTarget))) {
                         toBeCut = ti;
                     }

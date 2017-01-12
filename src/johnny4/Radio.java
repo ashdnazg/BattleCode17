@@ -21,23 +21,23 @@ public class Radio {
 
     public Radio(RobotController rc) {
         this.rc = rc;
-        if (rc.getType() == RobotType.ARCHON){
+        if (rc.getType() == RobotType.ARCHON) {
             myId = getArchonCounter() + 1;
             incrementArchonCounter();
-        }else {
+        } else {
             int frame = rc.getRoundNum();
             int uc = getUnitCounter() + 4;
             int id = -1;
-            for (int pos = 4; pos < uc; pos++){
-                if (frame - getUnitAge(pos) > 40){
+            for (int pos = 4; pos < uc; pos++) {
+                if (frame - getUnitAge(pos) > 40) {
                     id = pos;
                     break;
                 }
             }
-            if (id > 0){
+            if (id > 0) {
                 myId = id;
                 System.out.println("Reused unit slot " + myId + " / " + uc);
-            }else {
+            } else {
                 myId = getUnitCounter() + 4;
                 incrementUnitCounter();
             }
@@ -50,19 +50,19 @@ public class Radio {
         reportMyPosition(rc.getLocation());
     }
 
-    public void reportMyPosition(MapLocation location){
-        int info = ((int)location.x << 22) | ((int)location.y << 12) | (myType << 9) | (rc.getRoundNum() / 8);
+    public void reportMyPosition(MapLocation location) {
+        int info = ((int) location.x << 22) | ((int) location.y << 12) | (myType << 9) | (rc.getRoundNum() / 8);
         write(myId, info);
     }
 
-    public int countAllies(RobotType robotType){
+    public int countAllies(RobotType robotType) {
         int shiftedType = typeToInt(robotType) << 9;
         int found = 0;
         int frame = rc.getRoundNum();
         int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++){
+        for (int pos = 1; pos < uc; pos++) {
             if (pos == myId) continue;
-            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20){
+            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20) {
                 found++;
             }
         }
@@ -70,29 +70,30 @@ public class Radio {
     }
 
     //very expensive, use sparingly
-    public MapLocation[] getAllyPositions(RobotType robotType){
+    public MapLocation[] getAllyPositions(RobotType robotType) {
         int shiftedType = typeToInt(robotType) << 9;
         int found = 0;
         int frame = rc.getRoundNum();
         MapLocation[] result = new MapLocation[100];
         int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++){
+        for (int pos = 1; pos < uc; pos++) {
             if (pos == myId) continue;
-            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20){
+            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20) {
                 result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
             }
         }
         return result;
     }
+
     //very expensive, use sparingly
-    public MapLocation[] getAllyPositions(){
+    public MapLocation[] getAllyPositions() {
         int found = 0;
         int frame = rc.getRoundNum();
         MapLocation[] result = new MapLocation[100];
         int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++){
+        for (int pos = 1; pos < uc; pos++) {
             if (pos == myId) continue;
-            if (frame - getUnitAge(pos) < 20){
+            if (frame - getUnitAge(pos) < 20) {
                 result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
             }
         }
@@ -115,33 +116,37 @@ public class Radio {
         write(0, (((getArchonCounter() + 1) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
         System.out.println("Archon counter is now " + getArchonCounter());
     }
+
     public void incrementUnitCounter() {
         if (getUnitCounter() == 95) return;
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
         System.out.println("Unit counter is now " + getUnitCounter());
     }
+
     public void incrementEnemyCounter() {
         write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
     }
 
     public void reportEnemy(MapLocation location, RobotType type, int time) {
-        int info = ((int)Math.round(location.x) << 22) | ((int)Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
+        int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
         //System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
         incrementEnemyCounter();
     }
 
-    public float getUnitX(int pos){
+    public float getUnitX(int pos) {
         return ((read(pos) & 0b11111111110000000000000000000000) >> 22);
     }
+
     public float getUnitY(int pos) {
         return ((read(pos) & 0b00000000001111111111000000000000) >> 12);
     }
+
     public float getUnitAge(int pos) {
         return ((read(pos) & 0b00000000000000000000000111111111)) * 8;
     }
 
-    public RobotType getUnitType(int pos){
+    public RobotType getUnitType(int pos) {
         return intToType((read(pos) & 0b00000000000000000000111000000000) >> 9);
     }
 
@@ -180,14 +185,14 @@ public class Radio {
             int data = read(index);
             if (data == 0) {
                 zero_index = index;
-            } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0){
+            } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0) {
                 return true;
             }
         }
         if (zero_index < 0) {
             return false;
         }
-        int info = ((int)Math.round(ti.location.x) << 22) | ((int)Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
+        int info = ((int) Math.round(ti.location.x) << 22) | ((int) Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
         write(zero_index, info);
         return true;
     }
@@ -202,8 +207,22 @@ public class Radio {
         return null;
     }
 
+    public MapLocation findClosestTreeToCut(MapLocation myLocation) {
+        MapLocation tree, closest = null;
+        for (int index = 301; index <= 320; ++index) {
+            int data = read(index);
+            if (data != 0) {
+                tree = new MapLocation(getUnitX(index), getUnitY(index));
+                if (closest == null || closest.distanceTo(myLocation) > tree.distanceTo(myLocation)) {
+                    closest = tree;
+                }
+            }
+        }
+        return closest;
+    }
+
     public void reportTreeCut(MapLocation location) {
-        int loc = ((int)location.x << 22) | ((int)location.y << 12);
+        int loc = ((int) location.x << 22) | ((int) location.y << 12);
         for (int index = 301; index <= 320; ++index) {
             int data = read(index);
             if (((data ^ loc) & 0b11111111111111111111000000000000) == 0) {
@@ -256,7 +275,6 @@ public class Radio {
         }
         return null;
     }
-
 
 
 }
