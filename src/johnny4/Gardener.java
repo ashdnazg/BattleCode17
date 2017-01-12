@@ -100,6 +100,12 @@ public class Gardener {
                             rc.plantTree(treeDirs[i]);
                             break;
                         }
+                        if (frame % 6 == i) {
+                            MapLocation treeLocation = myLocation.add(treeDirs[i], 3.0f);
+                            for (TreeInfo ti: rc.senseNearbyTrees(treeLocation, 1.0f, Team.NEUTRAL)) {
+                                radio.requestTreeCut(ti);
+                            }
+                        }
                     }
                 }
 
