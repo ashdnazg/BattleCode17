@@ -12,6 +12,8 @@ public class Archon {
     Direction lastDirection;
     Direction[] directions = new Direction[12];
     Team enemyTeam;
+    MapLocation stuckLocation;
+    int stuckSince;
 
     public Archon(RobotController rc){
         this.rc = rc;
@@ -28,6 +30,8 @@ public class Archon {
             this.directions[i] = new Direction(angle * i);
         }
         this.enemyTeam = rc.getTeam().opponent();
+        stuckLocation = rc.getLocation();
+        stuckSince = rc.getRoundNum();
     }
 
     public void run(){
@@ -56,7 +60,23 @@ public class Archon {
 
             TreeInfo[] trees = rc.senseNearbyTrees(6);
 
+            if (myLocation.distanceTo(stuckLocation) > 6){
+                stuckSince = frame;
+                stuckLocation = myLocation;
+            }
+            if (rc.getRoundNum() - stuckSince > 69){
+                System.out.println("Stuck archon reporting trees");
+                stuckSince = 100000;
+                for (TreeInfo t : trees){
+                    if (t.getTeam().equals(rc.getTeam())) continue;
+                    if (t.location.distanceTo(myLocation) < 6){
+                        System.out.println("Reported tree at " + t.location);
+                        radio.requestTreeCut(t);
+                    }
+                }
+            }
 
+/*
             boolean[] blockedDir = new boolean[directions.length];
             for (TreeInfo t : trees){
                 int nextDir = 0;
@@ -66,7 +86,7 @@ public class Archon {
                 }
                 blockedDir[nextDir] = true;
                 blockedDir[(nextDir + 1) % directions.length] = true;
-            }/*
+            }
             Direction buildDir = null;
             Direction alternateBuildDir = null;
             int freeDirs = 0;

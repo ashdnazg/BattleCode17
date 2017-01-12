@@ -80,6 +80,7 @@ public class Gardener {
             }
             health = newHealth;
 
+            
             boolean alarm = radio.getAlarm();
             boolean inDanger = roundsSinceAttack < 10 || isFleeing;
             boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;

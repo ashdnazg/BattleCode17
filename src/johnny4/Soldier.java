@@ -104,7 +104,7 @@ public class Soldier {
                 stuckSince = frame;
                 stuckLocation = myLocation;
             }
-            if (rc.getRoundNum() - stuckSince > 50){
+            if (rc.getRoundNum() - stuckSince > 69){
                 System.out.println("Stuck soldier reporting trees");
                 stuckSince = 100000;
                 for (TreeInfo t : trees){
