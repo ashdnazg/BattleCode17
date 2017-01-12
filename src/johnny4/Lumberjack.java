@@ -85,6 +85,7 @@ public class Lumberjack {
                 currentTreeTarget = radio.findTreeToCut();
                 treeInSenseSince = 100000;
             }
+            boolean hasChopped = false;
 
 
             if (!alarm && currentTreeTarget != null) {
@@ -98,11 +99,13 @@ public class Lumberjack {
                 }
                 if (rc.canChop(currentTreeTarget)) {
                     rc.chop(currentTreeTarget);
+                    hasChopped = true;
                 } else if (toBeCut != null) {
                     Direction toTree = myLocation.directionTo(currentTreeTarget);
                     LJ_tryMove(toTree);
                     if (rc.canChop(currentTreeTarget)) {
                         rc.chop(currentTreeTarget);
+                        hasChopped = true;
                     }
                 } else {
                     Direction toTree = myLocation.directionTo(currentTreeTarget);
@@ -119,6 +122,15 @@ public class Lumberjack {
                     System.out.println("Cut tree at " + currentTreeTarget);
                     currentTreeTarget = null;
                     treeInSenseSince = 100000;
+                }
+                // clear trees around us if stuck
+                if (!hasChopped) {
+                    for (TreeInfo ti : trees) {
+                        if (rc.canChop(ti.ID)) {
+                            rc.chop(ti.ID);
+                            break;
+                        }
+                    }
                 }
                 return;
             }
@@ -144,7 +156,6 @@ public class Lumberjack {
                 }
             }
 
-            boolean hasChopped = false;
             TreeInfo choppable = null;
             for (TreeInfo ti : trees) {
                 if (ti.team == rc.getTeam().opponent() && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ti.location.distanceTo(myLocation))) {
