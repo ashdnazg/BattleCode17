@@ -394,6 +394,7 @@ public class Scout {
                         radio.requestTreeCut(t);
                         //System.out.println("Requesting christmas tree to be cut!");
                     }
+                    if (Clock.getBytecodesLeft() < 100) return;
                 }
                 if (toShake == null && isShaker) {
                     for (TreeInfo t : trees) {

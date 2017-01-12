@@ -14,12 +14,28 @@ public class Lumberjack {
     Direction lastDirection = randomDirection();
     MapLocation nextLumberjack;
     final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
+    RobotInfo guardener = null;
 
     public Lumberjack(RobotController rc) {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
         this.enemy = rc.getTeam().opponent();
+
+        boolean hasLJ = false;
+        for (RobotInfo ri : rc.senseNearbyRobots()) {
+            if (ri.getTeam().equals(rc.getTeam())){
+                if (ri.type == RobotType.GARDENER){
+                    guardener = ri;
+                }
+                if (ri.type == RobotType.LUMBERJACK){
+                    hasLJ = true;
+                }
+            }
+        }
+        if (hasLJ || Math.random() > 0.2f){
+            guardener = null;
+        }
     }
 
     public void run() {
@@ -97,6 +113,9 @@ public class Lumberjack {
             boolean treeenemy = false;
             boolean longrange = false;
             for (RobotInfo ri : nearbyRobots) {
+                if (guardener != null && guardener.getID() == ri.getID()){
+                    guardener = ri;
+                }
                 if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + ri.type.bodyRadius + 0.001f) {
                     if (ri.getTeam().equals(rc.getTeam())) {
                         friendlies += getWeight(ri.type);
@@ -121,6 +140,9 @@ public class Lumberjack {
             boolean hasChopped = false;
             boolean hasMoved = tryEvade(bullets);
             myLocation = rc.getLocation();
+            if (guardener != null && !hasMoved && myLocation.distanceTo(guardener.location) > RobotType.LUMBERJACK.sensorRadius + 3){
+                hasMoved = LJ_tryMove(myLocation.directionTo(guardener.location));
+            }
             if (!alarm && currentTreeTarget != null) {
                 rc.setIndicatorDot(currentTreeTarget, 0, 255, 255);
                 //System.out.println("Going for " + currentTreeTarget);

@@ -138,7 +138,7 @@ public class Soldier {
                     hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                 }
                 if (dist < 5 && nextLumberjack != null && nextLumberjack.distanceTo(myLocation) < MIN_LUMBERJACK_DIST){
-                    if (tryMove(nextLumberjack.directionTo(myLocation))){
+                    if (!hasMoved && tryMove(nextLumberjack.directionTo(myLocation))){
                         hasMoved = true;
                         myLocation = rc.getLocation();
                     }
