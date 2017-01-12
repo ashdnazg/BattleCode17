@@ -61,11 +61,15 @@ public class Gardener {
 
             RobotInfo[] nearbyRobots = map.sense();
             MapLocation nextEnemy = null;
+            int nearbyProtectors = 0;
             for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation)) &&
-                        (r.type == RobotType.SCOUT || r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK)) {
+                        (r.type == RobotType.SCOUT || r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
                     nextEnemy = r.location;
                     lastThreat = r.type;
+                }
+                if(r.getTeam().equals(rc.getTeam()) &&  (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)){
+                    nearbyProtectors ++;
                 }
             }
 
@@ -78,7 +82,7 @@ public class Gardener {
 
             boolean alarm = radio.getAlarm();
             boolean inDanger = roundsSinceAttack < 10 || isFleeing;
-            boolean rich = rc.getTeamBullets() > 400;
+            boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;
 
 
 
@@ -112,7 +116,7 @@ public class Gardener {
             for (int i = 0; i < 6; i++) {
                 // Check for soldier on purpose to allow the Archon to build gardeners
                 if ((rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && radio.getUnitCounter() < 3)) &&
-                        (!alarm || rich || inDanger) && rc.isBuildReady()) {
+                        (!alarm || rich || inDanger) && rc.isBuildReady() && nearbyProtectors < 3) {
                     if (inDanger) {
                         RobotType response;
                         if (lastThreat.equals(RobotType.SCOUT) && radio.countAllies(RobotType.LUMBERJACK) < 9){
