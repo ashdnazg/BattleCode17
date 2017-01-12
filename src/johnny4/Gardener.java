@@ -142,17 +142,16 @@ public class Gardener {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
                         break;
-                    } else if (lastBuilt != RobotType.LUMBERJACK && Math.random() > 0.6d) {               // UNCOMMENT WHEN LUMBERJACK HAS AI
-                        if (radio.countAllies(RobotType.LUMBERJACK) < 7) {
-                            rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
-                        }
-                        lastBuilt = RobotType.LUMBERJACK;
-                        break;
                     } else {
-                        if (radio.countAllies(RobotType.SOLDIER) < 22) {
+                        int ljCount = radio.countAllies(RobotType.LUMBERJACK);
+                        int soldierCount = radio.countAllies(RobotType.LUMBERJACK);
+                        if (ljCount < soldierCount && ljCount < 7) {
+                            rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
+                            lastBuilt = RobotType.LUMBERJACK;
+                        } else if (soldierCount < ljCount && radio.countAllies(RobotType.SOLDIER) < 22) {
                             rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
+                            lastBuilt = RobotType.SOLDIER;
                         }
-                        lastBuilt = RobotType.SOLDIER;
                         break;
                     }
                 }
