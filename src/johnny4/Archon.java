@@ -55,8 +55,9 @@ public class Archon {
                 radio.reportMyPosition(myLocation);
             }
 
-            boolean alarm = radio.getAlarm() || rc.senseNearbyRobots(RobotType.ARCHON.sensorRadius, enemyTeam).length > 0;
-            boolean rich = rc.getTeamBullets() > 400;
+            boolean inDanger = rc.senseNearbyRobots(RobotType.ARCHON.sensorRadius, enemyTeam).length > 0;
+            boolean alarm = radio.getAlarm();
+            boolean rich = rc.getTeamBullets() > 200;
 
             TreeInfo[] trees = rc.senseNearbyTrees(6);
 
@@ -76,42 +77,45 @@ public class Archon {
                 }
             }
 
-/*
-            boolean[] blockedDir = new boolean[directions.length];
-            for (TreeInfo t : trees){
-                int nextDir = 0;
-                float thisAngle = myLocation.directionTo(t.location).getAngleDegrees();
-                for (int i = 0; i < directions.length; i++){
-                    if (directions[i].getAngleDegrees() < thisAngle) nextDir = i;
-                }
-                blockedDir[nextDir] = true;
-                blockedDir[(nextDir + 1) % directions.length] = true;
-            }
-            Direction buildDir = null;
-            Direction alternateBuildDir = null;
-            int freeDirs = 0;
-            for (int i = 0; i < directions.length; i++){
-
-                if (!blockedDir[i]){
-                    buildDir = directions[i];
-                    freeDirs ++;
-                    System.out.println("Direction " + directions[i] + " is free");
-                }else if (rc.canHireGardener(directions[i])){
-                    alternateBuildDir = directions[i];
-                }
-            }
-            if (freeDirs == 1 && alternateBuildDir != null){
-                freeDirs = 2;
-                buildDir = alternateBuildDir;
-            }*/
-
             Direction oppositeDir = lastDirection.opposite();
             MapLocation potentialSpot = myLocation.add(oppositeDir, 3.0f);
             MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
             boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f)/* freeDirs > 1*/;
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
-            if (eligibleSpot && rc.canHireGardener(oppositeDir) && (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0) && (!alarm || rich)) {
+            if (eligibleSpot && rc.canHireGardener(oppositeDir) &&
+                (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0) &&
+                (!alarm || rich)) {
                 rc.hireGardener(oppositeDir);
+            } else if (inDanger && rich) {
+                boolean[] blockedDir = new boolean[directions.length];
+                for (TreeInfo t : trees){
+                    int nextDir = 0;
+                    float thisAngle = myLocation.directionTo(t.location).getAngleDegrees();
+                    for (int i = 0; i < directions.length; i++){
+                        if (directions[i].getAngleDegrees() < thisAngle) nextDir = i;
+                    }
+                    blockedDir[nextDir] = true;
+                    blockedDir[(nextDir + 1) % directions.length] = true;
+                }
+                Direction buildDir = null;
+                Direction alternateBuildDir = null;
+                int freeDirs = 0;
+                for (int i = 0; i < directions.length; i++){
+
+                    if (!blockedDir[i]){
+                        buildDir = directions[i];
+                        freeDirs ++;
+                        System.out.println("Direction " + directions[i] + " is free");
+                    }else if (rc.canHireGardener(directions[i])){
+                        alternateBuildDir = directions[i];
+                    }
+                }
+                if (freeDirs == 1 && alternateBuildDir != null){
+                    freeDirs = 2;
+                    buildDir = alternateBuildDir;
+                }
+
+                rc.hireGardener(buildDir);
             }
 
             // try to stay in good spots
