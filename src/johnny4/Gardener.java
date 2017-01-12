@@ -119,7 +119,7 @@ public class Gardener {
                         (!alarm || rich || inDanger) && rc.isBuildReady() && nearbyProtectors < 3) {
                     if (inDanger) {
                         RobotType response;
-                        if (lastThreat.equals(RobotType.SCOUT) && radio.countAllies(RobotType.LUMBERJACK) < 9){
+                        if (lastThreat.equals(RobotType.SCOUT) && radio.countAllies(RobotType.LUMBERJACK) < 7){
                             response = RobotType.LUMBERJACK;
                         }else{
                             response = RobotType.SOLDIER;
