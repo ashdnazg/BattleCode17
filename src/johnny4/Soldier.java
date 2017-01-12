@@ -2,9 +2,6 @@ package johnny4;
 
 import battlecode.common.*;
 
-import java.awt.*;
-import java.util.Optional;
-
 import static johnny4.Util.*;
 
 public class Soldier {
@@ -12,6 +9,7 @@ public class Soldier {
     RobotController rc;
     Map map;
     Radio radio;
+    final boolean isRoamer;
 
     public Soldier(RobotController rc) {
         this.rc = rc;
@@ -19,6 +17,7 @@ public class Soldier {
         this.map = new Map(rc, radio);
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
+        this.isRoamer = rc.getID() % 2 == 0;
     }
 
     public void run() {
@@ -123,7 +122,11 @@ public class Soldier {
                 nextEnemy = map.getTarget(myLocation, 0, 10);
                 if (nextEnemy == null) {
 
+
                     nextEnemy = map.getTarget(myLocation, 0, 90);
+                    if (!isRoamer && nextEnemy == null){
+                        nextEnemy = map.getTarget(myLocation, 3, 300);
+                    }
                     //System.out.println("Soldier at " + myLocation + " attacking " + nextEnemy);
                 }
             }

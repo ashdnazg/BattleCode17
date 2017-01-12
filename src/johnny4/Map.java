@@ -95,7 +95,7 @@ public class Map {
             if (clock > 1500 && frame == rc.getRoundNum()) {
                 //System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i) + " found " + found);
             }
-            if (maxAge > 100) {
+            if (maxAge > 100 && mindist > 1e6f) {
                 for (MapLocation m : archonPos) {
                     dist = m.distanceSquaredTo(myLoc) * tmul;
                     if (dist < mindist && dist * tmul > minDist) {
