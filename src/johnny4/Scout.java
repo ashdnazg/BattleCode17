@@ -290,9 +290,9 @@ public class Scout {
                         int tries = 0;
                         while (!hasMoved && tries++ < 30) {
                             if (circleDir > 0.5) {
-                                dir = myLocation.directionTo(nextCivilian).rotateRightDegrees(2 * tries + 42);
+                                dir = myLocation.directionTo(nextCivilian).rotateRightDegrees(2 * tries + 50);
                             } else {
-                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(2 * tries + 42);
+                                dir = myLocation.directionTo(nextCivilian).rotateLeftDegrees(2 * tries + 50);
                             }
                             if (!hasMoved && canMove(dir, 2f)) {
                                 try {

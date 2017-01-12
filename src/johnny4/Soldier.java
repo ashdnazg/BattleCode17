@@ -165,9 +165,9 @@ public class Soldier {
                             int tries = 0;
                             while (!hasMoved && tries++ < 20) {
                                 if (circleDir > 0.5) {
-                                    dir = myLocation.directionTo(nextEnemy).rotateRightDegrees(4 * tries + 30);
+                                    dir = myLocation.directionTo(nextEnemy).rotateRightDegrees(4 * tries + 60);
                                 } else {
-                                    dir = myLocation.directionTo(nextEnemy).rotateLeftDegrees(4 * tries + 30);
+                                    dir = myLocation.directionTo(nextEnemy).rotateLeftDegrees(4 * tries + 60);
                                 }
                                 if (!hasMoved && canMove(dir, 2f)) {
                                     rc.move(dir, 2f);
