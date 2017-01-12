@@ -40,7 +40,7 @@ public class Scout {
     TreeInfo toShake = null;
     MapLocation lastCivilian = null;
     BulletInfo[] bullets;
-    MapLocation[] visitedBroadcasts = new MapLocation[8];
+    MapLocation[] visitedBroadcasts = new MapLocation[10];
     int rollingBroadcastIndex = 0;
     MapLocation nextLumberjack;
     final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -148,7 +148,7 @@ public class Scout {
                                 for (MapLocation bc : broadcasts){
                                     boolean invalid = false;
                                     for (MapLocation known : visitedBroadcasts){
-                                        if (known.distanceTo(bc) < 5){
+                                        if (known.distanceTo(bc) < 6){
                                             invalid = true;
                                         }
                                     }
@@ -315,7 +315,14 @@ public class Scout {
                     if (!hasMoved) {
                         int tries = 0;
                         while (!canMove(lastDirection) && tries ++ < 10) {
-                            lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 42 + 30);
+                            if (circleDir > 0.5f) {
+                                lastDirection = lastDirection.rotateRightDegrees((float) Math.random() * 42 + 30);
+                            }else{
+                                lastDirection = lastDirection.rotateLeftDegrees((float) Math.random() * 42 + 30);
+                            }
+                        }
+                        if (tries > 1 && Math.random() < 0.12){
+                            circleDir = (float) Math.random();
                         }
                         if (tries < 10) {
                             rc.move(lastDirection);
@@ -373,7 +380,7 @@ public class Scout {
 
     boolean LJ_tryMove(Direction dir) {
         try {
-            return LJ_tryMove(dir, 26 + (float)Math.random() * 20, 3);
+            return LJ_tryMove(dir, 17 + (float)Math.random() * 17, 6);
         } catch (Exception ex) {
             return false;
         }
