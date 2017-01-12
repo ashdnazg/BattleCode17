@@ -22,6 +22,9 @@ public class Scout {
         this.map = new Map(rc, radio);
         isShaker = rc.getID() % 5 == 0;
         isRoamer = rc.getID() % 2 == 0;
+        for (int i = 0; i < visitedBroadcasts.length; i++){
+            visitedBroadcasts[i] = new MapLocation(0,0);
+        }
     }
 
     public void run() {
@@ -37,6 +40,8 @@ public class Scout {
     TreeInfo toShake = null;
     MapLocation lastCivilian = null;
     BulletInfo[] bullets;
+    MapLocation[] visitedBroadcasts = new MapLocation[8];
+    int rollingBroadcastIndex = 0;
 
     private boolean canMove(Direction dir){
         MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
@@ -131,9 +136,19 @@ public class Scout {
                             MapLocation[] broadcasts = rc.senseBroadcastingRobotLocations();
                             if (broadcasts.length > 0) {
                                 for (MapLocation bc : broadcasts){
+                                    boolean invalid = false;
+                                    for (MapLocation known : visitedBroadcasts){
+                                        if (known.distanceTo(bc) < 5){
+                                            invalid = true;
+                                        }
+                                    }
+                                    if (invalid) continue;
                                     if (nextCivilian == null || nextCivilian.distanceTo(myLocation) < bc.distanceTo(myLocation)){
                                         nextCivilian = bc;
                                     }
+                                }
+                                if (nextCivilian != null){
+                                    visitedBroadcasts[rollingBroadcastIndex ++] = nextCivilian;
                                 }
                                 System.out.println("Going to broadcaster at " + nextCivilian);
                             }

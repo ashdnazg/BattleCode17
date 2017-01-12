@@ -159,6 +159,7 @@ public class Gardener {
             if (hasMoved) {
                 isFleeing = true;
                 myLocation = rc.getLocation();
+                roundsSinceAttack = 0;
             }
 
 
