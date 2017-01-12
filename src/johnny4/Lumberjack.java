@@ -65,10 +65,7 @@ public class Lumberjack {
 
     protected void tick() {
         try {
-            if (rc.getTeamBullets() >= 10000f) {
-                rc.donate(10000f);
-            }
-
+            preTick();
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();

@@ -47,9 +47,7 @@ public class Gardener {
 
     protected void tick() {
         try {
-            if (rc.getTeamBullets() >= 10000f) {
-                rc.donate(10000f);
-            }
+            preTick();
             roundsSinceAttack++;
             int frame = rc.getRoundNum();
             radio.frame = frame;

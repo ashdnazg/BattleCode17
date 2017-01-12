@@ -7,6 +7,7 @@ import java.awt.*;
 import static johnny4.Util.checkLineOfFire;
 import static johnny4.Util.randomDirection;
 import static johnny4.Util.tryMove;
+import static johnny4.Util.preTick;
 
 public class Tank {
 
@@ -32,10 +33,7 @@ public class Tank {
 
     protected void tick() {
         try {
-            if (rc.getTeamBullets() >= 10000f) {
-                rc.donate(10000f);
-            }
-
+            preTick();
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();

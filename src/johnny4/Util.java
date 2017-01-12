@@ -217,4 +217,13 @@ public class Util {
 
         return (perpendicularDist <= rc.getType().bodyRadius);
     }
+
+    static void preTick() throws GameActionException {
+        if (rc.getTeamBullets() >= 10000f) {
+            rc.donate(10000f);
+        }
+        if (rc.getRoundNum() > 2980) {
+            rc.donate(rc.getTeamBullets());
+        }
+    }
 }
