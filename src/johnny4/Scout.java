@@ -127,11 +127,11 @@ public class Scout {
                     if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
                         nextCivilian = lastCivilian;
                     } else {
-                        nextCivilian = map.getTarget(myLocation, 2, 30, 0.8f * RobotType.SCOUT.sensorRadius);
+                        nextCivilian = map.getTarget(myLocation, 2, 10, 0.8f * RobotType.SCOUT.sensorRadius);
                         lastCivilian = null;
                     }
                     if (nextCivilian == null) {
-                        nextCivilian = map.getTarget(myLocation, 3, 90, 3.5f * RobotType.SCOUT.sensorRadius);
+                        nextCivilian = map.getTarget(myLocation, 2, 30, 3.5f * RobotType.SCOUT.sensorRadius);
                         if (nextCivilian == null) {
                             System.out.println("no target");
                         }
@@ -215,11 +215,11 @@ public class Scout {
             float lumberDist = 10000f;
             if (nextLumberjack != null){
                 lumberDist = nextLumberjack.distanceTo(myLocation);
-                System.out.println("Lumberjack at " + nextLumberjack);
+                //System.out.println("Lumberjack at " + nextLumberjack);
             }
             if (toShake != null && dist > 5) {
                 //System.out.println("Shaking " + toShake.getLocation());
-                if (!hasMoved && !tryMove(myLocation.directionTo(toShake.getLocation()))) {
+                if (!hasMoved && !LJ_tryMove(myLocation.directionTo(toShake.getLocation()))) {
                     if (canMove(myLocation.directionTo(toShake.getLocation()), 0.5f)) {
                         rc.move(myLocation.directionTo(toShake.getLocation()), 0.5f);
                         hasMoved = true;
@@ -241,7 +241,7 @@ public class Scout {
                 if (nextCivilian != null && dist > 3.5 && nearbyAllies < 5 + rc.getID() % 5 && lumberDist > MIN_LUMBERJACK_DIST) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
                     if (nextCivilian.distanceTo(myLocation) - civSize > 6.1) {
-                        if (!hasMoved && !tryMove(myLocation.directionTo(nextCivilian))) {
+                        if (!hasMoved && !LJ_tryMove(myLocation.directionTo(nextCivilian))) {
                             if (canMove(myLocation.directionTo(nextCivilian), 0.5f)) {
                                 rc.move(myLocation.directionTo(nextCivilian), 0.5f);
                                 hasMoved = true;
@@ -270,8 +270,8 @@ public class Scout {
                             TreeInfo best = null;
                             float mindist = 100000;
                             for (TreeInfo ti : trees){
-                                if (ti.location.distanceTo(nextCivilian) - ti.radius < mindist){
-                                    mindist = ti.location.distanceTo(nextCivilian) - ti.radius;
+                                if (ti.location.distanceTo(nextCivilian) - ti.radius - ((ti.getID() % 17) / 170f) < mindist){
+                                    mindist = ti.location.distanceTo(nextCivilian) - ti.radius - ((ti.getID() % 17) / 170f);
                                     best = ti;
                                 }
                             }
@@ -315,7 +315,7 @@ public class Scout {
                     if (!hasMoved) {
                         int tries = 0;
                         while (!canMove(lastDirection) && tries ++ < 10) {
-                            lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 42 + 10);
+                            lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 42 + 30);
                         }
                         if (tries < 10) {
                             rc.move(lastDirection);
@@ -330,16 +330,16 @@ public class Scout {
                             }
                         } else {
                         }
-                        if (!hasMoved) tryMove(nextEnemy.directionTo(myLocation));
+                        if (!hasMoved) LJ_tryMove(nextEnemy.directionTo(myLocation));
                         myLocation = rc.getLocation();
                     } else {
                         //System.out.println("Moving towards enemy at distance " + dist);
-                        if (!hasMoved) tryMove(myLocation.directionTo(nextEnemy), 70, 1);
+                        if (!hasMoved) LJ_tryMove(myLocation.directionTo(nextEnemy), 70, 1);
                         myLocation = rc.getLocation();
                     }
                 }  else {
                     if (!hasMoved)
-                        tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
+                        LJ_tryMove(new Direction(RobotType.SCOUT.strideRadius * fx / mag, RobotType.SCOUT.strideRadius * fy / mag));
                     myLocation = rc.getLocation();
                 }
                 if (Clock.getBytecodesLeft() < 1000) return;
@@ -369,5 +369,42 @@ public class Scout {
             System.out.println("Scout Exception");
             e.printStackTrace();
         }
+    }
+
+    boolean LJ_tryMove(Direction dir) {
+        try {
+            return LJ_tryMove(dir, 26 + (float)Math.random() * 20, 3);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    boolean LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
+
+        if (canMove(dir)) {
+            rc.move(dir);
+            return true;
+        }
+        boolean moved = false;
+        int currentCheck = 1;
+
+        while (currentCheck <= checksPerSide) {
+            try {
+                Direction d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
+                if (canMove(d)) {
+                    rc.move(d);
+                    return true;
+                }
+                d = dir.rotateRightDegrees(degreeOffset * currentCheck);
+                if (canMove(d)) {
+                    rc.move(d);
+                    return true;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            currentCheck++;
+        }
+        return false;
     }
 }

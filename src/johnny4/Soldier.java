@@ -2,6 +2,7 @@ package johnny4;
 
 import battlecode.common.*;
 
+import java.awt.*;
 import java.util.Optional;
 
 import static johnny4.Util.*;
@@ -29,6 +30,7 @@ public class Soldier {
 
     private boolean canMove(Direction dir){
         MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
+        if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
         float br = rc.getType().bodyRadius;
         for (BulletInfo bi : bullets){
             if (bi.location.distanceTo(nloc) < br){
@@ -40,6 +42,7 @@ public class Soldier {
     private boolean canMove(Direction dir, float dist){
         try {
             MapLocation nloc = rc.getLocation().add(dir, dist);
+            if (nextLumberjack != null && nloc.distanceTo(nextLumberjack) < MIN_LUMBERJACK_DIST) return false;
             float br = rc.getType().bodyRadius;
             for (BulletInfo bi : bullets) {
                 if (bi.location.distanceTo(nloc) < br) {
@@ -59,6 +62,11 @@ public class Soldier {
     MapLocation stuckLocation;
     int stuckSince;
     BulletInfo bullets[];
+    MapLocation nextLumberjack;
+    boolean evasionMode = true;
+    final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
+    final float MIN_HOSTILE_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
+    final float MIN_EVASION_DIST = 6f;
 
     protected void tick() {
         try {
@@ -71,6 +79,7 @@ public class Soldier {
             MapLocation myLocation = rc.getLocation();
             bullets = rc.senseNearbyBullets();
             RobotInfo nearbyRobots[] = null;
+            RobotType enemyType = RobotType.SOLDIER;
             if (frame % 8 == 0) {
                 radio.reportMyPosition(myLocation);
                 nearbyRobots = map.sense();
@@ -80,11 +89,15 @@ public class Soldier {
             }
 
             MapLocation nextEnemy = null;
-            MapLocation nextLumberjack = null;
+            nextLumberjack = null;
             TreeInfo trees[] = rc.senseNearbyTrees();
             for (RobotInfo r : nearbyRobots) {
-                if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
+                if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius > r.location.distanceTo(myLocation) * r.type.strideRadius)) {
                     nextEnemy = r.location;
+                    enemyType = r.type;
+                }
+                if (r.getTeam().equals(rc.getTeam()) && r.type == RobotType.LUMBERJACK && (nextLumberjack == null || nextLumberjack.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
+                    nextLumberjack = r.location;
                 }
             }
 
@@ -119,41 +132,39 @@ public class Soldier {
             float dist = 10000f;
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
+
                 boolean hasFired = longrange;
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius)) {
-                    if (rc.canFireSingleShot()) {
-                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
-                        hasFired = true;
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 8f / enemyType.strideRadius) {
+                    hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
+                }
+                if (dist < 5 && nextLumberjack != null && nextLumberjack.distanceTo(myLocation) < MIN_LUMBERJACK_DIST){
+                    if (tryMove(nextLumberjack.directionTo(myLocation))){
+                        hasMoved = true;
+                        myLocation = rc.getLocation();
                     }
                 }
-                if (dist < 0.5 * RobotType.SCOUT.sensorRadius) {
-                    /*if (!hasFired && rc.getTeamBullets() > 400 && rc.canFirePentadShot()) {
-                        rc.firePentadShot(myLocation.directionTo(nextEnemy));
-                        hasFired = true;
-                    }
-                    if (!hasFired && rc.getTeamBullets() > 100 && rc.canFireTriadShot()) {
-                        rc.fireTriadShot(myLocation.directionTo(nextEnemy));
-                        hasFired = true;
-                    }*/
+                if (rc.getTeamBullets() > 50) evasionMode = false;
+                if (rc.getTeamBullets() < 10) evasionMode = true;
+                if (evasionMode && (dist < MIN_EVASION_DIST || enemyType == RobotType.LUMBERJACK && dist < MIN_HOSTILE_LUMBERJACK_DIST)) {
                     if (!hasMoved && tryMove(nextEnemy.directionTo(myLocation))) {
                         hasMoved = true;
                         myLocation = rc.getLocation();
                     }
-
-
                 } else {
                     if (!hasMoved) {
-                        if (longrange) {
-                            tryMove(myLocation.directionTo(nextEnemy));
-                            myLocation = rc.getLocation();
+                        if ((longrange || dist > 8f / enemyType.strideRadius) && !evasionMode) {
+                            if (tryMove(myLocation.directionTo(nextEnemy))){
+                                hasMoved = true;
+                                myLocation = rc.getLocation();
+                            }
                         } else {
                             Direction dir;
                             int tries = 0;
-                            while (!hasMoved && tries++ < 30) {
+                            while (!hasMoved && tries++ < 20) {
                                 if (circleDir > 0.5) {
-                                    dir = myLocation.directionTo(nextEnemy).rotateRightDegrees(2 * tries + 50);
+                                    dir = myLocation.directionTo(nextEnemy).rotateRightDegrees(4 * tries + 30);
                                 } else {
-                                    dir = myLocation.directionTo(nextEnemy).rotateLeftDegrees(2 * tries + 50);
+                                    dir = myLocation.directionTo(nextEnemy).rotateLeftDegrees(4 * tries + 30);
                                 }
                                 if (!hasMoved && canMove(dir, 2f)) {
                                     rc.move(dir, 2f);
@@ -168,11 +179,8 @@ public class Soldier {
                     }
                 }
 
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius)) {
-                    if (rc.canFireSingleShot()) {
-                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
-                        hasFired = true;
-                    }
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 8f / enemyType.strideRadius) {
+                    hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                 }
             } else if (!hasMoved) {
                 tryMove(randomDirection());
@@ -187,5 +195,24 @@ public class Soldier {
             System.out.println("Soldier Exception");
             e.printStackTrace();
         }
+    }
+
+    boolean tryFire(MapLocation nextEnemy, float dist, float radius) throws GameActionException{
+        MapLocation myLocation = rc.getLocation();
+        if (dist - radius < 1.71 && rc.canFirePentadShot()) {
+            System.out.println("Firing pentad");
+            rc.firePentadShot(myLocation.directionTo(nextEnemy));
+            return true;
+        }else
+        if (dist - radius < 2.31 && rc.canFireTriadShot()) {
+            System.out.println("Firing triad");
+            rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+            return true;
+        }else
+        if (rc.canFireSingleShot()) {
+            rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+            return true;
+        }
+        return false;
     }
 }
