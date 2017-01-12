@@ -107,6 +107,7 @@ public class Lumberjack {
                 }
                 if (rc.canChop(currentTreeTarget)) {
                     rc.chop(currentTreeTarget);
+                    hasChopped = true;
                 } else if (toBeCut != null) {
                     Direction toTree = myLocation.directionTo(currentTreeTarget);
                     if (!hasMoved && LJ_tryMove(toTree)){
