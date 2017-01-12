@@ -258,7 +258,7 @@ public class Radio {
         throw new RuntimeException("Welp");
     }
 
-    private RobotType intToType(int num) {
+    static RobotType intToType(int num) {
         switch (num) {
             case 6:
                 return RobotType.SCOUT;

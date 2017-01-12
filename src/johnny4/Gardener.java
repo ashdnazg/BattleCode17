@@ -20,6 +20,7 @@ public class Gardener {
     int roundsSinceAttack;
     BulletInfo bullets[];
     boolean isFleeing;
+    boolean waitingForScout;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
@@ -36,6 +37,7 @@ public class Gardener {
         this.lastBuilt = RobotType.LUMBERJACK;
         this.health = rc.getHealth();
         this.roundsSinceAttack = 999999;
+        this.waitingForScout =  rc.getRoundNum() < 100;
     }
 
     public void run() {
@@ -84,6 +86,13 @@ public class Gardener {
             boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;
 
 
+            RobotType scouted = null;
+            if (waitingForScout){
+                if (map.getTarget(myLocation, 4, 50, 0) != null){
+                    scouted = Radio.intToType(map._type);
+                    System.out.println("Scouted " + scouted + " rush");
+                }
+            }
 
             if (!isFleeing) {
 
@@ -118,13 +127,26 @@ public class Gardener {
                 }
             }
 
+
+            int ownScouts = radio.countAllies(RobotType.SCOUT);
+            int ljCount = radio.countAllies(RobotType.LUMBERJACK);
+            int soldierCount = radio.countAllies(RobotType.SOLDIER);
             for (int i = 0; i < 6; i++) {
                 // Check for soldier on purpose to allow the Archon to build gardeners
-                if ((rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && radio.getUnitCounter() < 3)) &&
-                        (!alarm || rich || inDanger) && rc.isBuildReady() && nearbyProtectors < 3) {
+                if ((rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && ownScouts < radio.getArchonCounter())) &&
+                        (!alarm || rich || inDanger) && rc.isBuildReady() && nearbyProtectors < 3 && (frame > 100 || scouted != null || lastBuilt == RobotType.LUMBERJACK && ownScouts < radio.getArchonCounter())) {
+                    if (waitingForScout && scouted != null){
+                        if (!rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) break;
+
+                        rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
+                        lastBuilt = RobotType.SOLDIER;
+                        waitingForScout = false;
+                        break;
+                    }
                     if (inDanger) {
+                        if (!rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) break;
                         RobotType response;
-                        if (lastThreat.equals(RobotType.SCOUT) && radio.countAllies(RobotType.LUMBERJACK) < 7){
+                        if (lastThreat.equals(RobotType.SCOUT) && ljCount < 7){
                             response = RobotType.LUMBERJACK;
                         }else{
                             response = RobotType.SOLDIER;
@@ -133,23 +155,20 @@ public class Gardener {
                         lastBuilt = response;
                         break;
                     }
-                    int scoutCount = radio.countAllies(RobotType.SCOUT);
-                    if (scoutCount < 2 && lastBuilt != RobotType.LUMBERJACK) {
+                    if (ownScouts < 2 && lastBuilt != RobotType.LUMBERJACK && rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) {
                         rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
                         lastBuilt = RobotType.LUMBERJACK;
                         break;
                     }
-                    if (scoutCount < 3) {
+                    if (ownScouts < 3) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
                         break;
-                    } else if (scoutCount < 9 && lastBuilt == RobotType.SOLDIER) {
+                    } else if (ownScouts < 9 && lastBuilt == RobotType.SOLDIER) {
                         rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
                         lastBuilt = RobotType.SCOUT;
                         break;
                     } else {
-                        int ljCount = radio.countAllies(RobotType.LUMBERJACK);
-                        int soldierCount = radio.countAllies(RobotType.SOLDIER);
                         if (ljCount < soldierCount && ljCount < 7) {
                             rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
                             lastBuilt = RobotType.LUMBERJACK;

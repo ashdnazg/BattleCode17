@@ -9,6 +9,7 @@ public class Map {
     RobotController rc;
     Radio radio;
     MapLocation[] archonPos;
+    int _type;
 
     public Map(RobotController rc, Radio radio) {
         this.rc = rc;
@@ -81,6 +82,7 @@ public class Map {
                     continue;
                 if (type == 2 && !(ut == GARDENER)) continue;
                 if (type == 3 && !(ut == ARCHON)) continue;
+                if (type == 4 && !(ut == LUMBERJACK || ut == SOLDIER || ut == TANK)) continue;
                 x = (unitData & 0b11111111110000000000000000000000) >> 22;
                 y = (unitData & 0b00000000001111111111000000000000) >> 12;
                 dist = ((mx - x) * (mx - x) + (my - y) * (my - y)) * tmul;
@@ -89,6 +91,7 @@ public class Map {
                     mindist = dist;
                     cx = x;
                     cy = y;
+                    _type = ut;
                 }
             }
             clock = Clock.getBytecodeNum() - clock;
