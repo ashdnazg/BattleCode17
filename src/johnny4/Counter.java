@@ -15,55 +15,38 @@ public class Counter {
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
     static RobotController rc;
-    int myIndex;
-    int currentCount;
 
-    public Counter(int index) throws GameActionException {
-        this.myIndex = index;
-        int value = rc.readBroadcast(myIndex);
-        updateCount(value);
-    }
-
-    public int increment() throws GameActionException {
-        int value = rc.readBroadcast(myIndex);
+    public static int increment(int index) throws GameActionException {
+        int value = rc.readBroadcast(index);
         value += 1;
-        rc.broadcast(myIndex, value);
-        updateCount(value);
-        return currentCount;
+        rc.broadcast(index, value);
+        return Math.max(value >> 16, value & 0xFFFF);
     }
 
-    public int decrement() throws GameActionException {
-        int value = rc.readBroadcast(myIndex);
+    public static int decrement(int index) throws GameActionException {
+        int value = rc.readBroadcast(index);
         value -= 1;
-        rc.broadcast(myIndex, value);
-        updateCount(value);
-        return currentCount;
+        rc.broadcast(index, value);
+        return Math.max(value >> 16, value & 0xFFFF);
     }
 
-    public int commit() throws GameActionException {
-        int value = rc.readBroadcast(myIndex);
-        currentCount = value & 0xFFFF;
+    public static int commit(int index) throws GameActionException {
+        int value = rc.readBroadcast(index);
         value <<= 16;
-        rc.broadcast(myIndex, value);
-        return currentCount;
+        rc.broadcast(index, value);
+        return value >> 16;
     }
 
-    public int commitAndIncrement() throws GameActionException {
-        int value = rc.readBroadcast(myIndex);
+    public static int commitAndIncrement(int index) throws GameActionException {
+        int value = rc.readBroadcast(index);
         value <<= 16;
         value += 1;
-        rc.broadcast(myIndex, value);
-        updateCount(value);
-        return currentCount;
+        rc.broadcast(index, value);
+        return Math.max(value >> 16, 1);
     }
 
-    public void updateCount(int value) throws GameActionException {
-        currentCount = Math.max(value >> 16, value & 0xFFFF);
-    }
-
-    public int get() throws GameActionException {
-        int value = rc.readBroadcast(myIndex);
-        updateCount(value);
-        return currentCount;
+    public static int get(int index) throws GameActionException {
+        int value = rc.readBroadcast(index);
+        return Math.max(value >> 16, value & 0xFFFF);
     }
 }

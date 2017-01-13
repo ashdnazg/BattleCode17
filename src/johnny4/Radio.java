@@ -35,11 +35,6 @@ public class Radio {
         myType = typeToInt(rc.getType());
         Counter.rc = rc_;
         try {
-            for (int i = 0; i < 6; ++i) {
-                allyCounters[i] = new Counter(400 + i);
-                underConstructionCounters[i] = new Counter(406 + i);
-            }
-
             myRadioID = rc.readBroadcast(412);
             rc.broadcast(412, myRadioID + 1);
         } catch (Exception ex) {
@@ -140,22 +135,24 @@ public class Radio {
         if (previousRoundNum < frame) {
             rc.broadcast(413, frame);
             // System.out.println("I am first");
-            for (int i = 0; i < 6; ++i) {
+            for (int i = 400; i < 406; ++i) {
+                int robotType = i - 400;
                 if (i == myType) {
-                    allyCounts[i] = allyCounters[i].commitAndIncrement();
+                    allyCounts[robotType] = Counter.commitAndIncrement(i);
                 } else {
-                    allyCounts[i] = allyCounters[i].commit();
+                    allyCounts[robotType] = Counter.commit(i);
                 }
-                allyCounts[i] += underConstructionCounters[i].commit();
+                allyCounts[robotType] += Counter.commit(i + 6);
             }
         } else {
-            for (int i = 0; i < 6; ++i) {
+            for (int i = 400; i < 406; ++i) {
+                int robotType = i - 400;
                 if (i == myType) {
-                    allyCounts[i] = allyCounters[i].increment();
+                    allyCounts[robotType] = Counter.increment(i);
                 } else {
-                    allyCounts[i] = allyCounters[i].get();
+                    allyCounts[robotType] = Counter.get(i);
                 }
-                allyCounts[i] += underConstructionCounters[i].get();
+                allyCounts[robotType] += Counter.get(i + 6);
             }
         }
 
@@ -163,12 +160,12 @@ public class Radio {
         if (myType == 1) {
             if (frame <= (buildees[0] & 0xFFFF)) {
                 int robotType = buildees[0] >> 16;
-                underConstructionCounters[robotType].increment();
+                Counter.increment(406 + robotType);
             }
 
             if (frame <= (buildees[1] & 0xFFFF)) {
                 int robotType = buildees[1] >> 16;
-                underConstructionCounters[robotType].increment();
+                Counter.increment(406 + robotType);
             }
         }
 
@@ -177,12 +174,12 @@ public class Radio {
         // System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
         // System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
         // System.out.println("myID: " + rc.getID());
-        //System.out.println("after: " + Clock.getBytecodeNum());
+        // System.out.println("after: " + Clock.getBytecodeNum());
     }
 
     public static void reportBuild(RobotType robotType) throws GameActionException {
         int index = typeToInt(robotType);
-        underConstructionCounters[index].increment();
+        Counter.increment(406 + index);
 
         // gardeners activate immediately
         if (robotType != RobotType.GARDENER) {
