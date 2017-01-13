@@ -1,13 +1,10 @@
-package johnny4;
+package johnny4_soldierRush;
 
 import battlecode.common.*;
-
-import java.util.Random;
 
 public class Util {
 
     static RobotController rc;
-    static Random rnd;
 
     /**
      * Returns a random Direction
@@ -15,7 +12,7 @@ public class Util {
      * @return a random Direction
      */
     static Direction randomDirection() {
-        return new Direction(rand() * 2 * (float) Math.PI);
+        return new Direction((float) Math.random() * 2 * (float) Math.PI);
     }
 
     /**
@@ -31,13 +28,6 @@ public class Util {
         } catch (Exception ex) {
             return false;
         }
-    }
-
-    static float rand(){
-        if (rnd == null){
-            rnd = new Random(rc.getID() * rc.getRoundNum());
-        }
-        return rnd.nextFloat();
     }
 
     /**
@@ -151,17 +141,48 @@ public class Util {
         return outcome;
     }
 
-
-    static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy) throws GameActionException{
-        MapLocation nextEnemy = enemy.location;
-        if (lastEnemy != null && lastEnemy.getID() == enemy.getID()){
-            float dx = enemy.location.x - lastEnemy.location.x;
-            float dy = enemy.location.y - lastEnemy.location.y;
-            float time = (rc.getLocation().distanceTo(enemy.location) - enemy.type.bodyRadius - rc.getType().bodyRadius) / rc.getType().bulletSpeed;
-            nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
+    static private BulletInfo getMostDangerousBullet(MapLocation myLocation, BulletInfo[] bullets){
+        BulletInfo closest = null;
+        for (BulletInfo bi : bullets) {
+            if (willCollideWithMe(myLocation, bi) && (closest == null || closest.location.distanceTo(myLocation) > bi.location.distanceTo(myLocation))) {
+                closest = bi;
+            }
         }
-        rc.setIndicatorDot(nextEnemy, 255, 0, 0);
-        return nextEnemy;
+        return closest;
+    }
+
+    static boolean tryEvade(BulletInfo[] bullets) {
+        try {
+            boolean moved = false;
+            int clock = Clock.getBytecodeNum();
+
+            MapLocation myLocation = rc.getLocation();
+            ;
+            BulletInfo closest = getMostDangerousBullet(myLocation, bullets);
+            if (closest != null) {
+                Direction dir = closest.dir;
+                boolean leftSafe = (Clock.getBytecodeNum() - clock > 1500 || Clock.getBytecodesLeft() < 5000) ? true : getMostDangerousBullet(myLocation.add(dir.rotateLeftDegrees(90), rc.getType().strideRadius), bullets) == null;
+                boolean rightSafe = leftSafe ? true : (getMostDangerousBullet(myLocation.add(dir.rotateRightDegrees(90), rc.getType().strideRadius), bullets) == null);
+                if (rc.canMove(dir.rotateLeftDegrees(90)) && (leftSafe || !rightSafe)) {
+                    rc.move(dir.rotateLeftDegrees(90));
+                    moved = true;
+                } else if (rc.canMove(dir.rotateRightDegrees(90))) {
+                    rc.move(dir.rotateRightDegrees(90));
+                    moved = true;
+                }
+            }
+            clock = Clock.getBytecodeNum() - clock;
+            if (clock > 4000) {
+                System.out.println("Evade took " + clock);
+            }
+            if (moved){
+                //System.out.println("Evaded bullet");
+            }
+            return moved;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     /**
@@ -195,14 +216,5 @@ public class Util {
         float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
         return (perpendicularDist <= rc.getType().bodyRadius);
-    }
-
-    static void preTick() throws GameActionException {
-        if (rc.getTeamBullets() >= 10000f) {
-            rc.donate(10000f);
-        }
-        if (rc.getRoundNum() > GameConstants.GAME_DEFAULT_ROUNDS - 20) {
-            rc.donate(rc.getTeamBullets());
-        }
     }
 }

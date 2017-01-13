@@ -1,13 +1,16 @@
-package johnny4;
+package johnny4_soldierRush;
 
 import battlecode.common.*;
+import johnny4_soldierRush.*;
+import johnny4_soldierRush.Map;
+import johnny4_soldierRush.Radio;
 
-import static johnny4.Util.*;
+import static johnny4_soldierRush.Util.*;
 
 public class Gardener {
 
     RobotController rc;
-    Radio radio;
+    johnny4_soldierRush.Radio radio;
 
     Map map;
     Direction[] treeDirs;
@@ -20,8 +23,6 @@ public class Gardener {
     int roundsSinceAttack;
     BulletInfo bullets[];
     boolean isFleeing;
-    boolean waitingForScout;
-    int plantedTrees = 0;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
@@ -38,7 +39,6 @@ public class Gardener {
         this.lastBuilt = RobotType.LUMBERJACK;
         this.health = rc.getHealth();
         this.roundsSinceAttack = 999999;
-        this.waitingForScout =  rc.getRoundNum() < 100;
     }
 
     public void run() {
@@ -50,7 +50,9 @@ public class Gardener {
 
     protected void tick() {
         try {
-            preTick();
+            if (rc.getTeamBullets() >= 10000f) {
+                rc.donate(10000f);
+            }
             roundsSinceAttack++;
             int frame = rc.getRoundNum();
             radio.frame = frame;
@@ -69,8 +71,8 @@ public class Gardener {
                     nextEnemy = r.location;
                     lastThreat = r.type;
                 }
-                if(r.getTeam().equals(rc.getTeam()) &&  (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)){
-                    nearbyProtectors ++;
+                if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
+                    nearbyProtectors++;
                 }
             }
 
@@ -81,22 +83,10 @@ public class Gardener {
             }
             health = newHealth;
 
-
             boolean alarm = radio.getAlarm();
             boolean inDanger = roundsSinceAttack < 10 || isFleeing;
             boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;
 
-
-            RobotType scouted = null;
-            if (waitingForScout){
-                if (frame > 100)
-                    waitingForScout = false;
-                MapLocation target = map.getTarget(myLocation, 4, 50, 0);
-                if (target != null && target.distanceTo(myLocation) < 42){
-                    scouted = Radio.intToType(map._type);
-                    System.out.println("Scouted " + scouted + " rush");
-                }
-            }
 
             if (!isFleeing) {
 
@@ -104,18 +94,17 @@ public class Gardener {
                 if (!inDanger && (!alarm || rich) && tis.length < 5) {
                     boolean freePos = false;
                     for (int i = 0; i < 6; i++) {
-                        if (rc.canPlantTree(treeDirs[i]) && (radio.getUnitCounter() >= 4 || plantedTrees <= frame / 200) && frame > 10) {
+                        if (rc.canPlantTree(treeDirs[i]) && radio.getUnitCounter() >= 4) {
                             if (!freePos) {
                                 freePos = true;
                                 continue;
                             }
                             rc.plantTree(treeDirs[i]);
-                            plantedTrees++;
                             break;
                         }
                         if (frame % 6 == i) {
                             MapLocation treeLocation = myLocation.add(treeDirs[i], 3.0f);
-                            for (TreeInfo ti: rc.senseNearbyTrees(treeLocation, 1.0f, Team.NEUTRAL)) {
+                            for (TreeInfo ti : rc.senseNearbyTrees(treeLocation, 1.0f, Team.NEUTRAL)) {
                                 radio.requestTreeCut(ti);
                             }
                         }
@@ -132,67 +121,19 @@ public class Gardener {
                 }
             }
 
-            int counts[] = radio.countAllies();
-            int ownScouts = counts[Radio.typeToInt(RobotType.SCOUT)];
-            int ljCount = counts[Radio.typeToInt(RobotType.LUMBERJACK)];
-            int soldierCount = counts[Radio.typeToInt(RobotType.SOLDIER)];
             for (int i = 0; i < 6; i++) {
                 // Check for soldier on purpose to allow the Archon to build gardeners
-                if ((rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) || (rc.canBuildRobot(RobotType.SCOUT, treeDirs[i]) && ownScouts < radio.getArchonCounter())) &&
-                        (!alarm || rich || inDanger) && rc.isBuildReady() && nearbyProtectors < 3 && (frame > 100 || scouted != null || lastBuilt == RobotType.LUMBERJACK && ownScouts < radio.getArchonCounter())) {
-                    if (waitingForScout && scouted != null){
-                        if (!rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) break;
+                if (rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) && rc.isBuildReady() && nearbyProtectors < 3) {
 
-                        RobotType response;
-                        if (scouted.equals(RobotType.LUMBERJACK)){
-                            response = RobotType.LUMBERJACK;
-                        }else{
-                            response = RobotType.SOLDIER;
-                        }
-                        rc.buildRobot(response, treeDirs[i]);
-                        lastBuilt = response;
-                        break;
-                    }
-                    if (inDanger) {
-                        if (!rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i])) break;
-                        RobotType response;
-                        if (lastThreat.equals(RobotType.SCOUT) && ljCount < 7){
-                            response = RobotType.LUMBERJACK;
-                        }else{
-                            response = RobotType.SOLDIER;
-                        }
-                        rc.buildRobot(response, treeDirs[i]);
-                        lastBuilt = response;
-                        break;
-                    }
-                    if (ownScouts > 1 && lastBuilt != RobotType.LUMBERJACK && rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) && ljCount < 1) {
-                        rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
-                        lastBuilt = RobotType.LUMBERJACK;
-                        break;
-                    }
-                    if (ownScouts < 3) {
-                        rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
-                        lastBuilt = RobotType.SCOUT;
-                        break;
-                    } else if (ownScouts < 9 && lastBuilt == RobotType.SOLDIER) {
-                        rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
-                        lastBuilt = RobotType.SCOUT;
-                        break;
-                    } else {
-                        if (ljCount < soldierCount && ljCount < 7) {
-                            rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
-                            lastBuilt = RobotType.LUMBERJACK;
-                        } else if (soldierCount < ljCount && soldierCount < 22) {
-                            rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
-                            lastBuilt = RobotType.SOLDIER;
-                        }
-                        break;
-                    }
+                    rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
+                    lastBuilt = RobotType.SOLDIER;
+
+                    break;
                 }
             }
 
 
-            boolean hasMoved = false;
+            boolean hasMoved = tryEvade(bullets);
             if (hasMoved) {
                 isFleeing = true;
                 myLocation = rc.getLocation();
@@ -201,7 +142,7 @@ public class Gardener {
 
 
             if (nextEnemy == null) {
-                if (isFleeing == true){
+                if (isFleeing == true) {
                     System.out.println("Gardener escaped");
                 }
                 isFleeing = false;
@@ -210,10 +151,10 @@ public class Gardener {
             }
 
             if (isFleeing && !hasMoved) {
-                if (LJ_tryMove(nextEnemy.directionTo(myLocation), 20, 6)){
+                if (LJ_tryMove(nextEnemy.directionTo(myLocation), 20, 6)) {
                     hasMoved = true;
                     myLocation = rc.getLocation();
-                }else{
+                } else {
                     //Welp
                     isFleeing = false;
                     System.out.println("Gardener stuck, resigning");
@@ -224,14 +165,19 @@ public class Gardener {
                 System.out.println("Gardener took " + (rc.getRoundNum() - frame) + " frames at " + frame);
             }
 
-        } catch (Exception e) {
+        } catch (
+                Exception e
+                )
+
+        {
             System.out.println("Gardener Exception");
             e.printStackTrace();
         }
+
     }
 
     private boolean canMove(Direction dir) {
-        MapLocation nloc = rc.getLocation().add(dir, rc.getType().strideRadius);
+        MapLocation nloc = rc.getLocation().add(dir, RobotType.SCOUT.strideRadius);
         float br = rc.getType().bodyRadius;
         for (BulletInfo bi : bullets) {
             if (bi.location.distanceTo(nloc) < br) {

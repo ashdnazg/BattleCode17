@@ -124,8 +124,8 @@ public class Archon {
 
 
             // Move randomly
-            while (!rc.canMove(lastDirection) && Math.random() > 0.01) {
-                lastDirection = lastDirection.rotateRightDegrees((float)Math.random() * 60);
+            while (!rc.canMove(lastDirection) && rand() > 0.01) {
+                lastDirection = lastDirection.rotateRightDegrees(rand() * 60);
             }
             if (rc.canMove(lastDirection)) {
                 rc.move(lastDirection);
