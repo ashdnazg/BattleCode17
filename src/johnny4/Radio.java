@@ -139,7 +139,7 @@ public class Radio {
         int previousRadioID = rc.readBroadcast(413);
         rc.broadcast(413, rc.getID());
         if (previousRadioID >= rc.getID()) {
-            System.out.println("I am first");
+            //System.out.println("I am first");
             for (int i = 0; i < 6; ++i) {
                 if (i == myType) {
                     allyCounts[i] = allyCounters[i].commitAndIncrement();
@@ -169,11 +169,11 @@ public class Radio {
             underConstructionCounters[robotType].increment();
         }
 
-        System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
-        System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
-        System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
-        System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
-        System.out.println("myID: " + rc.getID());
+        // System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
+        // System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
+        // System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
+        // System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
+        // System.out.println("myID: " + rc.getID());
     }
 
     public static void reportBuild(RobotType robotType) throws GameActionException {
