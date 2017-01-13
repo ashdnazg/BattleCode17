@@ -2,6 +2,11 @@ package johnny4;
 
 import battlecode.common.*;
 
+
+
+// This counter stores the previous round's value in the upper 16 bits
+// and the current value in the lower 16 bits.
+// commit() is called in the start of each round.
 public class Counter {
 
     static RobotController rc;

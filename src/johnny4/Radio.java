@@ -137,7 +137,7 @@ public class Radio {
             // System.out.println("I am first");
             for (int i = 400; i < 406; ++i) {
                 int robotType = i - 400;
-                if (i == myType) {
+                if (robotType == myType) {
                     allyCounts[robotType] = Counter.commitAndIncrement(i);
                 } else {
                     allyCounts[robotType] = Counter.commit(i);
@@ -147,7 +147,7 @@ public class Radio {
         } else {
             for (int i = 400; i < 406; ++i) {
                 int robotType = i - 400;
-                if (i == myType) {
+                if (robotType == myType) {
                     allyCounts[robotType] = Counter.increment(i);
                 } else {
                     allyCounts[robotType] = Counter.get(i);
@@ -173,7 +173,6 @@ public class Radio {
         // System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
         // System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
         // System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
-        // System.out.println("myID: " + rc.getID());
         // System.out.println("after: " + Clock.getBytecodeNum());
     }
 
