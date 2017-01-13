@@ -134,12 +134,12 @@ public class Radio {
     }
 
     public static void keepAlive() throws GameActionException {
-
+        // System.out.println("before: " + Clock.getBytecodeNum());
         // Check if it's the first unit to call keepAlive this round
-        int previousRadioID = rc.readBroadcast(413);
-        rc.broadcast(413, rc.getID());
-        if (previousRadioID >= rc.getID()) {
-            //System.out.println("I am first");
+        int previousRoundNum = rc.readBroadcast(413);
+        if (previousRoundNum < frame) {
+            rc.broadcast(413, frame);
+            // System.out.println("I am first");
             for (int i = 0; i < 6; ++i) {
                 if (i == myType) {
                     allyCounts[i] = allyCounters[i].commitAndIncrement();
@@ -159,14 +159,17 @@ public class Radio {
             }
         }
 
-        if (frame <= (buildees[0] & 0xFFFF)) {
-            int robotType = buildees[0] >> 16;
-            underConstructionCounters[robotType].increment();
-        }
+        // Only gardeners have buildees
+        if (myType == 1) {
+            if (frame <= (buildees[0] & 0xFFFF)) {
+                int robotType = buildees[0] >> 16;
+                underConstructionCounters[robotType].increment();
+            }
 
-        if (frame <= (buildees[1] & 0xFFFF)) {
-            int robotType = buildees[1] >> 16;
-            underConstructionCounters[robotType].increment();
+            if (frame <= (buildees[1] & 0xFFFF)) {
+                int robotType = buildees[1] >> 16;
+                underConstructionCounters[robotType].increment();
+            }
         }
 
         // System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
@@ -174,6 +177,7 @@ public class Radio {
         // System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
         // System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
         // System.out.println("myID: " + rc.getID());
+        //System.out.println("after: " + Clock.getBytecodeNum());
     }
 
     public static void reportBuild(RobotType robotType) throws GameActionException {

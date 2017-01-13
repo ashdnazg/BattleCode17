@@ -16,51 +16,32 @@ public class Counter {
 
     static RobotController rc;
     int myIndex;
-    int value = 0;
     int currentCount;
-    int frame = -1;
 
     public Counter(int index) throws GameActionException {
         this.myIndex = index;
-        this.frame = rc.getRoundNum();
-        this.value = rc.readBroadcast(myIndex);
-        updateCount();
-    }
-
-    public int initialIncrement() throws GameActionException {
-        value += 0x00010001;
-        rc.broadcast(myIndex, value);
-        updateCount();
-        return currentCount;
+        int value = rc.readBroadcast(myIndex);
+        updateCount(value);
     }
 
     public int increment() throws GameActionException {
-        int currentFrame = rc.getRoundNum();
-        if (currentFrame > frame) {
-            frame = currentFrame;
-            value = rc.readBroadcast(myIndex);
-        }
+        int value = rc.readBroadcast(myIndex);
         value += 1;
         rc.broadcast(myIndex, value);
-        updateCount();
+        updateCount(value);
         return currentCount;
     }
 
     public int decrement() throws GameActionException {
-        int currentFrame = rc.getRoundNum();
-        if (currentFrame > frame) {
-            frame = currentFrame;
-            value = rc.readBroadcast(myIndex);
-        }
+        int value = rc.readBroadcast(myIndex);
         value -= 1;
         rc.broadcast(myIndex, value);
-        updateCount();
+        updateCount(value);
         return currentCount;
     }
 
     public int commit() throws GameActionException {
-        value = rc.readBroadcast(myIndex);
-        frame = rc.getRoundNum();
+        int value = rc.readBroadcast(myIndex);
         currentCount = value & 0xFFFF;
         value <<= 16;
         rc.broadcast(myIndex, value);
@@ -68,26 +49,21 @@ public class Counter {
     }
 
     public int commitAndIncrement() throws GameActionException {
-        value = rc.readBroadcast(myIndex);
-        frame = rc.getRoundNum();
+        int value = rc.readBroadcast(myIndex);
         value <<= 16;
         value += 1;
         rc.broadcast(myIndex, value);
-        updateCount();
+        updateCount(value);
         return currentCount;
     }
 
-    public void updateCount() throws GameActionException {
+    public void updateCount(int value) throws GameActionException {
         currentCount = Math.max(value >> 16, value & 0xFFFF);
     }
 
     public int get() throws GameActionException {
-        int currentFrame = rc.getRoundNum();
-        if (currentFrame > frame) {
-            frame = currentFrame;
-            value = rc.readBroadcast(myIndex);
-            updateCount();
-        }
+        int value = rc.readBroadcast(myIndex);
+        updateCount(value);
         return currentCount;
     }
 }
