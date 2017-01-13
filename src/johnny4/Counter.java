@@ -15,16 +15,16 @@ public class Counter {
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
     static RobotController rc;
-    static int myIndex;
-    static int value = 0;
-    static int currentCount;
-    static int frame = -1;
+    int myIndex;
+    int value = 0;
+    int currentCount;
+    int frame = -1;
 
     public Counter(RobotController rc_, int index) throws GameActionException {
-        myIndex = index;
         rc = rc_;
-        frame = rc.getRoundNum();
-        value = rc.readBroadcast(myIndex);
+        this.myIndex = index;
+        this.frame = rc.getRoundNum();
+        this.value = rc.readBroadcast(myIndex);
         updateCount();
     }
 
