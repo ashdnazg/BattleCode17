@@ -14,13 +14,13 @@ public class Movement {
     static TreeInfo[] trees;
     static BulletInfo[] bullets;
     static MapLocation myLocation;
-    static MapLocation nextFriendlyLumberjack = null;
-    static MapLocation nextEnemyLumberjack = null;
-    static MapLocation nextArmedEnemy = null;
     static Direction fireDir;
     static Team myTeam, enemyTeam;
+    static Threat[] threats;
+    static int threatsLen = 0;
+    static float attemptDist[];
     final float MIN_FRIENDLY_LUMBERJACK_DIST;
-    final float MIN_ENEMY_LUMBERJACK_DIST;
+    final float MIN_ENEMY_LUMBERJACK_DIST; //overrides enemy dist
     final float MIN_ENEMY_DIST;
     final float MIN_MOVE_TO_FIRE_ANGLE;
     boolean evadeBullets = true;
@@ -31,11 +31,15 @@ public class Movement {
         strideDistance = robotType.strideRadius;
         myTeam = rc.getTeam();
         enemyTeam = rc.getTeam().opponent();
+        attemptDist = new float[2];
+        attemptDist[0] = strideDistance;
+        attemptDist[1] = 0.5f;
         switch (robotType) {
             case SCOUT:
-                MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
+                MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.81f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 3.5f;
+                attemptDist[1] = 1.1f;
                 break;
             case LUMBERJACK:
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
@@ -65,6 +69,11 @@ public class Movement {
                 MIN_ENEMY_DIST = 0f;
                 evadeBullets = false;
         }
+        threats = new Threat[100];
+        for (int i = 0; i < 100; i++) {
+            threats[i] = new Threat();
+        }
+
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
         System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE);
     }
@@ -76,22 +85,35 @@ public class Movement {
         this.trees = trees != null ? trees : new TreeInfo[0];
         this.bullets = bullets != null ? bullets : new BulletInfo[0];
         this.myLocation = rc.getLocation();
-        nextEnemyLumberjack = nextFriendlyLumberjack = nextArmedEnemy = null;
+        this.threatsLen = 0;
+        boolean nothreats = true;
         for (RobotInfo ri : robots) {
-            if (MIN_FRIENDLY_LUMBERJACK_DIST > 0.01 && ri.getTeam().equals(myTeam) && (nextFriendlyLumberjack == null || nextFriendlyLumberjack.distanceTo(myLocation) > ri.location.distanceTo(myLocation))
-                    && ri.type == RobotType.LUMBERJACK && ri.moveCount + ri.attackCount > 0) {
-                nextFriendlyLumberjack = ri.location;
-            } else if (MIN_ENEMY_LUMBERJACK_DIST > 0.01 && ri.getTeam().equals(enemyTeam) && (nextEnemyLumberjack == null || nextEnemyLumberjack.distanceTo(myLocation) > ri.location.distanceTo(myLocation))
-                    && ri.type == RobotType.LUMBERJACK && ri.moveCount + ri.attackCount > 0) {
-                nextEnemyLumberjack = ri.location;
-            }
-            if (ri.getTeam().equals(enemyTeam) && (nextArmedEnemy == null || nextArmedEnemy.distanceTo(myLocation) > ri.location.distanceTo(myLocation)) && ri.moveCount + ri.attackCount > 0 &&
+            if (MIN_FRIENDLY_LUMBERJACK_DIST > 0.01 && ri.getTeam().equals(myTeam) && (ri.location.distanceTo(myLocation) < MIN_FRIENDLY_LUMBERJACK_DIST + strideDistance)
+                    && ri.type == RobotType.LUMBERJACK && (ri.moveCount + ri.attackCount > 0 || ri.health > 0.9f * ri.type.maxHealth)) {
+                threats[threatsLen].loc = ri.location;
+                threats[threatsLen].radius = MIN_FRIENDLY_LUMBERJACK_DIST;
+                threats[threatsLen++].description = "friendly lumberjack";
+            } else if (MIN_ENEMY_LUMBERJACK_DIST > 0.01 && ri.getTeam().equals(enemyTeam) && (ri.location.distanceTo(myLocation) < MIN_ENEMY_LUMBERJACK_DIST + strideDistance)
+                    && ri.type == RobotType.LUMBERJACK && (ri.moveCount + ri.attackCount > 0 || ri.health > 0.9f * ri.type.maxHealth)) {
+                threats[threatsLen].loc = ri.location;
+                threats[threatsLen].radius = MIN_ENEMY_LUMBERJACK_DIST;
+                threats[threatsLen++].description = "enemy lumberjack";
+                nothreats = false;
+            } else if (ri.getTeam().equals(enemyTeam) && (ri.location.distanceTo(myLocation)) < MIN_ENEMY_DIST + strideDistance && (ri.moveCount + ri.attackCount > 0 || ri.health > 0.9f * ri.type.maxHealth) &&
                     (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER || ri.type == RobotType.TANK || robotType == RobotType.GARDENER && ri.type == RobotType.SCOUT)) {
-                nextArmedEnemy = ri.location;
+                threats[threatsLen].loc = ri.location;
+                threats[threatsLen].radius = MIN_ENEMY_DIST;
+                threats[threatsLen++].description = "armed enemy";
+                nothreats = false;
             }
         }
-        if (nextArmedEnemy == null) { // only keep distance to lumberjacks in combat
-            nextFriendlyLumberjack = null;
+        for (int i = 0; i < threatsLen; i++) {
+            threats[i].x = threats[i].loc.x;
+            threats[i].y = threats[i].loc.y;
+            threats[i].radiusSquared = threats[i].radius * threats[i].radius;
+        }
+        if (nothreats) { // only keep distance to lumberjacks in combat
+            threatsLen = 0;
         }
     }
 
@@ -102,24 +124,10 @@ public class Movement {
         System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
         this.fireDir = fireDir;
 
-        //We're in an invalid position, go somewhere safe if possible
-        /*if (nextArmedEnemy != null && myLocation.distanceTo(nextArmedEnemy) < MIN_ENEMY_DIST && bugMove(nextArmedEnemy.directionTo(myLocation))) {
-            System.out.println("Evading armed enemy at " + nextArmedEnemy);
-            return true;
-        }
-        if (nextFriendlyLumberjack != null && myLocation.distanceTo(nextFriendlyLumberjack) < MIN_FRIENDLY_LUMBERJACK_DIST && bugMove(nextFriendlyLumberjack.directionTo(myLocation))) {
-            System.out.println("Evading friendly lumberjack at " + nextFriendlyLumberjack);
-            return true;
-        }
-        if (nextEnemyLumberjack != null && myLocation.distanceTo(nextEnemyLumberjack) < MIN_ENEMY_LUMBERJACK_DIST && bugMove(nextEnemyLumberjack.directionTo(myLocation))) {
-            System.out.println("Evading enemy lumberjack at " + nextEnemyLumberjack);
-            return true;
-        }*/
-
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
         float olddist = myLocation.distanceTo(target);
         boolean retval = bugMove(myLocation.directionTo(target), Math.min(strideDistance, target.distanceTo(myLocation)));
-        System.out.println(olddist + " -> " + myLocation.distanceTo(target) +" : " + retval);
+        System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         if (retval && olddist < myLocation.distanceTo(target) && (olddist < 4 || hadLos && olddist < 9)) {
             System.out.println("Switching bugdir because of distance");
             bugdir = !bugdir;
@@ -129,53 +137,53 @@ public class Movement {
     }
 
 
-    private boolean canMove(Direction dir, boolean force) {
-        return canMove(dir, strideDistance, force);
+    private float valueMove(Direction dir) {
+        return valueMove(dir, strideDistance);
     }
 
-    private boolean canMove(Direction dir, float dist, boolean force) {
-        try {
-            if (!rc.canMove(dir, dist) || dist > strideDistance) return false;
-            if (fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE && !force) {
-                System.out.println(dir + " would collide with own bullet");
-                return false;
+    MapLocation nloc, nloc2, b1, b2, b3;
+    float br;
+
+    private float valueMove(Direction dir, float dist) {
+        Threat threat;
+        if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
+        float max = 0;
+        if (fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
+            //System.out.println(dir + " would collide with own bullet");
+            max = 0.9f;
+        }
+        nloc = myLocation.add(dir, rc.getType().strideRadius);
+        nloc2 = myLocation.add(dir, rc.getType().strideRadius / 2);
+        for (int i = 0; i < threatsLen; i++) {
+
+            threat = threats[i];
+            if ((threat.x - nloc.x) * (threat.x - nloc.x) + (threat.y - nloc.y) * (threat.y - nloc.y) < threats[i].radiusSquared) {
+                //System.out.println(nloc + " would be too close to " + threat.description + " at " + threat.loc);
+                max = Math.max(max, threat.radius - nloc.distanceTo(threat.loc) + 1);
             }
-            MapLocation nloc = myLocation.add(dir, rc.getType().strideRadius);
-            MapLocation nloc2 = myLocation.add(dir, rc.getType().strideRadius / 2);
-            if (nextArmedEnemy != null && nloc.distanceTo(nextArmedEnemy) < MIN_ENEMY_DIST && (!force || myLocation.distanceTo(nextArmedEnemy) > MIN_ENEMY_DIST)) {
-                System.out.println(nloc + " would be too close to armed enemy at " + nextArmedEnemy);
-                return false;
-            }
-            if (nextFriendlyLumberjack != null && nloc.distanceTo(nextFriendlyLumberjack) < MIN_FRIENDLY_LUMBERJACK_DIST && (!force || myLocation.distanceTo(nextFriendlyLumberjack) > MIN_FRIENDLY_LUMBERJACK_DIST)) {
-                System.out.println(nloc + " would be too close to friendly lumberjack at " + nextFriendlyLumberjack);
-                return false;
-            }
-            if (nextEnemyLumberjack != null && nloc.distanceTo(nextEnemyLumberjack) < MIN_ENEMY_LUMBERJACK_DIST && (!force || myLocation.distanceTo(nextEnemyLumberjack) > MIN_ENEMY_LUMBERJACK_DIST)) {
-                System.out.println(nloc + " would be too close to enemy lumberjack at " + nextEnemyLumberjack);
-                return false;
-            }
-            MapLocation b1, b2, b3;
-            float br = rc.getType().bodyRadius;
-            if (evadeBullets) {
-                for (BulletInfo bi : bullets) {
-                    b1 = bi.location;
-                    b2 = bi.location.add(bi.dir, bi.speed / 2);
-                    b3 = bi.location.add(bi.dir, bi.speed);
-                    if (b1.distanceTo(nloc) < br || b2.distanceTo(nloc) < br || b3.distanceTo(nloc) < br) {
-                        return false;
-                    }
-                    if (b1.distanceTo(nloc2) < br || b2.distanceTo(nloc2) < br || b3.distanceTo(nloc2) < br) {
-                        return false;
-                    }
+        }
+        if (max > 0.0001) return max;
+        br = robotType.bodyRadius * robotType.bodyRadius;
+
+        if (evadeBullets) {
+            for (BulletInfo bi : bullets) {
+                b1 = bi.location;
+                b2 = bi.location.add(bi.dir, bi.speed / 2);
+                b3 = bi.location.add(bi.dir, bi.speed);
+                if ((b1.x - nloc.x) * (b1.x - nloc.x) + (b1.y - nloc.y) * (b1.y - nloc.y) < br ||
+                        (b2.x - nloc.x) * (b2.x - nloc.x) + (b2.y - nloc.y) * (b2.y - nloc.y) < br ||
+                        (b3.x - nloc.x) * (b3.x - nloc.x) + (b3.y - nloc.y) * (b3.y - nloc.y) < br) {
+                    return 1;
+                }
+                if ((b1.x - nloc2.x) * (b1.x - nloc2.x) + (b1.y - nloc2.y) * (b1.y - nloc2.y) < br ||
+                        (b2.x - nloc2.x) * (b2.x - nloc2.x) + (b2.y - nloc2.y) * (b2.y - nloc2.y) < br ||
+                        (b3.x - nloc2.x) * (b3.x - nloc2.x) + (b3.y - nloc2.y) * (b3.y - nloc2.y) < br) {
+                    return 1;
                 }
             }
-            return true;
-        } catch (Exception ex) {
-
-            System.out.println("canMove exception with args " + dir + ": " + dist);
-            ex.printStackTrace();
-            return false;
         }
+
+        return 0;
     }
 
 
@@ -186,68 +194,98 @@ public class Movement {
     private boolean bugdir = rand() > 0.5f;
 
     private boolean bugMove(Direction dir, float dist) {
-        boolean ret = LJ_tryMove(dir, 30, 5, bugdir, dist, false) ;
-        if (!ret){
-            if (LJ_tryMove(dir, 30, 6, !bugdir, dist, false) ){
-                bugdir = !bugdir;
-                System.out.println("Switching bugdir to evade enemy");
-                return true;
-            }
-            ret = LJ_tryMove(dir, 40, 9, bugdir, dist, true);
+        float ret = LJ_tryMove(dir, 52, 3, bugdir, dist);
+        if (ret >= 180) {
+            bugdir = !bugdir;
+            System.out.println("Switching bugdir to evade enemy");
         }
-        if (rand() < 0.02f || !ret && rand() < 0.2f) {
+        if (rand() < 0.02f || ret < 0 && rand() < 0.2f) {
             bugdir = !bugdir;
             System.out.println("Switching bugdir");
         }
-        return ret;
+        return ret > -0.01f;
     }
 
-    private boolean LJ_tryMove(Direction dir, boolean force) {
-        return LJ_tryMove(dir, 17 + rand() * 17, 6, true, strideDistance, force) || LJ_tryMove(dir, 17 + rand() * 17, 6, false, strideDistance, force);
+    private boolean LJ_tryMove(Direction dir) {
+        return LJ_tryMove(dir, 17 + rand() * 17, 6, true, strideDistance) > -0.001f || LJ_tryMove(dir, 17 + rand() * 17, 6, false, strideDistance) > -0.001f;
 
     }
 
-    private boolean LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide, boolean left, float dist, boolean force) {
+    private float LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide, boolean left, float dist) {
 
         try {
-            do {
-                if (canMove(dir, dist, force)) {
-                    rc.move(dir, dist);
-                    myLocation = rc.getLocation();
-                    return true;
+            Direction bestDir = null;
+            float bestDist = 0;
+            float bestVal = 10000;
+            float t = 0;
+            float bestDeg = 0;
+            float tOff = degreeOffset;
+            int tCheck = checksPerSide;
+            for (int lob = 0; lob < 2; lob++) {
+                int attempt = 0;
+                int maxAttempt = 1;
+                if (dist >= 0.8 * strideDistance) {
+                    attempt = 1;
+                    maxAttempt = 2;
                 }
-                boolean moved = false;
-                int currentCheck = 1;
 
-                while (currentCheck <= checksPerSide) {
-                    try {
-                        System.out.println("Checking angle" + degreeOffset * currentCheck + " in left dir " + left);
+                do {
+                    boolean moved = false;
+                    int currentCheck = lob;
+                    checksPerSide = tCheck / ((dist < 1.4) ? 3 : 1);
+                    degreeOffset = tOff * ((dist < 1.4) ? 3 : 1);
+                    Direction d;
+
+                    while (currentCheck <= checksPerSide) {
+                        System.out.println(Clock.getBytecodeNum() + ": Checking angle" + degreeOffset * currentCheck + " in left dir " + left);
                         if (left) {
-                            Direction d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
-                            if (canMove(d, dist, force)) {
-                                rc.move(d, dist);
-                                myLocation = rc.getLocation();
-                                return true;
-                            }
+                            d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
                         } else {
-                            Direction d = dir.rotateRightDegrees(degreeOffset * currentCheck);
-                            if (canMove(d, dist, force)) {
-                                rc.move(d, dist);
-                                myLocation = rc.getLocation();
-                                return true;
-                            }
+                            d = dir.rotateRightDegrees(degreeOffset * currentCheck);
                         }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                        int clock2 = Clock.getBytecodeNum();
+                        t = valueMove(d, dist);
+                        int clock3 = Clock.getBytecodeNum();
+                        rc.setIndicatorDot(myLocation.add(d, dist), 255 - (int) (t * 25), 255 - (int) (t * 25), 255 - (int) (t * 25));
+                        if (t < 0.01) {
+                            rc.move(d, dist);
+                            myLocation = rc.getLocation();
+                            return degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
+                        } else if (t < bestVal) {
+                            bestDist = dist;
+                            bestDir = d;
+                            bestVal = t;
+                            bestDeg = degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
+                        }
+                        currentCheck++;
+                        if (Clock.getBytecodesLeft() < 500) break; //emergency brake
                     }
-                    currentCheck++;
-                }
-                dist /= 2.9f;
-            } while (dist > 0.5f);
-            return false;
+                    if (Clock.getBytecodesLeft() < 500) break;
+                    if (attempt >= maxAttempt) break;
+                    dist = attemptDist[attempt++];
+                } while (true);
+                left = !left;
+                dist = strideDistance;
+                if (Clock.getBytecodesLeft() < 500) break;
+            }
+            if (bestVal > 1000) {
+                return -1f;
+            } else {
+                rc.move(bestDir, bestDist);
+                return bestDeg;
+            }
         } catch (Exception ex) {
-            return false;
+            ex.printStackTrace();
+            return -1f;
         }
+    }
+
+    public class Threat {
+        float x, y;
+        float radiusSquared;
+        MapLocation loc;
+        float radius;
+        String description;
     }
 
 }

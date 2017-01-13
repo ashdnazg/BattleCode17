@@ -1,6 +1,7 @@
 package johnny4;
 
 import battlecode.common.*;
+import sun.reflect.generics.tree.Tree;
 
 import java.util.Random;
 
@@ -160,10 +161,38 @@ public class Util {
             float dx = enemy.location.x - lastEnemy.location.x;
             float dy = enemy.location.y - lastEnemy.location.y;
             float time = (rc.getLocation().distanceTo(enemy.location) - enemy.type.bodyRadius - rc.getType().bodyRadius) / rc.getType().bulletSpeed;
+            System.out.println(time + ": " + dx + "|" + dy);
+            System.out.println("From " + lastEnemy.location + " to " + enemy.location);
             nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
         }
         rc.setIndicatorDot(nextEnemy, 255, 0, 0);
         return nextEnemy;
+    }
+
+
+
+    static TreeInfo[] temp = new TreeInfo[20];
+    static TreeInfo[] cache = new TreeInfo[0];
+    static TreeInfo[] senseBiggestTrees(){
+        if (rc.getRoundNum() % 3 == 0) {
+            int time = Clock.getBytecodeNum();
+            int cnt = 0;
+            TreeInfo trees[] = rc.senseNearbyTrees();
+            if (trees.length > 50) {
+                trees = rc.senseNearbyTrees(5);
+            }
+            for (int i = 0; i < trees.length; i++) {
+                if (trees[i].radius > 0.9 && cnt < temp.length)
+                    temp[cnt++] = trees[i];
+            }
+            cache = new TreeInfo[cnt];
+            System.arraycopy(temp, 0, cache, 0, cnt);
+            time = Clock.getBytecodeNum() - time;
+            if (time > 300){
+                System.out.println("Sensing trees took " + time);
+            }
+        }
+        return cache;
     }
 
     /**

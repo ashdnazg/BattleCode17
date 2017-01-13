@@ -63,7 +63,7 @@ public class Scout {
             //Sensing/Radio
 
             RobotInfo nearbyRobots[] = map.sense();
-            TreeInfo trees[] = rc.senseNearbyTrees();
+            TreeInfo trees[] = senseBiggestTrees();
             bullets = rc.senseNearbyBullets();
             movement.init(nearbyRobots, trees, bullets);
 
@@ -158,10 +158,10 @@ public class Scout {
             boolean cantfire = false;
             if (!safe) {
                 for (TreeInfo ti : trees) {
-                    if (nextEnemy != null && ti.location.distanceTo(nextEnemy) - ti.radius < myLocation.distanceTo(nextEnemy) - RobotType.SCOUT.bodyRadius && Math.abs(nextEnemy.directionTo(myLocation).degreesBetween(nextEnemy.directionTo(ti.location))) < 10) {
+                    if (nextEnemy != null && ti.location.distanceTo(nextEnemy) - ti.radius < myLocation.distanceTo(nextEnemy) - RobotType.SCOUT.bodyRadius && Math.abs(nextEnemy.directionTo(myLocation).degreesBetween(nextEnemy.directionTo(ti.location))) < 20) {
                         safe = true;
                     }
-                    if (myLocation.distanceTo(ti.location) + RobotType.SCOUT.bodyRadius < ti.radius) {
+                    if (myLocation.distanceTo(ti.location) + RobotType.SCOUT.bodyRadius < ti.radius || nextCivilian != null && myLocation.distanceTo(nextCivilian) - GameConstants.BULLET_SPAWN_OFFSET > ti.location.distanceTo(nextCivilian) && Math.abs(nextCivilian.directionTo(myLocation).degreesBetween(nextCivilian.directionTo(ti.location))) < 10) {
                         cantfire = true;
                         System.out.println("Can't fire from here");
                     }
