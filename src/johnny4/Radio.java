@@ -34,6 +34,7 @@ public class Radio {
         rc = rc_;
         myType = typeToInt(rc.getType());
         Counter.rc = rc_;
+        Stream.rc = rc_;
         try {
             myRadioID = rc.readBroadcast(412);
             rc.broadcast(412, myRadioID + 1);
