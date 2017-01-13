@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import static johnny4.Radio.*;
+
 public class Util {
 
     static RobotController rc;
@@ -198,6 +200,11 @@ public class Util {
     }
 
     static void preTick() throws GameActionException {
+
+        // Find out if we're the first unit to run this round
+        Radio.frame = rc.getRoundNum();
+        Radio.keepAlive();
+
         if (rc.getTeamBullets() >= 10000f) {
             rc.donate(10000f);
         }

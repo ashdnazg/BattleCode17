@@ -3,6 +3,7 @@ package johnny4;
 import battlecode.common.*;
 
 import static johnny4.Util.*;
+import static johnny4.Radio.*;
 
 public class Archon {
 
@@ -83,6 +84,7 @@ public class Archon {
                 (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0 && frame > 100) &&
                 (!alarm || rich)) {
                 rc.hireGardener(oppositeDir);
+                Radio.reportBuild(RobotType.GARDENER);
             } else if (inDanger && rich) {
                 boolean[] blockedDir = new boolean[directions.length];
                 for (TreeInfo t : trees){
@@ -114,6 +116,7 @@ public class Archon {
                 if (alternateBuildDir != null) {
 
                     rc.hireGardener(alternateBuildDir);
+                    Radio.reportBuild(RobotType.GARDENER);
                 }
             }
 

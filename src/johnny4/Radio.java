@@ -11,42 +11,69 @@ public class Radio {
     //Integer 201-300:  Enemy Trees
     //Integer 301-320:  Requested trees to remove according to priority
     //Integer 321:      ALARM ALARM
+    //Integer 400-411:  unit counters
+    //Integer 412:  radio unit ID
+    //Integer 413:  last active radio unit ID
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
-    RobotController rc;
-    final int myId;
-    final int myType;
-    int frame = 0;
+    static RobotController rc;
+    static int myId;
+    static int myType;
+    static int frame = -1;
+    static int myRadioID = -1;
+    static Counter[] allyCounters = new Counter[6];
+    static Counter[] underConstructionCounters = new Counter[6];
 
-    public Radio(RobotController rc) {
-        this.rc = rc;
+    static int[] allyCounts = new int[6];
+    static int[] buildees = new int[2];
+
+
+
+    public Radio(RobotController rc_) {
+        rc = rc_;
+        myType = typeToInt(rc.getType());
+        Counter.rc = rc_;
+        try {
+            for (int i = 0; i < 6; ++i) {
+                allyCounters[i] = new Counter(400 + i);
+                underConstructionCounters[i] = new Counter(406 + i);
+            }
+
+            myRadioID = rc.readBroadcast(412);
+            rc.broadcast(412, myRadioID + 1);
+        } catch (Exception ex) {
+            throw new RuntimeException("Counters not c'tored correctly");
+        }
+
         if (rc.getType() == RobotType.ARCHON) {
             myId = getArchonCounter() + 1;
-            incrementArchonCounter();
+            //incrementArchonCounter();
         } else {
-            int frame = rc.getRoundNum();
-            int uc = getUnitCounter() + 4;
-            int id = -1;
-            for (int pos = 4; pos < uc; pos++) {
-                if (frame - getUnitAge(pos) > 40) {
-                    id = pos;
-                    break;
-                }
-            }
-            if (id > 0) {
-                myId = id;
-                System.out.println("Reused unit slot " + myId + " / " + uc);
-            } else {
-                myId = getUnitCounter() + 4;
-                incrementUnitCounter();
-            }
+            // int frame = rc.getRoundNum();
+            // int uc = getUnitCounter() + 4;
+            // int id = -1;
+            // for (int pos = 4; pos < uc; pos++) {
+                // if (frame - getUnitAge(pos) > 40) {
+                    // id = pos;
+                    // break;
+                // }
+            // }
+            // if (id > 0) {
+                // myId = id;
+                // System.out.println("Reused unit slot " + myId + " / " + uc);
+            // } else {
+                // myId = getUnitCounter() + 4;
+                // //incrementUnitCounter();
+            // }
             /*System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
             System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
             System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
             System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));*/
         }
-        myType = typeToInt(rc.getType());
+
+
+
         reportMyPosition(rc.getLocation());
     }
 
@@ -55,31 +82,12 @@ public class Radio {
         write(myId, info);
     }
 
-    public int countAllies(RobotType robotType) {
-        int shiftedType = typeToInt(robotType) << 9;
-        int found = 0;
-        int frame = rc.getRoundNum();
-        int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++) {
-            if (pos == myId) continue;
-            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20) {
-                found++;
-            }
-        }
-        return found;
+    public static int countAllies(RobotType robotType) {
+        return allyCounts[typeToInt(robotType)];
     }
 
     public int[] countAllies() {
-        int ret[] = new int[8];
-        int frame = rc.getRoundNum();
-        int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++) {
-            if (pos == myId) continue;
-            if (frame - getUnitAge(pos) < 20) {
-                ret[(read(pos) & 0b00000000000000000000111000000000) >> 9] ++;
-            }
-        }
-        return ret;
+        return allyCounts;
     }
 
     //very expensive, use sparingly
@@ -125,26 +133,64 @@ public class Radio {
         return (read(0) & 0xFF000000) >> 24;
     }
 
-    public void incrementArchonCounter() {
-        write(0, (((getArchonCounter() + 1) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
-        System.out.println("Archon counter is now " + getArchonCounter());
+    public static void keepAlive() throws GameActionException {
+
+        // Check if it's the first unit to call keepAlive this round
+        int previousRadioID = rc.readBroadcast(413);
+        rc.broadcast(413, rc.getID());
+        if (previousRadioID >= rc.getID()) {
+            System.out.println("I am first");
+            for (int i = 0; i < 6; ++i) {
+                if (i == myType) {
+                    allyCounts[i] = allyCounters[i].commitAndIncrement();
+                } else {
+                    allyCounts[i] = allyCounters[i].commit();
+                }
+                allyCounts[i] += underConstructionCounters[i].commit();
+            }
+        } else {
+            for (int i = 0; i < 6; ++i) {
+                if (i == myType) {
+                    allyCounts[i] = allyCounters[i].increment();
+                } else {
+                    allyCounts[i] = allyCounters[i].get();
+                }
+                allyCounts[i] += underConstructionCounters[i].get();
+            }
+        }
+
+        if (frame <= (buildees[0] & 0xFFFF)) {
+            int robotType = buildees[0] >> 16;
+            underConstructionCounters[robotType].increment();
+        }
+
+        if (frame <= (buildees[1] & 0xFFFF)) {
+            int robotType = buildees[1] >> 16;
+            underConstructionCounters[robotType].increment();
+        }
+
+        System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
+        System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
+        System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
+        System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
+        System.out.println("myID: " + rc.getID());
     }
 
-    public void incrementUnitCounter() {
-        if (getUnitCounter() == 95) return;
-        write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
-        System.out.println("Unit counter is now " + getUnitCounter());
-    }
+    public static void reportBuild(RobotType robotType) throws GameActionException {
+        int index = typeToInt(robotType);
+        underConstructionCounters[index].increment();
 
-    public void incrementEnemyCounter() {
-        write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
+        // gardeners activate immediately
+        if (robotType != RobotType.GARDENER) {
+            buildees[frame < (buildees[0] & 0xFFFF) ? 1 : 0] = (frame + 20) + (index << 16);
+        }
     }
 
     public void reportEnemy(MapLocation location, RobotType type, int time) {
         int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
         //System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
-        incrementEnemyCounter();
+        //incrementEnemyCounter();
     }
 
     public float getUnitX(int pos) {
@@ -164,10 +210,10 @@ public class Radio {
     }
 
 
-    private int cache[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
-    private int cacheAge[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
+    private static int cache[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
+    private static int cacheAge[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
 
-    int read(int pos) {
+    static int read(int pos) {
         if (cacheAge[pos] != rc.getRoundNum()) {
             try {
                 cache[pos] = rc.readBroadcast(pos);
@@ -179,7 +225,7 @@ public class Radio {
         return cache[pos];
     }
 
-    void write(int pos, int value) {
+    static void write(int pos, int value) {
         cache[pos] = value;
         cacheAge[pos] = rc.getRoundNum();
         try {
@@ -255,17 +301,17 @@ public class Radio {
 
     static int typeToInt(RobotType rt) {
         switch (rt) {
-            case SCOUT:
-                return 6;
             case ARCHON:
-                return 1;
+                return 0;
             case GARDENER:
-                return 2;
+                return 1;
             case LUMBERJACK:
-                return 3;
+                return 2;
             case SOLDIER:
-                return 4;
+                return 3;
             case TANK:
+                return 4;
+            case SCOUT:
                 return 5;
         }
         throw new RuntimeException("Welp");
@@ -273,18 +319,18 @@ public class Radio {
 
     static RobotType intToType(int num) {
         switch (num) {
-            case 6:
-                return RobotType.SCOUT;
-            case 1:
+            case 0:
                 return RobotType.ARCHON;
-            case 2:
+            case 1:
                 return RobotType.GARDENER;
-            case 3:
+            case 2:
                 return RobotType.LUMBERJACK;
-            case 4:
+            case 3:
                 return RobotType.SOLDIER;
-            case 5:
+            case 4:
                 return RobotType.TANK;
+            case 5:
+                return RobotType.SCOUT;
         }
         return null;
     }

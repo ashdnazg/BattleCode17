@@ -3,6 +3,7 @@ package johnny4;
 import battlecode.common.*;
 
 import static johnny4.Util.*;
+import static johnny4.Radio.*;
 
 public class Gardener {
 
@@ -46,6 +47,12 @@ public class Gardener {
             tick();
             Clock.yield();
         }
+    }
+
+    public void build(RobotType robotType, Direction dir) throws GameActionException {
+        rc.buildRobot(robotType, dir);
+        Radio.reportBuild(robotType);
+        lastBuilt = robotType;
     }
 
     protected void tick() {
@@ -149,8 +156,7 @@ public class Gardener {
                         }else{
                             response = RobotType.SOLDIER;
                         }
-                        rc.buildRobot(response, treeDirs[i]);
-                        lastBuilt = response;
+                        build(response, treeDirs[i]);
                         break;
                     }
                     if (inDanger) {
@@ -161,30 +167,24 @@ public class Gardener {
                         }else{
                             response = RobotType.SOLDIER;
                         }
-                        rc.buildRobot(response, treeDirs[i]);
-                        lastBuilt = response;
+                        build(response, treeDirs[i]);
                         break;
                     }
                     if (ownScouts > 1 && lastBuilt != RobotType.LUMBERJACK && rc.canBuildRobot(RobotType.SOLDIER, treeDirs[i]) && ljCount < 1) {
-                        rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
-                        lastBuilt = RobotType.LUMBERJACK;
+                        build(RobotType.LUMBERJACK, treeDirs[i]);
                         break;
                     }
                     if (ownScouts < 3) {
-                        rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
-                        lastBuilt = RobotType.SCOUT;
+                        build(RobotType.SCOUT, treeDirs[i]);
                         break;
                     } else if (ownScouts < 9 && lastBuilt == RobotType.SOLDIER) {
-                        rc.buildRobot(RobotType.SCOUT, treeDirs[i]);
-                        lastBuilt = RobotType.SCOUT;
+                        build(RobotType.SCOUT, treeDirs[i]);
                         break;
                     } else {
                         if (ljCount < soldierCount && ljCount < 7) {
-                            rc.buildRobot(RobotType.LUMBERJACK, treeDirs[i]);
-                            lastBuilt = RobotType.LUMBERJACK;
+                            build(RobotType.LUMBERJACK, treeDirs[i]);
                         } else if (soldierCount < ljCount && soldierCount < 22) {
-                            rc.buildRobot(RobotType.SOLDIER, treeDirs[i]);
-                            lastBuilt = RobotType.SOLDIER;
+                            build(RobotType.SOLDIER, treeDirs[i]);
                         }
                         break;
                     }

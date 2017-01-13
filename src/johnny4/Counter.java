@@ -20,8 +20,7 @@ public class Counter {
     int currentCount;
     int frame = -1;
 
-    public Counter(RobotController rc_, int index) throws GameActionException {
-        rc = rc_;
+    public Counter(int index) throws GameActionException {
         this.myIndex = index;
         this.frame = rc.getRoundNum();
         this.value = rc.readBroadcast(myIndex);
@@ -42,6 +41,18 @@ public class Counter {
             value = rc.readBroadcast(myIndex);
         }
         value += 1;
+        rc.broadcast(myIndex, value);
+        updateCount();
+        return currentCount;
+    }
+
+    public int decrement() throws GameActionException {
+        int currentFrame = rc.getRoundNum();
+        if (currentFrame > frame) {
+            frame = currentFrame;
+            value = rc.readBroadcast(myIndex);
+        }
+        value -= 1;
         rc.broadcast(myIndex, value);
         updateCount();
         return currentCount;
