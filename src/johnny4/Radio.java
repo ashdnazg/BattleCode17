@@ -21,6 +21,7 @@ public class Radio {
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
     static RobotController rc;
+    static int myID;
     static int myType;
     static int frame = -1;
     static int myRadioID = -1;
@@ -46,25 +47,25 @@ public class Radio {
         }
 
         if (rc.getType() == RobotType.ARCHON) {
-            //myId = getArchonCounter() + 1;
-            //incrementArchonCounter();
+            myID = getArchonCounter() + 1;
+            incrementArchonCounter();
         } else {
-            // int frame = rc.getRoundNum();
-            // int uc = getUnitCounter() + 4;
-            // int id = -1;
-            // for (int pos = 4; pos < uc; pos++) {
-                // if (frame - getUnitAge(pos) > 40) {
-                    // id = pos;
-                    // break;
-                // }
-            // }
-            // if (id > 0) {
-                // myId = id;
-                // System.out.println("Reused unit slot " + myId + " / " + uc);
-            // } else {
-                // myId = getUnitCounter() + 4;
-                // //incrementUnitCounter();
-            // }
+            int frame = rc.getRoundNum();
+            int uc = getUnitCounter() + 4;
+            int id = -1;
+            for (int pos = 4; pos < uc; pos++) {
+                if (frame - getUnitAge(pos) > 40) {
+                    id = pos;
+                    break;
+                }
+            }
+            if (id > 0) {
+                myID = id;
+                //System.out.println("Reused unit slot " + myId + " / " + uc);
+            } else {
+                myID = getUnitCounter() + 4;
+                incrementUnitCounter();
+            }
             /*System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
             System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
             System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
@@ -83,19 +84,30 @@ public class Radio {
     //very expensive, use sparingly
 
     public static int getEnemyCounter() {
-        return read(0);
+        return (read(0) & 0x0000FF00) >> 8;
     }
 
-    public static void incrementEnemyCounter() {
-        write(0, read(0) + 1);
-    }
-
-    public int getUnitCounter() {
+    public static int getUnitCounter() {
         return (read(0) & 0x00FF0000) >> 16;
     }
 
-    public int getArchonCounter() {
+    public static int getArchonCounter() {
         return (read(0) & 0xFF000000) >> 24;
+    }
+
+    public static void incrementArchonCounter() {
+        write(0, (((getArchonCounter() + 1) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
+        System.out.println("Archon counter is now " + getArchonCounter());
+    }
+
+    public static void incrementUnitCounter() {
+        if (getUnitCounter() == 95) return;
+        write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
+        System.out.println("Unit counter is now " + getUnitCounter());
+    }
+
+    public static void incrementEnemyCounter() {
+        write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
     }
 
     public static void keepAlive() throws GameActionException {
