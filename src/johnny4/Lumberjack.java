@@ -89,7 +89,6 @@ public class Lumberjack {
             RobotInfo nearbyRobots[] = null;
             nextLumberjack = null;
             if (frame % 8 == 0) {
-                radio.reportMyPosition(myLocation);
                 nearbyRobots = map.sense();
             }
             if (nearbyRobots == null) {

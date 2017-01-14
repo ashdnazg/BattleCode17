@@ -63,9 +63,6 @@ public class Gardener {
             radio.frame = frame;
             bullets = rc.senseNearbyBullets();
             MapLocation myLocation = rc.getLocation();
-            if (frame % 8 == 0) {
-                radio.reportMyPosition(myLocation);
-            }
 
             RobotInfo[] nearbyRobots = map.sense();
             MapLocation nextEnemy = null;

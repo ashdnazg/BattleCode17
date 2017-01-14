@@ -102,7 +102,6 @@ public class Soldier {
             RobotType enemyType = RobotType.SOLDIER;
             int cnt1 = Clock.getBytecodeNum();
             if (frame % 8 == 0) {
-                radio.reportMyPosition(myLocation);
                 nearbyRobots = map.sense();
             }
             if (nearbyRobots == null) {

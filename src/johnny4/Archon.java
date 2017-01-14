@@ -49,9 +49,6 @@ public class Archon {
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
             map.sense();
-            if (frame % 8 == 0) {
-                radio.reportMyPosition(myLocation);
-            }
 
             boolean inDanger = rc.senseNearbyRobots(RobotType.ARCHON.sensorRadius, enemyTeam).length > 0;
             boolean alarm = radio.getAlarm();

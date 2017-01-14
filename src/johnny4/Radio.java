@@ -11,19 +11,22 @@ public class Radio {
     //Integer 201-300:  Enemy Trees
     //Integer 301-320:  Requested trees to remove according to priority
     //Integer 321:      ALARM ALARM
-    //Integer 400-411:  unit counters
+    //Integer 400-405:  active unit counters
+    //Integer 406-411:  under construction unit counters
     //Integer 412:  radio unit ID
-    //Integer 413:  last active radio unit ID
+    //Integer 413:  last round - used to figure who the first unit in the round is.
+    //Integer 414 - 419: enemy unit counters
+    //Integer 420 - 422: enemy unit counters bloom filter
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
     static RobotController rc;
-    static int myId;
     static int myType;
     static int frame = -1;
     static int myRadioID = -1;
     static Counter[] allyCounters = new Counter[6];
     static Counter[] underConstructionCounters = new Counter[6];
+    //static Counter[] enemyCounters = new Counter[6];
 
     static int[] allyCounts = new int[6];
     static int[] buildees = new int[2];
@@ -43,7 +46,7 @@ public class Radio {
         }
 
         if (rc.getType() == RobotType.ARCHON) {
-            myId = getArchonCounter() + 1;
+            //myId = getArchonCounter() + 1;
             //incrementArchonCounter();
         } else {
             // int frame = rc.getRoundNum();
@@ -67,58 +70,24 @@ public class Radio {
             System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
             System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));*/
         }
-
-
-
-        reportMyPosition(rc.getLocation());
-    }
-
-    public void reportMyPosition(MapLocation location) {
-        int info = ((int) location.x << 22) | ((int) location.y << 12) | (myType << 9) | (rc.getRoundNum() / 8);
-        write(myId, info);
     }
 
     public static int countAllies(RobotType robotType) {
         return allyCounts[typeToInt(robotType)];
     }
 
-    public int[] countAllies() {
+    public static int[] countAllies() {
         return allyCounts;
     }
 
     //very expensive, use sparingly
-    public MapLocation[] getAllyPositions(RobotType robotType) {
-        int shiftedType = typeToInt(robotType) << 9;
-        int found = 0;
-        int frame = rc.getRoundNum();
-        MapLocation[] result = new MapLocation[100];
-        int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++) {
-            if (pos == myId) continue;
-            if ((read(pos) & 0b00000000000000000000111000000000) == shiftedType && frame - getUnitAge(pos) < 20) {
-                result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
-            }
-        }
-        return result;
+
+    public static int getEnemyCounter() {
+        return read(0);
     }
 
-    //very expensive, use sparingly
-    public MapLocation[] getAllyPositions() {
-        int found = 0;
-        int frame = rc.getRoundNum();
-        MapLocation[] result = new MapLocation[100];
-        int uc = getUnitCounter() + 4;
-        for (int pos = 1; pos < uc; pos++) {
-            if (pos == myId) continue;
-            if (frame - getUnitAge(pos) < 20) {
-                result[found++] = new MapLocation(getUnitX(pos), getUnitY(pos));
-            }
-        }
-        return result;
-    }
-
-    public int getEnemyCounter() {
-        return (read(0) & 0x0000FF00) >> 8;
+    public static void incrementEnemyCounter() {
+        write(0, read(0) + 1);
     }
 
     public int getUnitCounter() {
@@ -182,11 +151,11 @@ public class Radio {
         }
     }
 
-    public void reportEnemy(MapLocation location, RobotType type, int time) {
+    public static void reportEnemy(MapLocation location, RobotType type, int time) {
         int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
         write(getEnemyCounter() + 101, info);
-        //System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
-        //incrementEnemyCounter();
+        // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
+        incrementEnemyCounter();
     }
 
     public float getUnitX(int pos) {

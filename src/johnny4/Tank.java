@@ -39,7 +39,6 @@ public class Tank {
             MapLocation myLocation = rc.getLocation();
             RobotInfo nearbyRobots[] = null;
             if (frame % 8 == 0) {
-                radio.reportMyPosition(myLocation);
                 nearbyRobots = map.sense();
             }
             if (nearbyRobots == null) {

@@ -67,10 +67,6 @@ public class Scout {
             bullets = rc.senseNearbyBullets();
             movement.init(nearbyRobots, trees, bullets);
 
-            if (frame % 8 == 0) {
-                radio.reportMyPosition(myLocation);
-            }
-
             //Target selection
             for (RobotInfo r : nearbyRobots) {
 
