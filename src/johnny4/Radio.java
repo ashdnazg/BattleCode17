@@ -136,25 +136,37 @@ public class Radio {
         if (previousRoundNum < frame) {
             rc.broadcast(413, frame);
             // System.out.println("I am first");
-            for (int i = 400; i < 406; ++i) {
-                int robotType = i - 400;
-                if (robotType == myType) {
-                    allyCounts[robotType] = Counter.commitAndIncrement(i);
-                } else {
-                    allyCounts[robotType] = Counter.commit(i);
-                }
-                allyCounts[robotType] += Counter.commit(i + 6);
-            }
+            allyCounts[0] = Counter.commit(400);
+            allyCounts[1] = Counter.commit(401);
+            allyCounts[2] = Counter.commit(402);
+            allyCounts[3] = Counter.commit(403);
+            allyCounts[4] = Counter.commit(404);
+            allyCounts[5] = Counter.commit(405);
+
+            allyCounts[myType] = Counter.increment(400 + myType);
+
+            allyCounts[0] += Counter.commit(406);
+            allyCounts[1] += Counter.commit(407);
+            allyCounts[2] += Counter.commit(408);
+            allyCounts[3] += Counter.commit(409);
+            allyCounts[4] += Counter.commit(410);
+            allyCounts[5] += Counter.commit(411);
         } else {
-            for (int i = 400; i < 406; ++i) {
-                int robotType = i - 400;
-                if (robotType == myType) {
-                    allyCounts[robotType] = Counter.increment(i);
-                } else {
-                    allyCounts[robotType] = Counter.get(i);
-                }
-                allyCounts[robotType] += Counter.get(i + 6);
-            }
+            allyCounts[0] = Counter.get(400);
+            allyCounts[1] = Counter.get(401);
+            allyCounts[2] = Counter.get(402);
+            allyCounts[3] = Counter.get(403);
+            allyCounts[4] = Counter.get(404);
+            allyCounts[5] = Counter.get(405);
+
+            allyCounts[myType] = Counter.increment(400 + myType);
+
+            allyCounts[0] += Counter.get(406);
+            allyCounts[1] += Counter.get(407);
+            allyCounts[2] += Counter.get(408);
+            allyCounts[3] += Counter.get(409);
+            allyCounts[4] += Counter.get(410);
+            allyCounts[5] += Counter.get(411);
         }
 
         // Only gardeners have buildees
