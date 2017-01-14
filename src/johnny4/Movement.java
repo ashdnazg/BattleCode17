@@ -126,6 +126,7 @@ public class Movement {
 
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
         float olddist = myLocation.distanceTo(target);
+        if (olddist < 0.0001f) return false;
         boolean retval = bugMove(myLocation.directionTo(target), Math.min(strideDistance, target.distanceTo(myLocation)));
         System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         if (retval && olddist < myLocation.distanceTo(target) && (olddist < 4 || hadLos && olddist < 9)) {
@@ -268,7 +269,7 @@ public class Movement {
                 dist = strideDistance;
                 if (Clock.getBytecodesLeft() < 500) break;
             }
-            if (bestVal > 1000) {
+            if (bestVal > 9.9) {
                 return -1f;
             } else {
                 rc.move(bestDir, bestDist);

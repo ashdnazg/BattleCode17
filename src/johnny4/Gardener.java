@@ -23,11 +23,15 @@ public class Gardener {
     boolean isFleeing;
     boolean waitingForScout;
     int plantedTrees = 0;
+    Grid grid;
+    Movement movement;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        this.grid = new HexagonalClusters(rc);
+        this.movement = new Movement(rc);
         this.treeDirs = new Direction[6];
         float angle = (float) Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -102,19 +106,24 @@ public class Gardener {
                 }
             }
 
+            movement.init(nearbyRobots, senseBiggestTrees(), bullets);
+            boolean hasMoved = false;
+
             if (!isFleeing) {
 
-                TreeInfo[] tis = rc.senseNearbyTrees(2.0f);
-                if (!inDanger && (!alarm || rich) && tis.length < 5) {
+                if (!inDanger && (!alarm || rich) ) {
                     boolean freePos = false;
                     for (int i = 0; i < 6; i++) {
-                        if (rc.canPlantTree(treeDirs[i]) && (radio.getUnitCounter() >= 4 || plantedTrees <= frame / 200) && frame > 10) {
-                            if (!freePos) {
-                                freePos = true;
-                                continue;
+                        if (rc.getTeamBullets() > GameConstants.BULLET_TREE_COST  && (radio.getUnitCounter() >= 4 || plantedTrees <= frame / 200) && frame > 2000) {
+                            MapLocation treeloc = grid.getNearestPlantableLocation(myLocation, null);
+                            if (treeloc != null) {
+                                MapLocation walkloc = grid.getNearestWalkableLocation(treeloc);
+                                hasMoved = movement.findPath(walkloc, null);
+                                if (myLocation.distanceTo(walkloc) < 0.01 && rc.canPlantTree(myLocation.directionTo(treeloc))) {
+                                    rc.plantTree(myLocation.directionTo(treeloc));
+                                    plantedTrees++;
+                                }
                             }
-                            rc.plantTree(treeDirs[i]);
-                            plantedTrees++;
                             break;
                         }
                         if (frame % 6 == i) {
@@ -127,14 +136,16 @@ public class Gardener {
                 }
 
                 // Try watering trees in some order
+                /*
                 if (tis.length > 0) {
                     lastWatered = (lastWatered + 1) % tis.length;
                     TreeInfo ti = tis[lastWatered];
                     if (ti.team == myTeam && rc.canWater(ti.ID)) {
                         rc.water(ti.ID);
                     }
-                }
+                }*/
             }
+            if (true) return;
 
             int counts[] = radio.countAllies();
             int ownScouts = counts[Radio.typeToInt(RobotType.SCOUT)];
@@ -189,12 +200,6 @@ public class Gardener {
             }
 
 
-            boolean hasMoved = false;
-            if (hasMoved) {
-                isFleeing = true;
-                myLocation = rc.getLocation();
-                roundsSinceAttack = 0;
-            }
 
 
             if (nextEnemy == null) {
