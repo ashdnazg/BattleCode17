@@ -149,7 +149,6 @@ public class Radio {
             allyCounts[3] = Counter.get(403) + Counter.get(409);
             allyCounts[4] = Counter.get(404) + Counter.get(410);
             allyCounts[5] = Counter.get(405) + Counter.get(411);
-
         }
         Counter.increment(400 + myType);
 
