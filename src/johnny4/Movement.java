@@ -149,17 +149,15 @@ public class Movement {
                 }
             }
             if (best != null && bestval < 60){
-                float bestToTarget = myLocation.directionTo(best.location).degreesBetween(myLocation.directionTo(target));
-                if (bestToTarget > 0 == bugdir) {
                 System.out.println("Found blocking tree at angle " + bestval);
                 rc.setIndicatorLine(myLocation, target, 0, 0, 255);
                 rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
                 //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
-                moveDir = myLocation.directionTo(best.location).rotateLeftRads(Math.signum(bestToTarget)
+                moveDir = myLocation.directionTo(best.location).rotateLeftRads((bugdir ? 1 : -1)
                         * (float) (Math.asin((robotType.bodyRadius + best.radius)/myLocation.distanceTo(best.location))));
 
                 rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float)Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
-            }}
+            }
         }
 
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);

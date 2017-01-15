@@ -31,10 +31,10 @@ public class Gardener {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
-        this.grid = new SimpleHexagonalClusters(rc);
+        this.grid = new WellSpacedHexagonalClusters(rc);
         this.movement = new Movement(rc);
-        this.planner = new BuildPlanner(rc, radio, treeStorage);
         this.treeStorage = new TreeStorage(rc);
+        this.planner = new BuildPlanner(rc, radio, treeStorage);
         this.buildDirs = new Direction[6];
         float angle = (float) Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -77,6 +77,7 @@ public class Gardener {
             bullets = rc.senseNearbyBullets();
             MapLocation myLocation = rc.getLocation();
             float money = rc.getTeamBullets();
+            System.out.println("Own trees: " + treeStorage.ownTrees);
 
 
             RobotInfo[] nearbyRobots = map.sense();

@@ -35,7 +35,7 @@ public class BuildPlanner {
     }
 
     public boolean buildTree(){
-        return  money > GameConstants.BULLET_TREE_COST;
+        return money > GameConstants.BULLET_TREE_COST && (!radio.getAlarm() || money > 200) && trees.ownTrees < 6;
     }
 
     public RobotType getUnitToBuild(){

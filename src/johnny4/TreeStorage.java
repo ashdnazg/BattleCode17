@@ -30,7 +30,7 @@ public class TreeStorage {
     int ownTrees = 0;
     int storedTrees = 0;
 
-    public void updateTrees(TreeInfo trees[]) {
+    public void updateTrees(TreeInfo trees[]) throws GameActionException{
 
         int time = Clock.getBytecodeNum();
         int time1 = Clock.getBytecodeNum();
@@ -61,7 +61,10 @@ public class TreeStorage {
                     ownTree[i] = false;
                 } else {
                     storedTrees++;
-                    if (ownTree[i]) ownTrees++;
+                    if (ownTree[i]) {
+                        ownTrees++;
+                        rc.setIndicatorDot(knownTrees[i], 255, 255, 0);
+                    }
                 }
             }else{
                 ownTree[i] = false;
