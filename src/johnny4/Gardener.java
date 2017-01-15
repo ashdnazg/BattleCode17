@@ -153,7 +153,7 @@ public class Gardener {
 
             // Units
 
-            if (rc.getTeamBullets() > RobotType.SCOUT.bulletCost) {
+            if (money > RobotType.SCOUT.bulletCost) {
                 tryBuild(BuildPlanner.getUnitToBuild());
             }
 

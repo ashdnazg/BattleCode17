@@ -108,9 +108,11 @@ public class Lumberjack {
 
             myLocation = rc.getLocation();
             if (guardener != null && !hasMoved && myLocation.distanceTo(guardener.location) > RobotType.LUMBERJACK.sensorRadius + 3) {
-                hasMoved = movement.findPath(guardener.location, null); //protect your padawan
+                movement.findPath(guardener.location, null); //protect your padawan
+                hasMoved =true;
             }
             if (!alarm && currentTreeTarget != null) {
+                System.out.println("Chopping tree at " + currentTreeTarget);
                 rc.setIndicatorDot(currentTreeTarget, 0, 255, 255);
                 //System.out.println("Going for " + currentTreeTarget);
 
@@ -176,14 +178,14 @@ public class Lumberjack {
             if (!hasMoved) {
                 if (nextEnemy != null) {
                     if (movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), RobotType.LUMBERJACK.bodyRadius + enemyRadius + 0.0001f), null)) {
-                        hasMoved = true;
                         myLocation = rc.getLocation();
                     }
+                    hasMoved = true;
                 }
             }
             if (!hasMoved && !rc.hasAttacked() && !hasChopped && choppable == null) {
 
-                while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !movement.findPath(lastRandomLocation, null)) {
+                while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
                     lastRandomLocation = myLocation.add(randomDirection(), 20);
                 }
                 hasMoved = true;

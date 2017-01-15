@@ -57,7 +57,7 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
-                GO_STRAIGHT_DISTANCE = 2;
+                GO_STRAIGHT_DISTANCE = 4;
                 break;
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -92,7 +92,7 @@ public class Movement {
         bullets = bullets_ != null ? bullets_ : new BulletInfo[0];
         myLocation = rc.getLocation();
         threatsLen = 0;
-        boolean nothreats = true;
+        boolean noEnemies = true;
         float dist;
         boolean active, friendly, lj;
         float maxDist = Math.max(MIN_FRIENDLY_LUMBERJACK_DIST, MIN_ENEMY_LUMBERJACK_DIST);
@@ -104,7 +104,8 @@ public class Movement {
         }
 
         for (RobotInfo ri : robots) {
-            friendly = ri.team == myTeam;
+            friendly = ri.team.equals(myTeam);
+            if (!friendly) noEnemies = false;
             if ((ri.moveCount + ri.attackCount == 0) && (ri.health < 0.9f * ri.type.maxHealth)) {
                 continue;
             }
@@ -129,6 +130,7 @@ public class Movement {
                 continue;
             }
 
+
             if (MIN_ENEMY_LUMBERJACK_DIST > 0.01 && ri.type == RobotType.LUMBERJACK) {
                 dist = ri.location.distanceTo(myLocation) - strideDistance;
                 if (dist < MIN_ENEMY_LUMBERJACK_DIST) {
@@ -143,7 +145,6 @@ public class Movement {
                         threats[threatsLen] = new Threat();
                         currentThreat = threats[threatsLen];
                     }
-                    nothreats = false;
                     continue;
                 }
             }
@@ -162,12 +163,12 @@ public class Movement {
                         threats[threatsLen] = new Threat();
                         currentThreat = threats[threatsLen];
                     }
-                    nothreats = false;
                 }
             }
         }
-        if (nothreats) { // only keep distance to lumberjacks in combat
+        if (noEnemies) { // only keep distance to lumberjacks in combat
             threatsLen = 0;
+            System.out.println("No threats, hugging friendly lumberjacks");
         }
         if (myLocation.distanceTo(stuckLocation) > strideDistance * 1.1) {
             stuckLocation = myLocation;
@@ -198,8 +199,21 @@ public class Movement {
 
         System.out.println("Somewhere in findPath " + Clock.getBytecodeNum());
 
-        Direction moveDir = myLocation.directionTo(target);
         float olddist = myLocation.distanceTo(target);
+        if (olddist < 0.0001f){
+            if (valueMove(Direction.getNorth(), 0) < 0.0001) {
+                System.out.println("I'm already at target");
+                return false;
+            }else{
+                System.out.println("I'm already at target but it sucks being around here");
+                target.add(Direction.getNorth(), 0.01f);
+            }
+        }
+        Direction moveDir = myLocation.directionTo(target);
+        if (fireDir != null) {
+            moveDir = moveDir.rotateLeftDegrees((bugdir ? 1.001f : -1.001f) * MIN_MOVE_TO_FIRE_ANGLE);
+
+        }
         if (robotType != RobotType.SCOUT && olddist > 0.9 * strideDistance) {
             float t, bestval = 10000f;
             TreeInfo best = null;
@@ -239,7 +253,6 @@ public class Movement {
         }
 
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
-        if (olddist < 0.0001f) return false;
         boolean retval = bugMove(moveDir, Math.min(strideDistance, target.distanceTo(myLocation)));
         if (DEBUG) {
             System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);

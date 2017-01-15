@@ -10,6 +10,7 @@ public class BuildPlanner {
 
     static float money = 0;
     static int nearbyProtectors = 0;
+    static RobotInfo nextEnemy = null;
 
     static int ownScouts;
     static int ownLumberjacks;
@@ -28,9 +29,15 @@ public class BuildPlanner {
         BuildPlanner.nearbyRobots = nearbyRobots;
         nearbyProtectors = 0;
         money = rc.getTeamBullets();
+        nextEnemy = null;
+        MapLocation myLocation = rc.getLocation();
         for (RobotInfo r : nearbyRobots) {
             if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
                 nearbyProtectors++;
+            }
+            if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.location.distanceTo(myLocation) > r.location.distanceTo(myLocation)) &&
+                    (r.type == RobotType.SCOUT || r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
+                nextEnemy = r;
             }
         }
         int ownCounts[] = Radio.countAllies();
@@ -94,10 +101,14 @@ public class BuildPlanner {
         boolean needScouts = (ownScouts < 3) || (ownScouts < (ownSoldiers / 3));
 
 
-        if (alarm) {
+        if (nextEnemy != null) { //in danger
             if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
             } else if (needSoldiers && canSoldier) {
+                return RobotType.SOLDIER;
+            } else if (nextEnemy.type == RobotType.SCOUT && canLumberjack) {
+                return RobotType.LUMBERJACK;
+            } else if (canSoldier) {
                 return RobotType.SOLDIER;
             }
         }

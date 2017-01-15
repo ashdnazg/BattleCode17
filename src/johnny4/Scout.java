@@ -161,7 +161,7 @@ public class Scout {
                     if (nextEnemy != null && ti.location.distanceTo(nextEnemy) - ti.radius < myLocation.distanceTo(nextEnemy) - RobotType.SCOUT.bodyRadius && Math.abs(nextEnemy.directionTo(myLocation).degreesBetween(nextEnemy.directionTo(ti.location))) < 20) {
                         safe = true;
                     }
-                    if (myLocation.distanceTo(ti.location) + RobotType.SCOUT.bodyRadius < ti.radius || nextCivilian != null && myLocation.distanceTo(nextCivilian) - GameConstants.BULLET_SPAWN_OFFSET > ti.location.distanceTo(nextCivilian) && Math.abs(nextCivilian.directionTo(myLocation).degreesBetween(nextCivilian.directionTo(ti.location))) < 10) {
+                    if (myLocation.distanceTo(ti.location) + RobotType.SCOUT.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET < ti.radius || nextCivilian != null && myLocation.distanceTo(nextCivilian) - RobotType.SCOUT.bodyRadius - GameConstants.BULLET_SPAWN_OFFSET > ti.location.distanceTo(nextCivilian) - ti.radius && Math.abs(nextCivilian.directionTo(myLocation).degreesBetween(nextCivilian.directionTo(ti.location))) < 10) {
                         cantfire = true;
                         System.out.println("Can't fire from here");
                     }
@@ -213,11 +213,13 @@ public class Scout {
                     if (nextCivilian.distanceTo(myLocation) - civSize < attackDistance) {
                         boolean hasFired = longRangeCiv || cantfire; //Don't shoot at units outside vision
                         Direction fireDir = null;
-                        if (!hasFired && checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
-                            if (rc.canFireSingleShot()) {
+                        if (!hasFired ) {
+                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
+                            }else{
+                                System.out.println("No LOS");
                             }
                         }
                         if (!hasMoved && !longRangeCiv) { //Try to hide behind tree
@@ -246,16 +248,19 @@ public class Scout {
                                 myLocation = rc.getLocation();
                             }
                         }
-                        if (!hasFired && checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius)) {
-                            if (rc.canFireSingleShot()) {
+                        if (!hasFired) {
+                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
+                                hasFired = true;
+                            }else{
+                                System.out.println("No LOS");
                             }
                         }
                     }
                 } else { //No civilian, search the map
                     if (!hasMoved) {
-                        while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !movement.findPath(lastRandomLocation, null)) {
+                        while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
                             lastRandomLocation = myLocation.add(randomDirection(), 20);
                         }
                     }

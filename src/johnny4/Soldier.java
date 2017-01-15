@@ -12,6 +12,7 @@ public class Soldier {
     Movement movement;
     final boolean isRoamer;
     MapLocation lastRandomLocation;
+    RobotInfo lastEnemyInfo;
 
     public Soldier(RobotController rc) {
         this.rc = rc;
@@ -61,18 +62,24 @@ public class Soldier {
             }
 
             MapLocation nextEnemy = null;
+            RobotInfo nextEnemyInfo = null;
             nextLumberjack = null;
             TreeInfo trees[] = senseBiggestTrees();
             for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (r.type != RobotType.SCOUT || rc.getID() % 7 == 0) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) > r.location.distanceTo(myLocation) * r.type.strideRadius + (r.type == RobotType.ARCHON ? 10 : 0))) {
                     nextEnemy = r.location;
+                    nextEnemyInfo = r;
                     enemyType = r.type;
                 }
                 if (r.getTeam().equals(rc.getTeam()) && r.type == RobotType.LUMBERJACK && (nextLumberjack == null || nextLumberjack.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
                     nextLumberjack = r.location;
                 }
             }
+            if (nextEnemyInfo != null && lastEnemyInfo != null){
+                nextEnemy = predict(nextEnemyInfo, lastEnemyInfo);
+            }
+            lastEnemyInfo = nextEnemyInfo;
 
             if (myLocation.distanceTo(stuckLocation) > 5) {
                 stuckSince = frame;
@@ -116,15 +123,21 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 6f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 9f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
                     hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                     fireDir = myLocation.directionTo(nextEnemy);
                     if (hasFired) {
                         bullets = rc.senseNearbyBullets();
                     }
                 }
-                if (rc.getTeamBullets() > 50) evasionMode = false;
-                if (rc.getTeamBullets() < 10) evasionMode = true;
+                if (rc.getTeamBullets() > 50 && evasionMode) {
+                    System.out.println("Soldier entering aggression mode");
+                    evasionMode = false;
+                }
+                if (rc.getTeamBullets() < 10 && !evasionMode) {
+                    System.out.println("Soldier entering evasion mode");
+                    evasionMode = true;
+                }
                 cnt4 = Clock.getBytecodeNum();
                 if (evasionMode && !longrange && (dist < MIN_EVASION_DIST)) {
                     if (!hasMoved && movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1), fireDir)) {
@@ -142,7 +155,7 @@ public class Soldier {
                     }
                 }
 
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 6f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
+                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 9f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
                     hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                 }
             } else if (!hasMoved) {
@@ -177,6 +190,7 @@ public class Soldier {
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
         } else if (rc.canFireSingleShot()) {
+            System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;
         }
