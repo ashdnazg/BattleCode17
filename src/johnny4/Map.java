@@ -10,6 +10,11 @@ public class Map {
     Radio radio;
     MapLocation[] archonPos;
     int _type;
+    static MapLocation[] farTargets = new MapLocation[6];
+    static float[] tempDist = new float[6];
+    static float[] tempX = new float[6];
+    static float[] tempY = new float[6];
+    static int targetsFrame = -1;
 
     public Map(RobotController rc, Radio radio) {
         this.rc = rc;
@@ -113,7 +118,85 @@ public class Map {
             return null;
         }
     }
-/*
+
+
+    public void generateFarTargets(MapLocation myLoc, int maxAge, float minDist) throws GameActionException{
+        minDist *= minDist; //square distances
+        tempDist[0] = 1e10f;
+        tempDist[1] = 1e10f;
+        tempDist[2] = 1e10f;
+        tempDist[3] = 1e10f;
+        tempDist[4] = 1e10f;
+        tempDist[5] = 1e10f;
+
+        float cx, cy;
+        cx = cy = 0;
+        float mx = myLoc.x;
+        float my = myLoc.y;
+        int frame = rc.getRoundNum();
+        int ecnt = radio.getEnemyCounter();
+        for (int i = ecnt + 100; i >= 101; i--) {
+            //System.out.println("1: " + Clock.getBytecodeNum());
+            int unitData = rc.readBroadcast(i);
+            //System.out.println("1.2: " + Clock.getBytecodeNum());
+            if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge)
+                continue;
+            int ut = (unitData & 0b00000000000000000000111000000000) >> 9;
+            //System.out.println("2: " + Clock.getBytecodeNum());
+
+            float x = (unitData & 0b11111111110000000000000000000000) >> 22;
+            float y = (unitData & 0b00000000001111111111000000000000) >> 12;
+            float dx = (mx - x);
+            float dy = (my - y);
+            float dist = dx * dx + dy * dy;
+            if (dist > tempDist[ut] || dist < minDist) {
+                continue;
+            }
+
+            tempDist[ut] = dist;
+            tempX[ut] = x;
+            tempY[ut] = y;
+        }
+
+        if (tempDist[0] != 1e10f) {
+            farTargets[0] = new MapLocation(tempX[0], tempY[0]);
+        } else {
+            farTargets[0] = null;
+        }
+
+        if (tempDist[1] != 1e10f) {
+            farTargets[1] = new MapLocation(tempX[1], tempY[1]);
+        } else {
+            farTargets[1] = null;
+        }
+
+        if (tempDist[2] != 1e10f) {
+            farTargets[2] = new MapLocation(tempX[2], tempY[2]);
+        } else {
+            farTargets[2] = null;
+        }
+
+        if (tempDist[3] != 1e10f) {
+            farTargets[3] = new MapLocation(tempX[3], tempY[3]);
+        } else {
+            farTargets[3] = null;
+        }
+
+        if (tempDist[4] != 1e10f) {
+            farTargets[4] = new MapLocation(tempX[4], tempY[4]);
+        } else {
+            farTargets[4] = null;
+        }
+
+        if (tempDist[5] != 1e10f) {
+            farTargets[5] = new MapLocation(tempX[5], tempY[5]);
+        } else {
+            farTargets[5] = null;
+        }
+        targetsFrame = frame;
+    }
+
+    /*
     private static List<Intel> toremove = new ArrayList();
 
     public class Intel{

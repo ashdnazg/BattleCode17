@@ -391,7 +391,7 @@ public class Radio {
             tempBloom[n2] |= b2;
             tempBloom[n3] |= b3;
 
-            int info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9);
+            int info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9) | (frame / 8);
             rc.broadcast(numReports + 202, info);
             rc.broadcast(numReports + 203, ID);
             //System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
@@ -454,7 +454,7 @@ public class Radio {
         if (numReports == 98) {
             return;
         }
-        int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9);
+        int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9) | (frame / 8);
         write(numReports + 202, info);
         write(numReports + 203, ID);
         write(201, numReports + 2);
