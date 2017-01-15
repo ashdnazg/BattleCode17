@@ -124,6 +124,7 @@ public class Archon {
 
                     rc.hireGardener(alternateBuildDir);
                     Radio.reportBuild(RobotType.GARDENER);
+                    Radio.reportActiveGardener();
                 }
             }
 

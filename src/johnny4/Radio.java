@@ -60,12 +60,6 @@ public class Radio {
         } catch (Exception ex) {
             throw new RuntimeException("Counters not c'tored correctly");
         }
-
-        if (rc.getType() == RobotType.ARCHON) {
-            enemyIDToAge = new int[180][];
-            enemyIDToPos = new int[180][];
-            enemyPosToID = new int[100];
-        }
     }
 
     public static int countAllies(RobotType robotType) {
@@ -100,6 +94,9 @@ public class Radio {
         if (!haveBeenFirst) {
             setEnemyCounter(0);
             haveBeenFirst = true;
+            enemyIDToAge = new int[180][];
+            enemyIDToPos = new int[180][];
+            enemyPosToID = new int[100];
         }
         int pos = 101;
         int last = getEnemyCounter() + 101;
