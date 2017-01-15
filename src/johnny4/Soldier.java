@@ -146,7 +146,7 @@ public class Soldier {
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
-                nextEnemy = map.getTarget(myLocation, 4, 10);
+                /*nextEnemy = map.getTarget(myLocation, 4, 10);
                 if (nextEnemy == null) {
 
 
@@ -155,7 +155,7 @@ public class Soldier {
                         nextEnemy = map.getTarget(myLocation, 3, 300);
                     }
                     //System.out.println("Soldier at " + myLocation + " attacking " + nextEnemy);
-                }
+                }*/
             }
             boolean hasMoved = false;
             myLocation = rc.getLocation();

@@ -40,18 +40,6 @@ public class Map {
     }
 
 
-    public MapLocation getTarget(MapLocation myLoc) {
-        return getTarget(myLoc, 0);
-    }
-
-    public MapLocation getTarget(MapLocation myLoc, int type) {
-        return getTarget(myLoc, type, 9);
-    }
-
-    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge) {
-        return getTarget(myLoc, type, maxAge, 0);
-    }
-
     final int LUMBERJACK = Radio.typeToInt(RobotType.LUMBERJACK);
     final int SOLDIER = Radio.typeToInt(RobotType.SOLDIER);
     final int TANK = Radio.typeToInt(RobotType.TANK);
@@ -60,65 +48,22 @@ public class Map {
     final int GARDENER = Radio.typeToInt(RobotType.GARDENER);
 
     //type: 0=any, 1=military, 2=civilian, 3=archon
-    public MapLocation getTarget(MapLocation myLoc, int type, int maxAge, float minDist) {
+    public MapLocation getTarget(int type, MapLocation myLocation) {
         try {
-            minDist *= minDist; //square distances
-            float cx, cy;
-            cx = cy = 0;
-            float mx = myLoc.x;
-            float my = myLoc.y;
-            float mindist = 1e10f;
-            int frame = rc.getRoundNum();
-            int ecnt = radio.getEnemyCounter();
-            int clock = Clock.getBytecodeNum();
-            int i;
-            float x, y, dist;
-            int unitData, age, ut, found = 0;
-            float tmul = (type == 3 ? -1 : 1);
-            for (i = ecnt + 100; i >= 101; i--) {
-                //System.out.println("1: " + Clock.getBytecodeNum());
-                unitData = //radio.read(i);
-                        rc.readBroadcast(i);
-                //System.out.println("1.2: " + Clock.getBytecodeNum());
-                if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge || found > 8 || (ecnt + 101 - i) > 40)
-                    break;
-                ut = (unitData & 0b00000000000000000000111000000000) >> 9;
-                //System.out.println("2: " + Clock.getBytecodeNum());
-                if (ut == 0) continue;
-                if (type == 1 && !(ut == LUMBERJACK || ut == SOLDIER || ut == TANK || ut == SCOUT))
+            MapLocation best = null;
+            for (int t = 0; t < farTargets.length; t++) {
+                if (farTargets[t] == null) continue;
+                if (type == 1 && !(t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT))
                     continue;
-                if (type == 2 && !(ut == GARDENER)) continue;
-                if (type == 3 && !(ut == ARCHON)) continue;
-                if (type == 4 && !(ut == LUMBERJACK || ut == SOLDIER || ut == TANK)) continue;
-                x = (unitData & 0b11111111110000000000000000000000) >> 22;
-                y = (unitData & 0b00000000001111111111000000000000) >> 12;
-                dist = ((mx - x) * (mx - x) + (my - y) * (my - y)) * tmul;
-                if (dist < mindist && dist * tmul > minDist) {
-                    found++;
-                    mindist = dist;
-                    cx = x;
-                    cy = y;
-                    _type = ut;
+                if (type == 2 && !(t == GARDENER)) continue;
+                if (type == 3 && !(t == ARCHON)) continue;
+                if (type == 4 && !(t == LUMBERJACK || t == SOLDIER || t == TANK)) continue;
+                if (best == null || best.distanceTo(myLocation) > farTargets[t].distanceTo(myLocation)) {
+                    best = farTargets[t];
                 }
             }
-            clock = Clock.getBytecodeNum() - clock;
-            if (clock > 1500 && frame == rc.getRoundNum()) {
-                //System.out.println("Get target took " + clock + " evaluating " + (ecnt + 101 - i) + " found " + found);
-            }
-            if (maxAge > 100 && mindist > 1e6f) {
-                for (MapLocation m : archonPos) {
-                    dist = m.distanceSquaredTo(myLoc) * tmul;
-                    if (dist < mindist && dist * tmul > minDist) {
-                        mindist = dist;
-                        cx = m.x;
-                        cy = m.y;
-                    }
-                }
-            }
-            if (mindist > 1e6f) {
-                return null;
-            }
-            return new MapLocation(cx, cy);
+            return best;
+
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -126,7 +71,7 @@ public class Map {
     }
 
 
-    public void generateFarTargets(MapLocation myLoc, int maxAge, float minDist) throws GameActionException{
+    public void generateFarTargets(MapLocation myLoc, int maxAge, float minDist) throws GameActionException {
         minDist *= minDist; //square distances
         tempDist[0] = 1e10f;
         tempDist[1] = 1e10f;
@@ -141,20 +86,22 @@ public class Map {
         float my = myLoc.y;
         int frame = rc.getRoundNum();
         int ecnt = radio.getEnemyCounter();
+        float x, y, dx, dy, dist;
+        int unitData, ut;
         for (int i = ecnt + 100; i >= 101; i--) {
             //System.out.println("1: " + Clock.getBytecodeNum());
-            int unitData = rc.readBroadcast(i);
+            unitData = rc.readBroadcast(i);
             //System.out.println("1.2: " + Clock.getBytecodeNum());
             if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge)
                 continue;
-            int ut = (unitData & 0b00000000000000000000111000000000) >> 9;
+            ut = (unitData & 0b00000000000000000000111000000000) >> 9;
             //System.out.println("2: " + Clock.getBytecodeNum());
 
-            float x = (unitData & 0b11111111110000000000000000000000) >> 22;
-            float y = (unitData & 0b00000000001111111111000000000000) >> 12;
-            float dx = (mx - x);
-            float dy = (my - y);
-            float dist = dx * dx + dy * dy;
+            x = (unitData & 0b11111111110000000000000000000000) >> 22;
+            y = (unitData & 0b00000000001111111111000000000000) >> 12;
+            dx = (mx - x);
+            dy = (my - y);
+            dist = dx * dx + dy * dy;
             if (dist > tempDist[ut] || dist < minDist) {
                 continue;
             }

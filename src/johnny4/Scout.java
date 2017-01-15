@@ -95,7 +95,7 @@ public class Scout {
                     if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
                         nextCivilian = lastCivilian;
                     } else {
-                        nextCivilian = map.getTarget(myLocation, 2, 10, 0.8f * RobotType.SCOUT.sensorRadius);
+                        //nextCivilian = map.getTarget(myLocation, 2, 10, 0.8f * RobotType.SCOUT.sensorRadius);
                         lastCivilian = null;
                     }
                     if (nextCivilian == null) {
@@ -105,7 +105,7 @@ public class Scout {
                         }
                     }
                 } else {
-                    nextCivilian = map.getTarget(myLocation, 2, 20, 0.8f * RobotType.SCOUT.sensorRadius);
+                    //nextCivilian = map.getTarget(myLocation, 2, 20, 0.8f * RobotType.SCOUT.sensorRadius);
                     if (nextCivilian == null) {
                         if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
                             nextCivilian = lastCivilian;
@@ -144,10 +144,10 @@ public class Scout {
 
             if (nextEnemy == null && nextCivilian == null) {
                 longRangeEnemy = true;
-                nextEnemy = map.getTarget(myLocation, 0, 9, 0.8f * RobotType.SCOUT.sensorRadius);
+                /*nextEnemy = map.getTarget(myLocation, 0, 9, 0.8f * RobotType.SCOUT.sensorRadius);
                 if (nextEnemy == null) {
                     nextEnemy = map.getTarget(myLocation, 3, 80);
-                }
+                }*/
             }
             float dist = 100000f;
             if (nextEnemy != null) {
