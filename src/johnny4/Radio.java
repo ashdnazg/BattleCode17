@@ -4,19 +4,21 @@ import battlecode.common.*;
 
 public class Radio {
 
-    //Integer 0:        Archon Counter (0-7) Unit Counter (8-15) Enemy Counter (16-23)
-    //Integer 1-3:      Archon Info
+    //Integer 0:        Archon Counter
+    //Integer 1:        Enemy Counter
+    //Integer 2:        Unit Counter
     //Integer 4-100:    Unit Info
     //Integer 101-200:  Enemy Info
-    //Integer 201-300:  Enemy Trees
+    //Integer 201:  Enemy Reports count
+    //Integer 202-300:  Enemy Reports
     //Integer 301-320:  Requested trees to remove according to priority
     //Integer 321:      ALARM ALARM
     //Integer 400-405:  active unit counters
     //Integer 406-411:  under construction unit counters
     //Integer 412:  radio unit ID
     //Integer 413:  last round - used to figure who the first unit in the round is.
-    //Integer 414 - 419: enemy unit counters
-    //Integer 420 - 422: enemy unit counters bloom filter
+    //Integer 414 - 419: enemy unit counters // updated by Archon only
+    //Integer 420 - 425: reports bloom filter
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
@@ -25,12 +27,22 @@ public class Radio {
     static int myType;
     static int frame = -1;
     static int myRadioID = -1;
+    static int byteCodeLimit;
+    static Team myTeam;
     static Counter[] allyCounters = new Counter[6];
     static Counter[] underConstructionCounters = new Counter[6];
-    //static Counter[] enemyCounters = new Counter[6];
 
     static int[] allyCounts = new int[6];
     static int[] buildees = new int[2];
+
+    static int[] enemyCounts = new int[6];
+    static int[] reportBloom = new int[6];
+    static int[] tempBloom = new int[6];
+
+    // only used by Archon
+    static int[][] enemyIDToPos;
+    static int[][] enemyIDToAge;
+    static int[] enemyPosToID;
 
 
 
@@ -39,6 +51,8 @@ public class Radio {
         myType = typeToInt(rc.getType());
         Counter.rc = rc_;
         Stream.rc = rc_;
+        byteCodeLimit = rc.getType().bytecodeLimit;
+        myTeam = rc.getTeam();
         try {
             myRadioID = rc.readBroadcast(412);
             rc.broadcast(412, myRadioID + 1);
@@ -49,6 +63,9 @@ public class Radio {
         if (rc.getType() == RobotType.ARCHON) {
             myID = getArchonCounter() + 1;
             incrementArchonCounter();
+            enemyIDToAge = new int[180][];
+            enemyIDToPos = new int[180][];
+            enemyPosToID = new int[100];
         } else {
             int frame = rc.getRoundNum();
             int uc = getUnitCounter() + 4;
@@ -81,34 +98,192 @@ public class Radio {
         return allyCounts;
     }
 
+    public static int[] countEnemies() {
+        return enemyCounts;
+    }
+
+    public static int countEnemies(RobotType robotType) {
+        return enemyCounts[typeToInt(robotType)];
+    }
+
     //very expensive, use sparingly
 
     public static int getEnemyCounter() {
-        return (read(0) & 0x0000FF00) >> 8;
+        return read(1);
     }
 
     public static int getUnitCounter() {
-        return (read(0) & 0x00FF0000) >> 16;
+        return read(2);
     }
 
     public static int getArchonCounter() {
-        return (read(0) & 0xFF000000) >> 24;
+        return read(0);
     }
 
     public static void incrementArchonCounter() {
-        write(0, (((getArchonCounter() + 1) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
+        write(0, getArchonCounter() + 1);
         System.out.println("Archon counter is now " + getArchonCounter());
     }
 
     public static void incrementUnitCounter() {
         if (getUnitCounter() == 95) return;
-        write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 1) % 96) << 16) | (((getEnemyCounter() + 0) % 100) << 8));
+        write(2, getUnitCounter() + 1);
         System.out.println("Unit counter is now " + getUnitCounter());
     }
 
     public static void incrementEnemyCounter() {
-        write(0, (((getArchonCounter() + 0) % 4) << 24) | (((getUnitCounter() + 0) % 96) << 16) | (((getEnemyCounter() + 1) % 100) << 8));
+        write(1, getEnemyCounter() + 1);
     }
+
+    public static void setEnemyCounter(int newCounter) {
+        write(1, newCounter);
+    }
+
+    public static void updateEnemyCounts() throws GameActionException {
+        //System.out.println("before updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        int pos = 101;
+        int last = getEnemyCounter() + 101;
+        //System.out.println("updating counts last: " + last);
+        enemyCounts[0] = 0;
+        enemyCounts[1] = 0;
+        enemyCounts[2] = 0;
+        enemyCounts[3] = 0;
+        enemyCounts[4] = 0;
+        enemyCounts[5] = 0;
+
+        reportBloom[0] = 0;
+        reportBloom[1] = 0;
+        reportBloom[2] = 0;
+        reportBloom[3] = 0;
+        reportBloom[4] = 0;
+        reportBloom[5] = 0;
+
+        int report = rc.readBroadcast(pos);
+        boolean writeNeeded = false;
+        int frame32 = frame % 32 + 1;
+        while (pos < last) {
+            int ID = enemyPosToID[pos - 101];
+            //System.out.println("checking for eviction ID: " + ID);
+            int ID_a = ID % 180;
+            int ID_b = ID / 180;
+            int age = enemyIDToAge[ID_a][ID_b];
+            // evict units after not seeing them for 32 rounds
+            if (age == frame32) {
+                //System.out.println("evicting from pos: " + pos);
+                enemyIDToAge[ID_a][ID_b] = 0;
+                enemyIDToPos[ID_a][ID_b] = 0;
+                writeNeeded = true;
+                last--;
+                enemyPosToID[pos - 101] = enemyPosToID[last - 101];
+                report = rc.readBroadcast(last);
+
+                continue;
+            }
+            int type = (report & 0b00000000000000000000111000000000) >> 9;
+            enemyCounts[type]++;
+            if (writeNeeded) {
+                rc.broadcast(pos, report);
+                enemyIDToPos[ID_a][ID_b] = pos;
+                writeNeeded = false;
+            }
+            report = rc.readBroadcast(++pos);
+        }
+
+        if (writeNeeded) {
+            write(pos, report);
+        }
+
+        pos = 202;
+        int lastReport = 202 + rc.readBroadcast(201);
+        for (;pos < lastReport; pos += 2) {
+            report = rc.readBroadcast(pos);
+            //System.out.println("reading new report from pos: " + pos + " info: " + report);
+            int ID = rc.readBroadcast(pos + 1);
+            //System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000111000000000) >> 9));
+            int ID_a = ID % 180;
+            int ID_b = ID / 180;
+            if (enemyIDToAge[ID_a] == null) {
+                if (last == 201 || (byteCodeLimit - Clock.getBytecodeNum() < 5000)) {
+                    continue;
+                }
+                enemyIDToAge[ID_a] = new int[180];
+                enemyIDToPos[ID_a] = new int[180];
+            } else {
+                int infoPos = enemyIDToPos[ID_a][ID_b];
+                if (infoPos > 0) {
+                    rc.broadcast(infoPos, report);
+
+                    int h1 = ID % 192;
+                    int n1 = h1 / 32;
+                    int b1 = 1 << (h1 % 32);
+                    int h2 = (ID * 41 + 23) % 192;
+                    int n2 = h2 / 32;
+                    int b2 = 1 << (h2 % 32);
+                    int h3 = (ID * 97 + 67) % 192;
+                    int n3 = h3 / 32;
+                    int b3 = 1 << (h3 % 32);
+                    reportBloom[n1] |= b1;
+                    reportBloom[n2] |= b2;
+                    reportBloom[n3] |= b3;
+
+
+                    enemyIDToAge[ID_a][ID_b] = frame32;
+                    continue;
+                }
+            }
+            if (last == 201) {
+                continue;
+            }
+            int h1 = ID % 192;
+            int n1 = h1 / 32;
+            int b1 = 1 << (h1 % 32);
+            int h2 = (ID * 41 + 23) % 192;
+            int n2 = h2 / 32;
+            int b2 = 1 << (h2 % 32);
+            int h3 = (ID * 97 + 67) % 192;
+            int n3 = h3 / 32;
+            int b3 = 1 << (h3 % 32);
+            reportBloom[n1] |= b1;
+            reportBloom[n2] |= b2;
+            reportBloom[n3] |= b3;
+
+            enemyIDToAge[ID_a][ID_b] = frame32;
+            enemyIDToPos[ID_a][ID_b] = last;
+            enemyPosToID[last - 101] = ID;
+            rc.broadcast(last++, report);
+            int type = (report & 0b00000000000000000000111000000000) >> 9;
+            enemyCounts[type]++;
+        }
+
+        setEnemyCounter(last - 101);
+        rc.broadcast(201, 0);
+
+
+        rc.broadcast(414, enemyCounts[0]);
+        rc.broadcast(415, enemyCounts[1]);
+        rc.broadcast(416, enemyCounts[2]);
+        rc.broadcast(417, enemyCounts[3]);
+        rc.broadcast(418, enemyCounts[4]);
+        rc.broadcast(419, enemyCounts[5]);
+
+        System.out.println("Enemy Archons: "     + enemyCounts[0]);
+        System.out.println("Enemy Gardeners: "   + enemyCounts[1]);
+        System.out.println("Enemy Lumberjacks: " + enemyCounts[2]);
+        System.out.println("Enemy Soldiers: "    + enemyCounts[3]);
+        System.out.println("Enemy Tanks: "       + enemyCounts[4]);
+        System.out.println("Enemy Scouts: "      + enemyCounts[5]);
+
+
+        rc.broadcast(420, reportBloom[0]);
+        rc.broadcast(421, reportBloom[1]);
+        rc.broadcast(422, reportBloom[2]);
+        rc.broadcast(423, reportBloom[3]);
+        rc.broadcast(424, reportBloom[4]);
+        rc.broadcast(425, reportBloom[5]);
+
+        //System.out.println("after updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+    }
+
 
     public static void keepAlive() throws GameActionException {
         // System.out.println("before: " + Clock.getBytecodeNum());
@@ -123,6 +298,8 @@ public class Radio {
             allyCounts[3] = Counter.commit(403) + Counter.commit(409);
             allyCounts[4] = Counter.commit(404) + Counter.commit(410);
             allyCounts[5] = Counter.commit(405) + Counter.commit(411);
+
+            updateEnemyCounts();
         } else {
             allyCounts[0] = Counter.get(400) + Counter.get(406);
             allyCounts[1] = Counter.get(401) + Counter.get(407);
@@ -130,6 +307,20 @@ public class Radio {
             allyCounts[3] = Counter.get(403) + Counter.get(409);
             allyCounts[4] = Counter.get(404) + Counter.get(410);
             allyCounts[5] = Counter.get(405) + Counter.get(411);
+
+            enemyCounts[0] = rc.readBroadcast(414);
+            enemyCounts[1] = rc.readBroadcast(415);
+            enemyCounts[2] = rc.readBroadcast(416);
+            enemyCounts[3] = rc.readBroadcast(417);
+            enemyCounts[4] = rc.readBroadcast(418);
+            enemyCounts[5] = rc.readBroadcast(419);
+
+            reportBloom[0] = rc.readBroadcast(420);
+            reportBloom[1] = rc.readBroadcast(421);
+            reportBloom[2] = rc.readBroadcast(422);
+            reportBloom[3] = rc.readBroadcast(423);
+            reportBloom[4] = rc.readBroadcast(424);
+            reportBloom[5] = rc.readBroadcast(425);
         }
         Counter.increment(400 + myType);
 
@@ -163,11 +354,113 @@ public class Radio {
         }
     }
 
-    public static void reportEnemy(MapLocation location, RobotType type, int time) {
-        int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9) | (time / 8);
-        write(getEnemyCounter() + 101, info);
+    public static void reportEnemies(RobotInfo[] ris) throws GameActionException {
+        //System.out.println("before reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        int length = ris.length;
+        int numReports = read(201);
+        if (numReports == 98) {
+            return;
+        }
+        for (int i = 0; i < length; ++i) {
+            RobotInfo ri = ris[i];
+            if (ri.team == myTeam) {
+                continue;
+            }
+            int ID = ri.ID;
+
+            int h1 = ID % 192;
+            int n1 = h1 / 32;
+            int b1 = 1 << (h1 % 32);
+            int h2 = (ID * 41 + 23) % 192;
+            int n2 = h2 / 32;
+            int b2 = 1 << (h2 % 32);
+            int h3 = (ID * 97 + 67) % 192;
+            int n3 = h3 / 32;
+            int b3 = 1 << (h3 % 32);
+
+
+            if ((reportBloom[n1] & b1) != 0) {
+                if ((reportBloom[n2] & b2) != 0) {
+                    if ((reportBloom[n3] & b3) != 0) {
+                        continue;
+                    }
+                }
+            }
+
+            tempBloom[n1] |= b1;
+            tempBloom[n2] |= b2;
+            tempBloom[n3] |= b3;
+
+            int info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9);
+            rc.broadcast(numReports + 202, info);
+            rc.broadcast(numReports + 203, ID);
+            //System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
+            numReports += 2;
+            if (numReports == 98) {
+                break;
+            }
+        }
+        rc.broadcast(201, numReports);
+        if (tempBloom[0] != 0) {
+            rc.broadcast(420, reportBloom[0] | tempBloom[0]);
+            tempBloom[0] = 0;
+        }
+        if (tempBloom[1] != 0) {
+            rc.broadcast(421, reportBloom[1] | tempBloom[1]);
+            tempBloom[1] = 0;
+        }
+        if (tempBloom[2] != 0) {
+            rc.broadcast(422, reportBloom[2] | tempBloom[2]);
+            tempBloom[2] = 0;
+        }
+        if (tempBloom[3] != 0) {
+            rc.broadcast(423, reportBloom[3] | tempBloom[3]);
+            tempBloom[3] = 0;
+        }
+        if (tempBloom[4] != 0) {
+            rc.broadcast(424, reportBloom[4] | tempBloom[4]);
+            tempBloom[4] = 0;
+        }
+        if (tempBloom[5] != 0) {
+            rc.broadcast(425, reportBloom[5] | tempBloom[5]);
+            tempBloom[5] = 0;
+        }
+        //System.out.println("after reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+    }
+
+
+
+    public static void reportEnemy(MapLocation location, RobotType type, int ID) {
+        int h1 = ID % 192;
+        int n1 = h1 / 32;
+        int b1 = 1 << (h1 % 32);
+        int h2 = (ID * 41 + 23) % 192;
+        int n2 = h2 / 32;
+        int b2 = 1 << (h2 % 32);
+        int h3 = (ID * 97 + 67) % 192;
+        int n3 = h3 / 32;
+        int b3 = 1 << (h3 % 32);
+
+
+        if ((reportBloom[n1] & b1) != 0) {
+            if ((reportBloom[n2] & b2) != 0) {
+                if ((reportBloom[n3] & b3) != 0) {
+                    return;
+                }
+            }
+        }
+
+        int numReports = read(201);
+        if (numReports == 98) {
+            return;
+        }
+        int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9);
+        write(numReports + 202, info);
+        write(numReports + 203, ID);
+        write(201, numReports + 2);
+
+
         // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
-        incrementEnemyCounter();
     }
 
     public float getUnitX(int pos) {
@@ -178,9 +471,10 @@ public class Radio {
         return ((read(pos) & 0b00000000001111111111000000000000) >> 12);
     }
 
-    public float getUnitAge(int pos) {
+    public int getUnitAge(int pos) {
         return ((read(pos) & 0b00000000000000000000000111111111)) * 8;
     }
+
 
     public RobotType getUnitType(int pos) {
         return intToType((read(pos) & 0b00000000000000000000111000000000) >> 9);

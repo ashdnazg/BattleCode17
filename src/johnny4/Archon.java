@@ -23,7 +23,7 @@ public class Archon {
         this.lastDirection = randomDirection();
         if (radio.getEnemyCounter() == 0){
             for (MapLocation m : rc.getInitialArchonLocations(rc.getTeam().opponent())){
-                radio.reportEnemy(m, RobotType.ARCHON, 0);
+                //radio.reportEnemy(m, RobotType.ARCHON, 0);
             }
         }
         float angle = (float) Math.PI * 2/ directions.length ;

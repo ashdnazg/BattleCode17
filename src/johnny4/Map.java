@@ -19,15 +19,11 @@ public class Map {
         // init vision
     }
 
-    public RobotInfo[] sense() {
+    public RobotInfo[] sense() throws GameActionException {
         int frame = rc.getRoundNum();
         int clocks = Clock.getBytecodeNum();
         RobotInfo[] ret = rc.senseNearbyRobots();
-        for (RobotInfo r : ret) {
-            if (!r.getTeam().equals(rc.getTeam())) {
-                radio.reportEnemy(r.getLocation(), r.getType(), frame);
-            }
-        }
+        Radio.reportEnemies(ret);
         return ret;
         //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
     }
