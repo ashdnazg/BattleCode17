@@ -38,16 +38,19 @@ public class BuildPlanner {
         }
 
         int numGardeners =  Radio.countAllies(RobotType.GARDENER);
+        System.out.println("numGardeners: " + numGardeners);
         if (numGardeners == 0) {
             return true;
         }
 
         int activeGardeners = Radio.countActiveGardeners();
+        System.out.println("activeGardeners: " + activeGardeners);
         if (activeGardeners == 0) {
             return false;
         }
 
         boolean rich = money > 2 * RobotType.GARDENER.bulletCost;
+        System.out.println("rich: " + rich);
         if (rich && numGardeners == 1) {
             return true;
         }

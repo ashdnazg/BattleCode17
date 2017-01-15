@@ -40,8 +40,12 @@ public class Lumberjack {
 
     public void run() {
         while (true) {
+            int frame = rc.getRoundNum();
             tick();
             Clock.yield();
+            if (frame != rc.getRoundNum()) {
+                System.out.println("BYTECODE OVERFLOW")
+            }
         }
     }
 
