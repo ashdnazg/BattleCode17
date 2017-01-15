@@ -87,7 +87,7 @@ public class BuildPlanner {
 
 
         boolean alarm = Radio.getAlarm() && nearbyProtectors < 2;
-        boolean needSoldiers = (ownSoldiers < enemySoldiers) || (ownSoldiers < (enemyScouts / 2));
+        boolean needSoldiers = (ownSoldiers < (enemySoldiers + enemyLumberjacks)) || (ownSoldiers < (enemyScouts / 2));
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (ownLumberjacks < 1) || (ownLumberjacks < (ownSoldiers / 3));
