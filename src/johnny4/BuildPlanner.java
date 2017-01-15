@@ -7,6 +7,7 @@ public class BuildPlanner {
     static RobotController rc;
     static RobotInfo[] nearbyRobots;
     static TreeStorage trees;
+    static final int MAX_TREES_PER_GARDENER = 6;
 
     static float money = 0;
     static int nearbyProtectors = 0;
@@ -25,7 +26,7 @@ public class BuildPlanner {
     }
 
     public static boolean buildTree(){
-        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && trees.ownTrees < 6;
+        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && trees.ownTrees < MAX_TREES_PER_GARDENER;
     }
 
 

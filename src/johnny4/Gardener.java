@@ -81,6 +81,9 @@ public class Gardener {
             float money = rc.getTeamBullets();
             System.out.println("Own trees: " + treeStorage.ownTrees);
 
+            if (treeStorage.ownTrees < BuildPlanner.MAX_TREES_PER_GARDENER){
+                Radio.reportActiveGardener();
+            }
 
             RobotInfo[] nearbyRobots = map.sense();
             TreeInfo[] trees = senseBiggestTrees();
