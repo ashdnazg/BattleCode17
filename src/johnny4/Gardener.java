@@ -103,7 +103,6 @@ public class Gardener {
 
             movement.init(nearbyRobots, trees, bullets);
             if (money > MIN_CONSTRUCTION_MONEY) planner.update(nearbyRobots);
-            treeStorage.updateTrees(trees);
             boolean hasMoved = false;
 
             if (frame % 9 == 0) {
