@@ -99,7 +99,7 @@ public class WellSpacedHexagonalClusters extends Grid {
                 gxSpacing = gx * SPACING;
                 gx2 = 0.5f * (gx % 2);
 
-                for (; gy < ymax; gy += PATTERN_SKIP[gx % P_X][gy % P_Y]) {
+                for (; gy < ymax; gy += PATTERN_SKIP_X[gy % P_Y]) {
                     realLocation = new MapLocation(gxSpacing, (gy + gx2) * SPACING);
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
                     //System.out.println(realLocation);
