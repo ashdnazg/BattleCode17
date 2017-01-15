@@ -18,6 +18,7 @@ public class Archon {
     int stuckSince;
 
     public Archon(RobotController rc){
+        BuildPlanner.rc = rc;
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
