@@ -68,7 +68,7 @@ public class BuildPlanner {
         }
 
         if (needLumberJacks) {
-            return RobotType.SOLDIER;
+            return RobotType.LUMBERJACK;
         }
 
         if (needScouts) {

@@ -301,6 +301,13 @@ public class Radio {
             activeGardenersCount = Counter.commit(426);
 
             updateEnemyCounts();
+
+            System.out.println("Allied Scouts: " + countAllies(RobotType.SCOUT));
+            System.out.println("Allied Soldiers: " + countAllies(RobotType.SOLDIER));
+            System.out.println("Allied Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
+            System.out.println("Allied Gardeners: " + countAllies(RobotType.GARDENER));
+
+
         } else {
             allyCounts[0] = Counter.get(400) + Counter.get(406);
             allyCounts[1] = Counter.get(401) + Counter.get(407);
@@ -339,11 +346,6 @@ public class Radio {
                 Counter.increment(406 + robotType);
             }
         }
-
-        // System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
-        // System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
-        // System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
-        // System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));
         // System.out.println("after: " + Clock.getBytecodeNum());
     }
 
