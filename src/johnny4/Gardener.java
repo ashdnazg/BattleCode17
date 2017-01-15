@@ -108,11 +108,10 @@ public class Gardener {
             if (newHealth < health || nextEnemy != null) {
                 roundsSinceAttack = 0;
                 radio.setAlarm();
+                System.out.println("Alarm!");
             }
             health = newHealth;
 
-            boolean alarm = radio.getAlarm();
-            boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;
             System.out.println("gardener prepath: " + Clock.getBytecodeNum());
             // Trees
 
@@ -135,6 +134,8 @@ public class Gardener {
                             rc.plantTree(myLocation.directionTo(treeloc));
                             TreeStorage.plantedTree(rc.senseTreeAtLocation(treeloc));
                         }
+                    }else{
+                        System.out.println("No space for tree found");
                     }
                 }
 

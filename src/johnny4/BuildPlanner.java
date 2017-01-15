@@ -11,8 +11,19 @@ public class BuildPlanner {
     static float money = 0;
     static int nearbyProtectors = 0;
 
-    public static void update(RobotInfo[] nearbyRobots){
-        int frame = rc.getRoundNum();
+    static int ownScouts;
+    static int ownLumberjacks;
+    static int ownSoldiers;
+    static int ownGardeners;
+    static int enemyScouts;
+    static int enemyLumberjacks;
+    static int enemySoldiers;
+    static int enemyGardeners;
+    static int frame;
+
+
+    public static void update(RobotInfo[] nearbyRobots) {
+        frame = rc.getRoundNum();
 
         BuildPlanner.nearbyRobots = nearbyRobots;
         nearbyProtectors = 0;
@@ -22,10 +33,20 @@ public class BuildPlanner {
                 nearbyProtectors++;
             }
         }
+        int ownCounts[] = Radio.countAllies();
+        ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];
+        ownLumberjacks = ownCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
+        ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)];
+        ownGardeners = ownCounts[Radio.typeToInt(RobotType.GARDENER)];
+        int enemyCounts[] = Radio.countEnemies();
+        enemyScouts = enemyCounts[Radio.typeToInt(RobotType.SCOUT)];
+        enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
+        enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
+        enemyGardeners = enemyCounts[Radio.typeToInt(RobotType.GARDENER)];
     }
 
     public static boolean buildTree() throws GameActionException {
-        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && TreeStorage.ownTrees < MAX_TREES_PER_GARDENER;
+        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && TreeStorage.ownTrees < MAX_TREES_PER_GARDENER && TreeStorage.ownTrees * ownGardeners < frame / 100 + 1;
     }
 
 
@@ -36,7 +57,7 @@ public class BuildPlanner {
             return false;
         }
 
-        int numGardeners =  Radio.countAllies(RobotType.GARDENER);
+        int numGardeners = Radio.countAllies(RobotType.GARDENER);
         System.out.println("numGardeners: " + numGardeners);
         if (numGardeners == 0) {
             return true;
@@ -60,19 +81,9 @@ public class BuildPlanner {
 
     public static RobotType getUnitToBuild() throws GameActionException {
 
-        int ownCounts[] = Radio.countAllies();
-        int ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];
-        int ownLumberjacks = ownCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
-        int ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)];
-        int enemyCounts[] = Radio.countEnemies();
-        int enemyScouts = enemyCounts[Radio.typeToInt(RobotType.SCOUT)];
-        int enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
-        int enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
-
         boolean canSoldier = money > RobotType.SOLDIER.bulletCost;
         boolean canLumberjack = money > RobotType.LUMBERJACK.bulletCost;
         boolean canScout = money > RobotType.SCOUT.bulletCost;
-
 
 
         boolean alarm = Radio.getAlarm() && nearbyProtectors < 2;
