@@ -9,6 +9,7 @@ public class TreeStorage {
     static float[] treeHealth = new float[knownTrees.length];
     static boolean[] _updated = new boolean[knownTrees.length];
     static int[] lastUpdate = new int[knownTrees.length];
+    static boolean[] ownTree = new boolean[knownTrees.length];
     static int lastWater;
 
     public TreeStorage(RobotController rc) {
@@ -18,37 +19,15 @@ public class TreeStorage {
         }
     }
 
-    public void addTree(TreeInfo tree) {
-        float maxDist = -1f;
-        MapLocation myLocation = rc.getLocation();
-        float dist;
-        int best = -1;
-        for (int i = 0; i < knownTrees.length; i++) {
-            if (treeHealth[i] < 0) {
-                treeHealth[i] = tree.health;
-                knownTrees[i] = tree.location;
-                lastUpdate[i] = rc.getRoundNum();
-                _updated[i] = true;
-                System.out.println("Added tree at " + knownTrees[i] + " index " + i + " with health " + treeHealth[i]);
-                return;
-            }
-            dist = knownTrees[i].distanceTo(myLocation);
-            if (dist > maxDist) {
-                best = i;
-                maxDist = dist;
-            }
-        }
-        if (best >= tree.location.distanceTo(myLocation)) {
-            System.out.println("Overwriting tree at " + knownTrees[best]);
-            treeHealth[best] = tree.health;
-            knownTrees[best] = tree.location;
-            lastUpdate[best] = rc.getRoundNum();
-            _updated[best] = true;
-        } else {
-            System.out.println("Couldn't add tree due to full storage");
-        }
+    public void plantedTree(TreeInfo t) {
+        knownTrees[t.getID() % knownTrees.length] = t.location;
+        treeHealth[t.getID() % knownTrees.length] = t.health;
+        _updated[t.getID() % knownTrees.length] = true;
+        ownTree[t.getID() % knownTrees.length] = true;
     }
 
+
+    int ownTrees = 0;
     int storedTrees = 0;
 
     public void updateTrees(TreeInfo trees[]) {
@@ -60,36 +39,32 @@ public class TreeStorage {
             _updated[i] = false;
             treeHealth[i] -= GameConstants.BULLET_TREE_DECAY_RATE * (frame - lastUpdate[i]);
             lastUpdate[i] = frame;
-            //System.out.println(i + ": " + treeHealth[i] + " at " + knownTrees[i]);
         }
 
         int time2 = Clock.getBytecodeNum();
         boolean unknownTree;
         for (TreeInfo t : trees) {
             if (t.getTeam().equals(rc.getTeam()) && t.maxHealth == GameConstants.BULLET_TREE_MAX_HEALTH) {
-                unknownTree = true;
-                //for (int i = 0; i < knownTrees.length; i++) {
-                    //if (treeHealth[i] > 0 && t.location.equals(knownTrees[i])) {
-                        //System.out.println("Updated tree at " + knownTrees[i] + " " + treeHealth[i] + " -> " + t.health);
-                        knownTrees[t.getID() % knownTrees.length] = t.location;
-                        treeHealth[t.getID() % knownTrees.length] = t.health;
-                        _updated[t.getID() % knownTrees.length] = true;
-                        unknownTree = false;
-                    //}
-                //}
-                //if (unknownTree) addTree(t);
+                knownTrees[t.getID() % knownTrees.length] = t.location;
+                treeHealth[t.getID() % knownTrees.length] = t.health;
+                _updated[t.getID() % knownTrees.length] = true;
             }
         }
 
         storedTrees = 0;
+        ownTrees = 0;
         int time3 = Clock.getBytecodeNum();
         for (int i = 0; i < knownTrees.length; i++) {
             if (treeHealth[i] > 0) {
                 if (!_updated[i] && rc.canSenseLocation(knownTrees[i])) {
                     treeHealth[i] = -1;
+                    ownTree[i] = false;
                 } else {
                     storedTrees++;
+                    if (ownTree[i]) ownTrees++;
                 }
+            }else{
+                ownTree[i] = false;
             }
         }
         int time4 = Clock.getBytecodeNum();
