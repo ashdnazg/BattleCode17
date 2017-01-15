@@ -8,7 +8,7 @@ public class Movement {
 
     static RobotType robotType;
     static RobotController rc;
-    final float strideDistance;
+    static float strideDistance;
     static int lastInit = -1;
     static RobotInfo[] robots;
     static TreeInfo[] trees;
@@ -19,11 +19,12 @@ public class Movement {
     static Threat[] threats;
     static int threatsLen = 0;
     static float attemptDist[];
-    final float MIN_FRIENDLY_LUMBERJACK_DIST;
-    final float MIN_ENEMY_LUMBERJACK_DIST; //overrides enemy dist
-    final float MIN_ENEMY_DIST;
-    final float MIN_MOVE_TO_FIRE_ANGLE;
-    boolean evadeBullets = true;
+    static float MIN_FRIENDLY_LUMBERJACK_DIST;
+    static float MIN_ENEMY_LUMBERJACK_DIST; //overrides enemy dist
+    static float MIN_ENEMY_DIST;
+    static float MIN_MOVE_TO_FIRE_ANGLE;
+    static float GO_STRAIGHT_DISTANCE;
+    static boolean evadeBullets = true;
 
     public Movement(RobotController rc) {
         this.rc = rc;
@@ -39,27 +40,32 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.81f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 3.5f;
+                GO_STRAIGHT_DISTANCE = 4;
                 attemptDist[1] = 1.1f;
                 break;
             case LUMBERJACK:
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
+                GO_STRAIGHT_DISTANCE = 1;
                 break;
             case SOLDIER:
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
+                GO_STRAIGHT_DISTANCE = 2;
                 break;
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 5f;
+                GO_STRAIGHT_DISTANCE = 0;
                 break;
             case ARCHON:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
                 MIN_ENEMY_DIST = 0f;
+                GO_STRAIGHT_DISTANCE = 0;
                 evadeBullets = false;
                 break;
             default:
@@ -117,19 +123,50 @@ public class Movement {
         }
     }
 
-    public boolean findPath(MapLocation target, Direction fireDir) {
+    public boolean findPath(MapLocation target, Direction fireDir) throws GameActionException {
+        if (target == null) {
+            System.out.println("Pathfinding to null, that's easy");
+            return false;
+        }
         if (rc.getRoundNum() != lastInit) {
             new RuntimeException("Movement wasn't initialized since: " + lastInit).printStackTrace();
         }
         System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
         this.fireDir = fireDir;
 
-        boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
+        Direction moveDir = myLocation.directionTo(target);
         float olddist = myLocation.distanceTo(target);
+        if (robotType != RobotType.SCOUT && olddist > 0.9 * strideDistance) {
+            float t, bestval = 10000f;
+            TreeInfo best = null;
+            for (TreeInfo tree : trees) {
+                if (myLocation.distanceTo(tree.location) - tree.radius - robotType.bodyRadius < strideDistance) {
+                    t = Math.abs(myLocation.directionTo(tree.location).degreesBetween(myLocation.directionTo(target)));
+                    if (t < bestval) {
+                        bestval = t;
+                        best = tree;
+                    }
+                }
+            }
+            if (best != null && bestval < 60){
+                float bestToTarget = myLocation.directionTo(best.location).degreesBetween(myLocation.directionTo(target));
+                if (bestToTarget > 0 == bugdir) {
+                System.out.println("Found blocking tree at angle " + bestval);
+                rc.setIndicatorLine(myLocation, target, 0, 0, 255);
+                rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
+                //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
+                moveDir = myLocation.directionTo(best.location).rotateLeftRads(Math.signum(bestToTarget)
+                        * (float) (Math.asin((robotType.bodyRadius + best.radius)/myLocation.distanceTo(best.location))));
+
+                rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float)Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+            }}
+        }
+
+        boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
         if (olddist < 0.0001f) return false;
-        boolean retval = bugMove(myLocation.directionTo(target), Math.min(strideDistance, target.distanceTo(myLocation)));
+        boolean retval = bugMove(moveDir, Math.min(strideDistance, target.distanceTo(myLocation)));
         System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
-        if (retval && olddist < myLocation.distanceTo(target) && (olddist < 4 || hadLos && olddist < 9)) {
+        if (retval && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || hadLos && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
             System.out.println("Switching bugdir because of distance");
             bugdir = !bugdir;
         }
@@ -142,10 +179,10 @@ public class Movement {
         return valueMove(dir, strideDistance);
     }
 
-    MapLocation nloc, nloc2, b1, b2, b3;
-    float br;
+    static MapLocation nloc, nloc2, b1, b2, b3;
+    static float br;
 
-    private float valueMove(Direction dir, float dist) {
+    static private float valueMove(Direction dir, float dist) {
         Threat threat;
         if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
         float max = 0;
@@ -167,10 +204,10 @@ public class Movement {
         br = robotType.bodyRadius * robotType.bodyRadius;
 
         if (evadeBullets) {
-            for (BulletInfo bi : bullets) {
-                b1 = bi.location;
-                b2 = bi.location.add(bi.dir, bi.speed / 2);
-                b3 = bi.location.add(bi.dir, bi.speed);
+            for (int i = 0; i < bullets.length; i++) {
+                b1 = bullets[i].location;
+                b2 = bullets[i].location.add(bullets[i].dir, bullets[i].speed / 2);
+                b3 = bullets[i].location.add(bullets[i].dir, bullets[i].speed);
                 if ((b1.x - nloc.x) * (b1.x - nloc.x) + (b1.y - nloc.y) * (b1.y - nloc.y) < br ||
                         (b2.x - nloc.x) * (b2.x - nloc.x) + (b2.y - nloc.y) * (b2.y - nloc.y) < br ||
                         (b3.x - nloc.x) * (b3.x - nloc.x) + (b3.y - nloc.y) * (b3.y - nloc.y) < br) {
@@ -212,7 +249,7 @@ public class Movement {
 
     }
 
-    private float LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide, boolean left, float dist) {
+    private static float LJ_tryMove(Direction dir, float degreeOffset, int checksPerSide, boolean left, float dist) {
 
         try {
             Direction bestDir = null;
@@ -233,8 +270,8 @@ public class Movement {
                 do {
                     boolean moved = false;
                     int currentCheck = lob;
-                    checksPerSide = tCheck / ((dist < 1.4) ? 3 : 1);
-                    degreeOffset = tOff * ((dist < 1.4) ? 3 : 1);
+                    checksPerSide = tCheck / ((dist < strideDistance / 2f) ? 3 : 1);
+                    degreeOffset = tOff * ((dist < strideDistance / 2f) ? 3 : 1);
                     Direction d;
 
                     while (currentCheck <= checksPerSide) {

@@ -170,7 +170,7 @@ public class Util {
 
 
 
-    static TreeInfo[] temp = new TreeInfo[20];
+    static TreeInfo[] temp = new TreeInfo[25];
     static TreeInfo[] cache = new TreeInfo[0];
     static TreeInfo[] senseBiggestTrees(){
         if (rc.getRoundNum() % 3 == 0) {
@@ -189,6 +189,9 @@ public class Util {
             time = Clock.getBytecodeNum() - time;
             if (time > 300){
                 System.out.println("Sensing trees took " + time);
+            }
+            if (cache.length >= temp.length){
+                System.out.println("Reached maximum tree count");
             }
         }
         return cache;

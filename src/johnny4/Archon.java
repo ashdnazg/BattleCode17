@@ -78,7 +78,7 @@ public class Archon {
             boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f)/* freeDirs > 1*/;
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
             if (eligibleSpot && rc.canHireGardener(oppositeDir) &&
-                (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0 && frame > 100) && frame < 30 &&
+                (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0 && frame > 100)  &&
                 (!alarm || rich)) {
                 rc.hireGardener(oppositeDir);
                 Radio.reportBuild(RobotType.GARDENER);
