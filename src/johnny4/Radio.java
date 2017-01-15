@@ -19,6 +19,7 @@ public class Radio {
     //Integer 413:  last round - used to figure who the first unit in the round is.
     //Integer 414 - 419: enemy unit counters // updated by Archon only
     //Integer 420 - 425: reports bloom filter
+    //Integer 426: active gardener counter
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
@@ -29,11 +30,10 @@ public class Radio {
     static int myRadioID = -1;
     static int byteCodeLimit;
     static Team myTeam;
-    static Counter[] allyCounters = new Counter[6];
-    static Counter[] underConstructionCounters = new Counter[6];
 
     static int[] allyCounts = new int[6];
     static int[] buildees = new int[2];
+    static int activeGardenersCount;
 
     static int[] enemyCounts = new int[6];
     static int[] reportBloom = new int[6];
@@ -298,6 +298,7 @@ public class Radio {
             allyCounts[3] = Counter.commit(403) + Counter.commit(409);
             allyCounts[4] = Counter.commit(404) + Counter.commit(410);
             allyCounts[5] = Counter.commit(405) + Counter.commit(411);
+            activeGardenersCount = Counter.commit(426);
 
             updateEnemyCounts();
         } else {
@@ -307,6 +308,8 @@ public class Radio {
             allyCounts[3] = Counter.get(403) + Counter.get(409);
             allyCounts[4] = Counter.get(404) + Counter.get(410);
             allyCounts[5] = Counter.get(405) + Counter.get(411);
+
+            activeGardenersCount = Counter.get(426);
 
             enemyCounts[0] = rc.readBroadcast(414);
             enemyCounts[1] = rc.readBroadcast(415);
@@ -559,6 +562,15 @@ public class Radio {
                 write(index, 0);
             }
         }
+    }
+
+
+    public static void reportActiveGardener() throws GameActionException {
+        Counter.increment(426);
+    }
+
+    public static int countActiveGardeners() throws GameActionException {
+        return activeGardenersCount;
     }
 
     public static void setAlarm() {
