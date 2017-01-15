@@ -26,7 +26,7 @@ public class Soldier {
             tick();
             Clock.yield();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW")
+                System.out.println("BYTECODE OVERFLOW");
             }
         }
     }
