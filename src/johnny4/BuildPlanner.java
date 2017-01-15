@@ -42,6 +42,39 @@ public class BuildPlanner {
         int enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         int enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
 
+
+        boolean alarm = Radio.getAlarm() && nearbyProtectors < 2;
+        boolean needSoldiers = (ownSoldiers < enemySoldiers) || (ownSoldiers < (enemyScouts / 2));
+        boolean noScouts = ownScouts == 0;
+
+        boolean needLumberJacks = (ownLumberjacks < 1) || (ownLumberjacks < (ownSoldiers / 3));
+        boolean needScouts = (ownScouts < 3) || (ownScouts < (ownSoldiers / 3));
+
+
+        if (alarm) {
+            if (needLumberJacks) {
+                return RobotType.LUMBERJACK;
+            } else if (needSoldiers) {
+                return RobotType.SOLDIER;
+            }
+        }
+
+        if (needSoldiers) {
+            return RobotType.SOLDIER;
+        }
+
+        if (noScouts) {
+            return RobotType.SCOUT;
+        }
+
+        if (needLumberJacks) {
+            return RobotType.SOLDIER;
+        }
+
+        if (needScouts) {
+            return RobotType.SCOUT;
+        }
+
         return null;
     }
 }
