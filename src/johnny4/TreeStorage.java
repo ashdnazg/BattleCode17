@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class TreeStorage {
 
     static RobotController rc;
-    static MapLocation[] knownTrees = new MapLocation[50];
+    static MapLocation[] knownTrees = new MapLocation[71];
     static float[] treeHealth = new float[knownTrees.length];
     static boolean[] _updated = new boolean[knownTrees.length];
     static int[] lastUpdate = new int[knownTrees.length];
@@ -59,11 +59,15 @@ public class TreeStorage {
                 if (!_updated[i] && rc.canSenseLocation(knownTrees[i])) {
                     treeHealth[i] = -1;
                     ownTree[i] = false;
+                    rc.setIndicatorDot(knownTrees[i], 255, 0, 0);
                 } else {
                     storedTrees++;
                     if (ownTree[i]) {
                         ownTrees++;
-                        rc.setIndicatorDot(knownTrees[i], 255, 255, 0);
+                        rc.setIndicatorDot(knownTrees[i], 255, 255, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
+                    }else{
+
+                        rc.setIndicatorDot(knownTrees[i], 255, 100, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }
                 }
             }else{
@@ -85,6 +89,7 @@ public class TreeStorage {
             if (treeHealth[i] > 0 && rc.canWater(knownTrees[i]) && treeHealth[i] < GameConstants.BULLET_TREE_MAX_HEALTH - GameConstants.WATER_HEALTH_REGEN_RATE) {
                 rc.water(knownTrees[i]);
                 treeHealth[i] = Math.min(GameConstants.BULLET_TREE_MAX_HEALTH, treeHealth[i] + GameConstants.WATER_HEALTH_REGEN_RATE);
+                lastUpdate[i] = rc.getRoundNum();
                 System.out.println("Watered tree at " + knownTrees[i] + " back to " + treeHealth[i] + "/" + GameConstants.BULLET_TREE_MAX_HEALTH + " hp.");
                 lastWater = rc.getRoundNum();
                 return;
@@ -118,11 +123,12 @@ public class TreeStorage {
                     rc.water(knownTrees[i]);
                     treeHealth[i] = Math.min(GameConstants.BULLET_TREE_MAX_HEALTH, treeHealth[i] + GameConstants.WATER_HEALTH_REGEN_RATE);
                     lastWater = frame;
+                    lastUpdate[i] = rc.getRoundNum();
                     System.out.println("Watered tree at " + knownTrees[i] + " back to " + treeHealth[i] + "/" + GameConstants.BULLET_TREE_MAX_HEALTH + " hp.");
                 }
-                dist = knownTrees[i].distanceTo(myLocation) * (-1 / treeHealth[i] / treeHealth[i] + 1);
+                dist = /*knownTrees[i].distanceTo(myLocation) **/ (treeHealth[i]);
                 for (int g = 0; g < gcnt; g++) {
-                    if (gardeners[g].location.distanceTo(knownTrees[i]) + 1 < dist) {
+                    if (gardeners[g].location.distanceTo(knownTrees[i]) + 0.1 < dist) {
                         dist = 10000;
                     }
                 }

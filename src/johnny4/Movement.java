@@ -18,6 +18,8 @@ public class Movement {
     static Team myTeam, enemyTeam;
     static Threat[] threats;
     static int threatsLen = 0;
+    static MapLocation stuckLocation;
+    static int stuckSince;
     static float attemptDist[];
     static float MIN_FRIENDLY_LUMBERJACK_DIST;
     static float MIN_ENEMY_LUMBERJACK_DIST; //overrides enemy dist
@@ -32,6 +34,8 @@ public class Movement {
         strideDistance = robotType.strideRadius;
         myTeam = rc.getTeam();
         enemyTeam = rc.getTeam().opponent();
+        stuckLocation = rc.getLocation();
+        stuckSince = rc.getRoundNum();
         attemptDist = new float[2];
         attemptDist[0] = strideDistance;
         attemptDist[1] = 0.5f;
@@ -121,13 +125,23 @@ public class Movement {
         if (nothreats) { // only keep distance to lumberjacks in combat
             threatsLen = 0;
         }
+        if (myLocation.distanceTo(stuckLocation) > strideDistance * 1.1){
+            stuckLocation = myLocation;
+            stuckSince = lastInit;
+        }
     }
+
+    static MapLocation oldTarget = null;
 
     public boolean findPath(MapLocation target, Direction fireDir) throws GameActionException {
         if (target == null) {
             System.out.println("Pathfinding to null, that's easy");
             return false;
         }
+        if (oldTarget != null && oldTarget.distanceTo(target) > 2){
+            stuckSince = rc.getRoundNum();
+        }
+        oldTarget = target;
         if (rc.getRoundNum() != lastInit) {
             new RuntimeException("Movement wasn't initialized since: " + lastInit).printStackTrace();
         }
@@ -158,6 +172,11 @@ public class Movement {
 
                 rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float)Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
             }
+        }
+        if (olddist > 2 * strideDistance && lastInit - stuckSince > 4 ) {
+            System.out.println("Switching bugdir because of stuck");
+            stuckSince = rc.getRoundNum();
+            bugdir = !bugdir;
         }
 
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
