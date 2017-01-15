@@ -45,7 +45,7 @@ public class BuildPlanner {
         int activeGardeners = Radio.countActiveGardeners();
         System.out.println("activeGardeners: " + activeGardeners);
         if (activeGardeners == 0) {
-            return false;
+            return true;
         }
 
         boolean rich = money > 2 * RobotType.GARDENER.bulletCost;

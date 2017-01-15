@@ -119,16 +119,22 @@ public class Gardener {
             movement.init(nearbyRobots, trees, bullets);
             if (money > MIN_CONSTRUCTION_MONEY) BuildPlanner.update(nearbyRobots);
             boolean hasMoved = false;
-
+            System.out.println("gardener a: " + Clock.getBytecodeNum());
             if (frame % 9 == 0) {
+                System.out.println("gardener b: " + Clock.getBytecodeNum());
                 TreeStorage.updateTrees(trees);
+                System.out.println("gardener c: " + Clock.getBytecodeNum());
             } else if (roundsSinceAttack >= ATTACK_COOLDOWN_TIME) {
-
+                System.out.println("gardener d: " + Clock.getBytecodeNum());
                 //Try building new trees
                 if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree()) {
+                    System.out.println("gardener e: " + Clock.getBytecodeNum());
                     MapLocation treeloc = grid.getNearestPlantableLocation(myLocation, null);
+                    System.out.println("gardener f: " + Clock.getBytecodeNum());
                     if (treeloc != null) {
+                        System.out.println("gardener g: " + Clock.getBytecodeNum());
                         MapLocation walkloc = grid.getNearestWalkableLocation(treeloc);
+                        System.out.println("gardener h: " + Clock.getBytecodeNum());
                         hasMoved = movement.findPath(walkloc, null);
                         myLocation = rc.getLocation();
                         rc.setIndicatorDot(walkloc, 0, 0, 255);
@@ -142,7 +148,9 @@ public class Gardener {
 
                 //Try watering existing trees
                 if (!hasMoved) {
+                    System.out.println("gardener i: " + Clock.getBytecodeNum());
                     MapLocation tree = TreeStorage.waterTree(nearbyRobots);
+                    System.out.println("gardener j: " + Clock.getBytecodeNum());
                     if (tree != null && movement.findPath(tree.add(tree.directionTo(myLocation), 2), null)) {
                         hasMoved = true;
                         myLocation = rc.getLocation();
@@ -150,6 +158,7 @@ public class Gardener {
                 }
             }
             TreeStorage.tryWater(); //Try to water any trees in range
+            System.out.println("gardener k: " + Clock.getBytecodeNum());
 
 
             // Units
@@ -157,6 +166,7 @@ public class Gardener {
             if (rc.getTeamBullets() > RobotType.SCOUT.bulletCost) {
                 tryBuild(BuildPlanner.getUnitToBuild());
             }
+            System.out.println("gardener l: " + Clock.getBytecodeNum());
 
 
             //Evasion
@@ -173,10 +183,12 @@ public class Gardener {
             if (isFleeing) {
                 roundsSinceAttack = 0;
             }
+            System.out.println("gardener m: " + Clock.getBytecodeNum());
             if (roundsSinceAttack < ATTACK_COOLDOWN_TIME && !hasMoved) {
                 if (nextEnemy != null) {
                     escapeLocation = nextEnemy.add(nextEnemy.directionTo(myLocation), 10);
                 }
+                System.out.println("gardener n: " + Clock.getBytecodeNum());
                 if (movement.findPath(escapeLocation, null)) {
                     hasMoved = true;
                     myLocation = rc.getLocation();
