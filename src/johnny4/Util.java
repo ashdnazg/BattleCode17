@@ -10,6 +10,7 @@ public class Util {
 
     static RobotController rc;
     static Random rnd;
+    static final boolean DEBUG = false;
 
     /**
      * Returns a random Direction
@@ -104,7 +105,7 @@ public class Util {
             x = t.location.x;
             y = t.location.y;
             r = t.radius;
-            if (Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) < rs + r){
+            if ((x-cx)*(x-cx) + (y-cy)*(y-cy) < (rs + r) * (rs + r)){
                 px[cnt] = x;
                 py[cnt] = y;
                 pr[cnt] = r + 0.0001f;
@@ -116,11 +117,11 @@ public class Util {
             x = rb.location.x;
             y = rb.location.y;
             r = rb.type.bodyRadius;
-            if (Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) < rs + r){
+            if ((x-cx)*(x-cx) + (y-cy)*(y-cy) < (rs + r) * (rs + r)){
                 px[cnt] = x;
                 py[cnt] = y;
                 pr[cnt] = r + 0.0001f;
-                pg[cnt++] = rb.getTeam().equals(enemy);
+                pg[cnt++] = rb.team == enemy;
             }
         }
         if (cnt >= px.length){

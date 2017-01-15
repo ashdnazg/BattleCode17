@@ -191,7 +191,9 @@ public class Movement {
         if (rc.getRoundNum() != lastInit) {
             new RuntimeException("Movement wasn't initialized since: " + lastInit).printStackTrace();
         }
-        System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
+        if (DEBUG) {
+            System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
+        }
         this.fireDir = fireDir;
 
         System.out.println("Somewhere in findPath " + Clock.getBytecodeNum());
@@ -214,7 +216,9 @@ public class Movement {
                 Direction toTree = myLocation.directionTo(best.location);
                 float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));
                 if (Math.abs(moveDir.radiansBetween(toTree)) < correctionAngle) {
-                    System.out.println("Found blocking tree at angle " + bestval);
+                    if (DEBUG) {
+                        System.out.println("Found blocking tree at angle " + bestval);
+                    }
                     rc.setIndicatorLine(myLocation, target, 0, 0, 255);
                     rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
                     //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
@@ -227,7 +231,9 @@ public class Movement {
 
         System.out.println("Somewhere else in findPath " + Clock.getBytecodeNum());
         if (olddist > 2 * strideDistance && lastInit - stuckSince > 4) {
-            System.out.println("Switching bugdir because of stuck");
+            if (DEBUG) {
+                System.out.println("Switching bugdir because of stuck");
+            }
             stuckSince = rc.getRoundNum();
             bugdir = !bugdir;
         }
@@ -235,9 +241,13 @@ public class Movement {
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
         if (olddist < 0.0001f) return false;
         boolean retval = bugMove(moveDir, Math.min(strideDistance, target.distanceTo(myLocation)));
-        System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
+        if (DEBUG) {
+            System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
+        }
         if (retval && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || hadLos && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
-            System.out.println("Switching bugdir because of distance");
+            if (DEBUG) {
+                System.out.println("Switching bugdir because of distance");
+            }
             bugdir = !bugdir;
         }
         System.out.println("end of findPath " + Clock.getBytecodeNum());
@@ -348,7 +358,9 @@ public class Movement {
                     Direction d;
 
                     while (currentCheck <= checksPerSide) {
-                        System.out.println(Clock.getBytecodeNum() + ": Checking angle" + degreeOffset * currentCheck + " in left dir " + left);
+                        if (DEBUG) {
+                            System.out.println(Clock.getBytecodeNum() + ": Checking angle" + degreeOffset * currentCheck + " in left dir " + left);
+                        }
                         if (left) {
                             d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
                         } else {
