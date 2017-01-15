@@ -210,12 +210,12 @@ public class Movement {
                     }
                 }
             }
+            rc.setIndicatorLine(myLocation, target, 0, 0, 255);
             if (best != null) {
                 Direction toTree = myLocation.directionTo(best.location);
                 float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));
                 if (Math.abs(moveDir.radiansBetween(toTree)) < correctionAngle) {
                     System.out.println("Found blocking tree at angle " + bestval);
-                    rc.setIndicatorLine(myLocation, target, 0, 0, 255);
                     rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
                     //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
                     moveDir = toTree.rotateLeftRads((bugdir ? 1 : -1) * correctionAngle);

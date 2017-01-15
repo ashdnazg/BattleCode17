@@ -4,6 +4,8 @@ import battlecode.common.*;
 
 import static johnny4.Util.rand;
 
+import static johnny4.Util.*;
+
 public class WellSpacedHexagonalClusters extends Grid {
 
     final static int P_X = 6;
@@ -44,9 +46,10 @@ public class WellSpacedHexagonalClusters extends Grid {
                 gy += (PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_INVERSE_X[gy % P_Y] : 0;
                 gx2 = (gx % 2) * 0.5f;
                 gxSpacing = gx * SPACING;
+                realLocation.add(gxSpacing - realLocation.x, 0);
                 for (; gy < ymax; gy += PATTERN_SKIP_INVERSE_X[gy % P_Y]) {
                     //System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
-                    realLocation = new MapLocation(gxSpacing, (gy + gx2) * SPACING);
+                    realLocation = realLocation.add(0, (gy + gx2) * SPACING - realLocation.y);
                     checkLocation = unitloc.equals(realLocation) ? realLocation : realLocation.add(new Direction((Math.round((unitloc.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
                     canSense = rc.canSenseLocation(checkLocation);
                     if ((!canSense || rc.onTheMap(checkLocation))) {
@@ -86,7 +89,7 @@ public class WellSpacedHexagonalClusters extends Grid {
             int gx, gy, i;
             float gxSpacing, gx2;
             int[] PATTERN_SKIP_X;
-            MapLocation realLocation;
+            MapLocation realLocation = new MapLocation(0,0);
             MapLocation checkLocation;
             for (gx = (int) ((myLocation.x - radius) / SPACING); gx < xmax; gx++) {
                 gy = ymin;
@@ -96,13 +99,14 @@ public class WellSpacedHexagonalClusters extends Grid {
                 gy += (!PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_X[gy % P_Y] : 0;
                 gxSpacing = gx * SPACING;
                 gx2 = 0.5f * (gx % 2);
+                realLocation.add(gxSpacing - realLocation.x, 0);
 
-                for (; gy < ymax; gy += PATTERN_SKIP_X[gy % P_Y]) {
-                    // System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
-                    realLocation = new MapLocation(gxSpacing, (gy + gx2) * SPACING);
+                for (; gy < ymax; gy += PATTERN_SKIP[gx % P_X][gy % P_Y]) {
+                    //System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
+                    realLocation = realLocation.add(0, (gy + gx2) * SPACING - realLocation.y);
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
 
-                    //rc.setIndicatorDot(realLocation, 255, 255, 0);
+                    rc.setIndicatorDot(realLocation, 255, 255, 0);
                     if (rc.canSenseLocation(checkLocation) && rc.senseTreeAtLocation(realLocation) == null && rc.onTheMap(checkLocation)) {
                         dist = realLocation.distanceTo(myLocation);
                         if (dist < bestDist && !rc.isCircleOccupiedExceptByThisRobot(realLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {

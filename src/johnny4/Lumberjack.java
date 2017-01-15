@@ -86,12 +86,13 @@ public class Lumberjack {
                 if (guardener != null && guardener.getID() == ri.getID()) {
                     guardener = ri;
                 }
-                if (ri.getTeam() == rc.getTeam().opponent() && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
+                if (ri.getTeam().equals(rc.getTeam().opponent()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
                     nextEnemy = ri.location;
                     enemyRadius = ri.type.bodyRadius;
                 }
             }
             if (nextEnemy == null) {
+                System.out.println("Using long range target");
                 if (frame % 9 == 0){
                     map.generateFarTargets(myLocation, 50, RobotType.LUMBERJACK.sensorRadius);
                 }

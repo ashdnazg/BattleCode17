@@ -510,6 +510,7 @@ public class Radio {
 
     public static boolean getAlarm() throws GameActionException {
         int lastAlarm = rc.readBroadcast(321);
+        System.out.println("Last alarm was " + lastAlarm);
         return lastAlarm != 0 && (rc.getRoundNum() - lastAlarm) < 10;
     }
 
