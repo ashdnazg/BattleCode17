@@ -39,7 +39,7 @@ public class SimpleHexagonalClusters extends Grid {
 
                 for (; gy < ymax; gy += PATTERN_SKIP_INVERSE[gx % P_X][gy % P_Y]) {
                     realLocation = new MapLocation(gx * SPACING, ((gy + 0.5f * (gx % 2)) * SPACING));
-                    checkLocation = realLocation.add(new Direction((Math.round((unitloc.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
+                    checkLocation = unitloc.equals(realLocation) ? realLocation : realLocation.add(new Direction((Math.round((unitloc.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
                     if ((!rc.canSenseLocation(checkLocation) || rc.onTheMap(checkLocation))) {
                         //rc.setIndicatorDot(realLocation, 0, 0, 255);
                         dist = realLocation.distanceTo(myLocation);
