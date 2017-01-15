@@ -21,19 +21,23 @@ public class Gardener {
     boolean isFleeing;
     Grid grid;
     Movement movement;
-    TreeStorage treeStorage;
     MapLocation escapeLocation;
     final float MIN_CONSTRUCTION_MONEY;
 
 
     public Gardener(RobotController rc) {
-
+        System.out.println("Constructing gardener: " + Clock.getBytecodeNum());
         this.rc = rc;
         this.radio = new Radio(rc);
+        System.out.println("a: " + Clock.getBytecodeNum());
         this.map = new Map(rc, radio);
+        System.out.println("b: " + Clock.getBytecodeNum());
         this.grid = new WellSpacedHexagonalClusters(rc);
+        System.out.println("c: " + Clock.getBytecodeNum());
         this.movement = new Movement(rc);
-        this.treeStorage = new TreeStorage(rc);
+        System.out.println("d: " + Clock.getBytecodeNum());
+        TreeStorage.rc = rc;
+        System.out.println("e: " + Clock.getBytecodeNum());
         this.buildDirs = new Direction[6];
         float angle = (float) Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -46,7 +50,7 @@ public class Gardener {
         this.MIN_CONSTRUCTION_MONEY = Math.min(GameConstants.BULLET_TREE_COST, RobotType.SCOUT.bulletCost);
 
         BuildPlanner.rc = rc;
-        BuildPlanner.trees = this.treeStorage;
+        System.out.println("Finished Constructing gardener: " + Clock.getBytecodeNum());
     }
 
     public void run() {
@@ -75,6 +79,7 @@ public class Gardener {
     protected void tick() {
         try {
             preTick();
+            System.out.println("Starting gardener: " + Clock.getBytecodeNum());
 
             //Sensing
             roundsSinceAttack++;
@@ -83,14 +88,15 @@ public class Gardener {
             bullets = rc.senseNearbyBullets();
             MapLocation myLocation = rc.getLocation();
             float money = rc.getTeamBullets();
-            System.out.println("Own trees: " + treeStorage.ownTrees);
+            System.out.println("Own trees: " + TreeStorage.ownTrees);
 
-            if (treeStorage.ownTrees < BuildPlanner.MAX_TREES_PER_GARDENER){
+            if (TreeStorage.ownTrees < BuildPlanner.MAX_TREES_PER_GARDENER){
                 Radio.reportActiveGardener();
             }
 
             RobotInfo[] nearbyRobots = map.sense();
             TreeInfo[] trees = senseBiggestTrees();
+            System.out.println("gardener post header: " + Clock.getBytecodeNum());
             MapLocation nextEnemy = null;
             for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation)) &&
@@ -107,8 +113,7 @@ public class Gardener {
 
             boolean alarm = radio.getAlarm();
             boolean rich = rc.getTeamBullets() > 1.2f * RobotType.SOLDIER.bulletCost;
-
-
+            System.out.println("gardener prepath: " + Clock.getBytecodeNum());
             // Trees
 
             movement.init(nearbyRobots, trees, bullets);
@@ -116,7 +121,7 @@ public class Gardener {
             boolean hasMoved = false;
 
             if (frame % 9 == 0) {
-                treeStorage.updateTrees(trees);
+                TreeStorage.updateTrees(trees);
             } else if (roundsSinceAttack >= ATTACK_COOLDOWN_TIME) {
 
                 //Try building new trees
@@ -130,21 +135,21 @@ public class Gardener {
                         rc.setIndicatorDot(treeloc, 0, 255, 0);
                         if ((myLocation.distanceTo(walkloc) < 0.01) && rc.canPlantTree(myLocation.directionTo(treeloc))) {
                             rc.plantTree(myLocation.directionTo(treeloc));
-                            treeStorage.plantedTree(rc.senseTreeAtLocation(treeloc));
+                            TreeStorage.plantedTree(rc.senseTreeAtLocation(treeloc));
                         }
                     }
                 }
 
                 //Try watering existing trees
                 if (!hasMoved) {
-                    MapLocation tree = treeStorage.waterTree(nearbyRobots);
+                    MapLocation tree = TreeStorage.waterTree(nearbyRobots);
                     if (tree != null && movement.findPath(tree.add(tree.directionTo(myLocation), 2), null)) {
                         hasMoved = true;
                         myLocation = rc.getLocation();
                     }
                 }
             }
-            treeStorage.tryWater(); //Try to water any trees in range
+            TreeStorage.tryWater(); //Try to water any trees in range
 
 
             // Units

@@ -61,32 +61,9 @@ public class Radio {
         }
 
         if (rc.getType() == RobotType.ARCHON) {
-            myID = getArchonCounter() + 1;
-            incrementArchonCounter();
             enemyIDToAge = new int[180][];
             enemyIDToPos = new int[180][];
             enemyPosToID = new int[100];
-        } else {
-            int frame = rc.getRoundNum();
-            int uc = getUnitCounter() + 4;
-            int id = -1;
-            for (int pos = 4; pos < uc; pos++) {
-                if (frame - getUnitAge(pos) > 40) {
-                    id = pos;
-                    break;
-                }
-            }
-            if (id > 0) {
-                myID = id;
-                //System.out.println("Reused unit slot " + myId + " / " + uc);
-            } else {
-                myID = getUnitCounter() + 4;
-                incrementUnitCounter();
-            }
-            /*System.out.println("Scouts: " + countAllies(RobotType.SCOUT));
-            System.out.println("Soldiers: " + countAllies(RobotType.SOLDIER));
-            System.out.println("Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
-            System.out.println("Gardeners: " + countAllies(RobotType.GARDENER));*/
         }
     }
 
@@ -108,35 +85,13 @@ public class Radio {
 
     //very expensive, use sparingly
 
-    public static int getEnemyCounter() {
-        return read(1);
+    public static int getEnemyCounter() throws GameActionException {
+        return rc.readBroadcast(1);
     }
 
-    public static int getUnitCounter() {
-        return read(2);
-    }
 
-    public static int getArchonCounter() {
-        return read(0);
-    }
-
-    public static void incrementArchonCounter() {
-        write(0, getArchonCounter() + 1);
-        System.out.println("Archon counter is now " + getArchonCounter());
-    }
-
-    public static void incrementUnitCounter() {
-        if (getUnitCounter() == 95) return;
-        write(2, getUnitCounter() + 1);
-        System.out.println("Unit counter is now " + getUnitCounter());
-    }
-
-    public static void incrementEnemyCounter() {
-        write(1, getEnemyCounter() + 1);
-    }
-
-    public static void setEnemyCounter(int newCounter) {
-        write(1, newCounter);
+    public static void setEnemyCounter(int newCounter) throws GameActionException {
+        rc.broadcast(1, newCounter);
     }
 
     public static void updateEnemyCounts() throws GameActionException {
@@ -190,7 +145,7 @@ public class Radio {
         }
 
         if (writeNeeded) {
-            write(pos, report);
+            rc.broadcast(pos, report);
         }
 
         pos = 202;
@@ -362,7 +317,7 @@ public class Radio {
     public static void reportEnemies(RobotInfo[] ris) throws GameActionException {
         //System.out.println("before reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
         int length = ris.length;
-        int numReports = read(201);
+        int numReports = rc.readBroadcast(201);
         if (numReports == 98) {
             return;
         }
@@ -435,7 +390,7 @@ public class Radio {
 
 
 
-    public static void reportEnemy(MapLocation location, RobotType type, int ID) {
+    public static void reportEnemy(MapLocation location, RobotType type, int ID) throws GameActionException {
         int h1 = ID % 192;
         int n1 = h1 / 32;
         int b1 = 1 << (h1 % 32);
@@ -455,69 +410,43 @@ public class Radio {
             }
         }
 
-        int numReports = read(201);
+        int numReports = rc.readBroadcast(201);
         if (numReports == 98) {
             return;
         }
         int info = ((int) Math.round(location.x) << 22) | ((int) Math.round(location.y) << 12) | (typeToInt(type) << 9) | (frame / 8);
-        write(numReports + 202, info);
-        write(numReports + 203, ID);
-        write(201, numReports + 2);
+        rc.broadcast(numReports + 202, info);
+        rc.broadcast(numReports + 203, ID);
+        rc.broadcast(201, numReports + 2);
 
 
         // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
     }
 
-    public float getUnitX(int pos) {
-        return ((read(pos) & 0b11111111110000000000000000000000) >> 22);
+    public static float getUnitX(int info) {
+        return (info & 0b11111111110000000000000000000000) >> 22;
     }
 
-    public float getUnitY(int pos) {
-        return ((read(pos) & 0b00000000001111111111000000000000) >> 12);
+    public static float getUnitY(int info) {
+        return (info & 0b00000000001111111111000000000000) >> 12;
     }
 
-    public int getUnitAge(int pos) {
-        return ((read(pos) & 0b00000000000000000000000111111111)) * 8;
-    }
-
-
-    public RobotType getUnitType(int pos) {
-        return intToType((read(pos) & 0b00000000000000000000111000000000) >> 9);
+    public static int getUnitAge(int info) {
+        return (info & 0b00000000000000000000000111111111) * 8;
     }
 
 
-    private static int cache[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
-    private static int cacheAge[] = new int[GameConstants.BROADCAST_MAX_CHANNELS];
-
-    static int read(int pos) {
-        if (cacheAge[pos] != rc.getRoundNum()) {
-            try {
-                cache[pos] = rc.readBroadcast(pos);
-                cacheAge[pos] = rc.getRoundNum();
-            } catch (Exception ex) {
-                throw new RuntimeException("read failed");
-            }
-        }
-        return cache[pos];
+    public static RobotType getUnitType(int info) {
+        return intToType((info & 0b00000000000000000000111000000000) >> 9);
     }
 
-    static void write(int pos, int value) {
-        cache[pos] = value;
-        cacheAge[pos] = rc.getRoundNum();
-        try {
-            rc.broadcast(pos, value);
-        } catch (GameActionException e) {
-            throw new RuntimeException("write failed");
-        }
-
-    }
 
     // returns the index, so you can mark it as cut later
-    public boolean requestTreeCut(TreeInfo ti) {
+    public static boolean requestTreeCut(TreeInfo ti) throws GameActionException {
         int index = rc.getType() == RobotType.ARCHON ? 301 : 304;
         int zero_index = -1;
         for (; index <= 320; ++index) {
-            int data = read(index);
+            int data = rc.readBroadcast(index);
             if (data == 0) {
                 zero_index = index;
             } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0) {
@@ -528,26 +457,26 @@ public class Radio {
             return false;
         }
         int info = ((int) Math.round(ti.location.x) << 22) | ((int) Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
-        write(zero_index, info);
+        rc.broadcast(zero_index, info);
         return true;
     }
 
-    public MapLocation findTreeToCut() {
+    public static MapLocation findTreeToCut() throws GameActionException {
         for (int index = 301; index <= 320; ++index) {
-            int data = read(index);
+            int data = rc.readBroadcast(index);
             if (data != 0) {
-                return new MapLocation(getUnitX(index), getUnitY(index));
+                return new MapLocation(getUnitX(data), getUnitY(data));
             }
         }
         return null;
     }
 
-    public MapLocation findClosestTreeToCut(MapLocation myLocation) {
+    public static MapLocation findClosestTreeToCut(MapLocation myLocation) throws GameActionException {
         MapLocation tree, closest = null;
         for (int index = 301; index <= 320; ++index) {
-            int data = read(index);
+            int data = rc.readBroadcast(index);
             if (data != 0) {
-                tree = new MapLocation(getUnitX(index), getUnitY(index));
+                tree = new MapLocation(getUnitX(data), getUnitY(data));
                 if (closest == null || closest.distanceTo(myLocation) > tree.distanceTo(myLocation)) {
                     closest = tree;
                 }
@@ -556,12 +485,12 @@ public class Radio {
         return closest;
     }
 
-    public void reportTreeCut(MapLocation location) {
+    public static void reportTreeCut(MapLocation location) throws GameActionException {
         int loc = ((int) location.x << 22) | ((int) location.y << 12);
         for (int index = 301; index <= 320; ++index) {
-            int data = read(index);
+            int data = rc.readBroadcast(index);
             if (((data ^ loc) & 0b11111111111111111111000000000000) == 0) {
-                write(index, 0);
+                rc.broadcast(index, 0);
             }
         }
     }
@@ -575,12 +504,12 @@ public class Radio {
         return activeGardenersCount;
     }
 
-    public static void setAlarm() {
-        write(321, rc.getRoundNum());
+    public static void setAlarm() throws GameActionException {
+        rc.broadcast(321, rc.getRoundNum());
     }
 
-    public static boolean getAlarm() {
-        int lastAlarm = read(321);
+    public static boolean getAlarm() throws GameActionException {
+        int lastAlarm = rc.readBroadcast(321);
         return lastAlarm != 0 && (rc.getRoundNum() - lastAlarm) < 10;
     }
 

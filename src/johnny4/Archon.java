@@ -23,11 +23,11 @@ public class Archon {
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
         this.lastDirection = randomDirection();
-        if (radio.getEnemyCounter() == 0){
-            for (MapLocation m : rc.getInitialArchonLocations(rc.getTeam().opponent())){
-                //radio.reportEnemy(m, RobotType.ARCHON, 0);
-            }
-        }
+        // if (radio.getEnemyCounter() == 0){
+            // for (MapLocation m : rc.getInitialArchonLocations(rc.getTeam().opponent())){
+                // radio.reportEnemy(m, RobotType.ARCHON, 0);
+            // }
+        // }
         float angle = (float) Math.PI * 2/ directions.length ;
         for (int i = 0; i < directions.length; i++) {
             this.directions[i] = new Direction(angle * i);

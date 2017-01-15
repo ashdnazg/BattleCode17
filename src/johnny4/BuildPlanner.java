@@ -6,7 +6,6 @@ public class BuildPlanner {
 
     static RobotController rc;
     static RobotInfo[] nearbyRobots;
-    static TreeStorage trees;
     static final int MAX_TREES_PER_GARDENER = 6;
 
     static float money = 0;
@@ -25,8 +24,8 @@ public class BuildPlanner {
         }
     }
 
-    public static boolean buildTree(){
-        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && trees.ownTrees < MAX_TREES_PER_GARDENER;
+    public static boolean buildTree() throws GameActionException {
+        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && TreeStorage.ownTrees < MAX_TREES_PER_GARDENER;
     }
 
 
@@ -59,7 +58,7 @@ public class BuildPlanner {
     }
 
 
-    public static RobotType getUnitToBuild(){
+    public static RobotType getUnitToBuild() throws GameActionException {
 
         int ownCounts[] = Radio.countAllies();
         int ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];

@@ -85,7 +85,7 @@ public class Map {
         float mx = myLoc.x;
         float my = myLoc.y;
         int frame = rc.getRoundNum();
-        int ecnt = radio.getEnemyCounter();
+        int ecnt = rc.readBroadcast(1);
         float x, y, dx, dy, dist;
         int unitData, ut;
         for (int i = ecnt + 100; i >= 101; i--) {

@@ -12,14 +12,13 @@ public class TreeStorage {
     static boolean[] ownTree = new boolean[knownTrees.length];
     static int lastWater;
 
-    public TreeStorage(RobotController rc) {
-        this.rc = rc;
-        for (int i = 0; i < treeHealth.length; i++) {
-            treeHealth[i] = -1f;
-        }
-    }
+    static int ownTrees = 0;
+    static int storedTrees = 0;
+    static int toWater = -1; //remember last result, so it doesnt change
 
-    public void plantedTree(TreeInfo t) {
+    static RobotInfo[] gardeners = new RobotInfo[40];
+
+    public static void plantedTree(TreeInfo t) {
         knownTrees[t.getID() % knownTrees.length] = t.location;
         treeHealth[t.getID() % knownTrees.length] = t.health;
         _updated[t.getID() % knownTrees.length] = true;
@@ -27,10 +26,8 @@ public class TreeStorage {
     }
 
 
-    int ownTrees = 0;
-    int storedTrees = 0;
 
-    public void updateTrees(TreeInfo trees[]) throws GameActionException{
+    public static void updateTrees(TreeInfo trees[]) throws GameActionException{
 
         int time = Clock.getBytecodeNum();
         int time1 = Clock.getBytecodeNum();
@@ -57,7 +54,7 @@ public class TreeStorage {
         for (int i = 0; i < knownTrees.length; i++) {
             if (treeHealth[i] > 0) {
                 if (!_updated[i] && rc.canSenseLocation(knownTrees[i])) {
-                    treeHealth[i] = -1;
+                    treeHealth[i] = 0;
                     ownTree[i] = false;
                     rc.setIndicatorDot(knownTrees[i], 255, 0, 0);
                 } else {
@@ -82,7 +79,7 @@ public class TreeStorage {
         }
     }
 
-    public void tryWater() throws GameActionException {
+    public static void tryWater() throws GameActionException {
 
         if (rc.getRoundNum() == lastWater) return;
         for (int i = 0; i < knownTrees.length; i++) {
@@ -97,12 +94,7 @@ public class TreeStorage {
         }
     }
 
-    int toWater = -1; //remember last result, so it doesnt change
-
-
-    static final RobotInfo[] gardeners = new RobotInfo[20];
-
-    public MapLocation waterTree(RobotInfo[] nearbyRobots) throws GameActionException {
+    public static MapLocation waterTree(RobotInfo[] nearbyRobots) throws GameActionException {
 
         int time = Clock.getBytecodeNum();
         int gcnt = 0;
