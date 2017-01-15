@@ -125,7 +125,7 @@ public class Movement {
         if (nothreats) { // only keep distance to lumberjacks in combat
             threatsLen = 0;
         }
-        if (myLocation.distanceTo(stuckLocation) > strideDistance * 1.1){
+        if (myLocation.distanceTo(stuckLocation) > strideDistance * 1.1) {
             stuckLocation = myLocation;
             stuckSince = lastInit;
         }
@@ -138,7 +138,7 @@ public class Movement {
             System.out.println("Pathfinding to null, that's easy");
             return false;
         }
-        if (oldTarget != null && oldTarget.distanceTo(target) > 2){
+        if (oldTarget != null && oldTarget.distanceTo(target) > 2) {
             stuckSince = rc.getRoundNum();
         }
         oldTarget = target;
@@ -162,18 +162,21 @@ public class Movement {
                     }
                 }
             }
-            if (best != null && bestval < 60){
-                System.out.println("Found blocking tree at angle " + bestval);
-                rc.setIndicatorLine(myLocation, target, 0, 0, 255);
-                rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
-                //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
-                moveDir = myLocation.directionTo(best.location).rotateLeftRads((bugdir ? 1 : -1)
-                        * (float) (Math.asin((robotType.bodyRadius + best.radius)/myLocation.distanceTo(best.location))));
+            if (best != null) {
+                Direction toTree = myLocation.directionTo(best.location);
+                float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));
+                if (Math.abs(moveDir.radiansBetween(toTree)) < correctionAngle) {
+                    System.out.println("Found blocking tree at angle " + bestval);
+                    rc.setIndicatorLine(myLocation, target, 0, 0, 255);
+                    rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
+                    //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
+                    moveDir = toTree.rotateLeftRads((bugdir ? 1 : -1) * correctionAngle);
 
-                rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float)Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+                    rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+                }
             }
         }
-        if (olddist > 2 * strideDistance && lastInit - stuckSince > 4 ) {
+        if (olddist > 2 * strideDistance && lastInit - stuckSince > 4) {
             System.out.println("Switching bugdir because of stuck");
             stuckSince = rc.getRoundNum();
             bugdir = !bugdir;
