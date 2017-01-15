@@ -44,6 +44,7 @@ public class Radio {
     static int[][] enemyIDToAge;
     static int[] enemyPosToID;
 
+    static boolean haveBeenFirst = false;
 
 
     public Radio(RobotController rc_) {
@@ -96,6 +97,10 @@ public class Radio {
 
     public static void updateEnemyCounts() throws GameActionException {
         //System.out.println("before updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        if (!haveBeenFirst) {
+            setEnemyCounter(0);
+            haveBeenFirst = true;
+        }
         int pos = 101;
         int last = getEnemyCounter() + 101;
         //System.out.println("updating counts last: " + last);
