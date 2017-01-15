@@ -84,12 +84,12 @@ public class Movement {
     }
 
     // Call this every frame before using
-    public static void init(RobotInfo[] robots, TreeInfo[] trees, BulletInfo[] bullets) {
+    public static void init(RobotInfo[] robots_, TreeInfo[] trees_, BulletInfo[] bullets_) {
         System.out.println("Starting init " + Clock.getBytecodeNum());
         lastInit = rc.getRoundNum();
-        robots = robots != null ? robots : new RobotInfo[0];
-        trees = trees != null ? trees : new TreeInfo[0];
-        bullets = bullets != null ? bullets : new BulletInfo[0];
+        robots = robots_ != null ? robots_ : new RobotInfo[0];
+        trees = trees_ != null ? trees_ : new TreeInfo[0];
+        bullets = bullets_ != null ? bullets_ : new BulletInfo[0];
         myLocation = rc.getLocation();
         threatsLen = 0;
         boolean nothreats = true;
