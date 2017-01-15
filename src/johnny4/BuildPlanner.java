@@ -42,6 +42,11 @@ public class BuildPlanner {
         int enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         int enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
 
+        boolean canSoldier = money > RobotType.SOLDIER.bulletCost;
+        boolean canLumberjack = money > RobotType.LUMBERJACK.bulletCost;
+        boolean canScout = money > RobotType.SCOUT.bulletCost;
+
+
 
         boolean alarm = Radio.getAlarm() && nearbyProtectors < 2;
         boolean needSoldiers = (ownSoldiers < enemySoldiers) || (ownSoldiers < (enemyScouts / 2));
@@ -52,26 +57,26 @@ public class BuildPlanner {
 
 
         if (alarm) {
-            if (needLumberJacks) {
+            if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
-            } else if (needSoldiers) {
+            } else if (needSoldiers && canSoldier) {
                 return RobotType.SOLDIER;
             }
         }
 
-        if (needSoldiers) {
+        if (needSoldiers && canSoldier) {
             return RobotType.SOLDIER;
         }
 
-        if (noScouts) {
+        if (noScouts && canScout) {
             return RobotType.SCOUT;
         }
 
-        if (needLumberJacks) {
+        if (needLumberJacks && canLumberjack) {
             return RobotType.LUMBERJACK;
         }
 
-        if (needScouts) {
+        if (needScouts && canScout) {
             return RobotType.SCOUT;
         }
 
