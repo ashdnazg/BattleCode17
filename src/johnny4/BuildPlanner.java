@@ -1,9 +1,6 @@
 package johnny4;
 
-import battlecode.common.GameConstants;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 public class BuildPlanner {
 
@@ -30,6 +27,33 @@ public class BuildPlanner {
     public static boolean buildTree(){
         return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && trees.ownTrees < 6;
     }
+
+
+    public static boolean hireGardener() throws GameActionException {
+        money = rc.getTeamBullets();
+        boolean haveMoney = money > RobotType.GARDENER.bulletCost;
+        if (!haveMoney) {
+            return false;
+        }
+
+        int numGardeners =  Radio.countAllies(RobotType.GARDENER);
+        if (numGardeners == 0) {
+            return true;
+        }
+
+        int activeGardeners = Radio.countActiveGardeners();
+        if (activeGardeners == 0) {
+            return false;
+        }
+
+        boolean rich = money > 2 * RobotType.GARDENER.bulletCost;
+        if (rich && numGardeners == 1) {
+            return true;
+        }
+
+        return false;
+    }
+
 
     public static RobotType getUnitToBuild(){
 

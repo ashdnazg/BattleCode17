@@ -12,6 +12,7 @@ public class Archon {
     Radio radio;
     Direction lastDirection;
     Direction[] directions = new Direction[12];
+    boolean[] blockedDir = new boolean[12];
     Team enemyTeam;
     MapLocation stuckLocation;
     int stuckSince;
@@ -72,18 +73,22 @@ public class Archon {
                 }
             }
 
-            Direction oppositeDir = lastDirection.opposite();
-            MapLocation potentialSpot = myLocation.add(oppositeDir, 3.0f);
-            MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
-            boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f)/* freeDirs > 1*/;
-            boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
-            if (eligibleSpot && rc.canHireGardener(oppositeDir) &&
-                (radio.countAllies(RobotType.GARDENER) == 0 || radio.countAllies(RobotType.SCOUT) > 0 && frame > 100)  &&
-                (!alarm || rich)) {
-                rc.hireGardener(oppositeDir);
-                Radio.reportBuild(RobotType.GARDENER);
-            } else if (inDanger && rich) {
-                boolean[] blockedDir = new boolean[directions.length];
+            boolean hireGardener = BuildPlanner.hireGardener();
+
+            if (hireGardener) {
+                blockedDir[0] = false;
+                blockedDir[1] = false;
+                blockedDir[2] = false;
+                blockedDir[3] = false;
+                blockedDir[4] = false;
+                blockedDir[5] = false;
+                blockedDir[6] = false;
+                blockedDir[7] = false;
+                blockedDir[8] = false;
+                blockedDir[9] = false;
+                blockedDir[10] = false;
+                blockedDir[11] = false;
+
                 for (TreeInfo t : trees){
                     int nextDir = 0;
                     float thisAngle = myLocation.directionTo(t.location).getAngleDegrees();
@@ -115,11 +120,6 @@ public class Archon {
                     rc.hireGardener(alternateBuildDir);
                     Radio.reportBuild(RobotType.GARDENER);
                 }
-            }
-
-            // try to stay in good spots
-            if (goodSpot && eligibleSpot) {
-                return;
             }
 
 
