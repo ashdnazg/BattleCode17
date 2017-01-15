@@ -68,7 +68,7 @@ public class WellSpacedHexagonalClusters extends Grid {
         float bestDist = 1000000;
         float dist;
         try {
-            if (plannedLocation != null && rc.canSenseLocation(plannedLocation) && rc.senseTreeAtLocation(plannedLocation) == null && !rc.isCircleOccupiedExceptByThisRobot(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
+            if (plannedLocation != null && rc.canSenseAllOfCircle(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f) && rc.senseTreeAtLocation(plannedLocation) == null && !rc.isCircleOccupiedExceptByThisRobot(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
                 return plannedLocation;
             }
             float radius = senseRadius;

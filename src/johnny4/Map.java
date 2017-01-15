@@ -15,6 +15,8 @@ public class Map {
     static float[] tempX = new float[6];
     static float[] tempY = new float[6];
     static int targetsFrame = -1;
+    static int lastSenseFrame = -1;
+    static RobotInfo[] nearbyRobots;
 
     public Map(RobotController rc, Radio radio) {
         this.rc = rc;
@@ -26,11 +28,15 @@ public class Map {
 
     public RobotInfo[] sense() throws GameActionException {
         int frame = rc.getRoundNum();
-        int clocks = Clock.getBytecodeNum();
-        RobotInfo[] ret = rc.senseNearbyRobots();
-        Radio.reportEnemies(ret);
-        return ret;
-        //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
+        if (frame != lastSenseFrame) {
+            lastSenseFrame = frame;
+            nearbyRobots = rc.senseNearbyRobots();
+            Radio.reportEnemies(nearbyRobots);
+            //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
+            return nearbyRobots;
+        }
+        //int clocks = Clock.getBytecodeNum();
+        return nearbyRobots;
     }
 
 
