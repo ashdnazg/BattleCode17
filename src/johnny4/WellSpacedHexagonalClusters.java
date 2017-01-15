@@ -46,10 +46,9 @@ public class WellSpacedHexagonalClusters extends Grid {
                 gy += (PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_INVERSE_X[gy % P_Y] : 0;
                 gx2 = (gx % 2) * 0.5f;
                 gxSpacing = gx * SPACING;
-                realLocation.add(gxSpacing - realLocation.x, 0);
                 for (; gy < ymax; gy += PATTERN_SKIP_INVERSE_X[gy % P_Y]) {
                     //System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
-                    realLocation = realLocation.add(0, (gy + gx2) * SPACING - realLocation.y);
+                    realLocation = new MapLocation(gxSpacing,(gy + gx2) * SPACING);
                     checkLocation = unitloc.equals(realLocation) ? realLocation : realLocation.add(new Direction((Math.round((unitloc.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
                     canSense = rc.canSenseLocation(checkLocation);
                     if ((!canSense || rc.onTheMap(checkLocation))) {
@@ -99,12 +98,11 @@ public class WellSpacedHexagonalClusters extends Grid {
                 gy += (!PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_X[gy % P_Y] : 0;
                 gxSpacing = gx * SPACING;
                 gx2 = 0.5f * (gx % 2);
-                realLocation.add(gxSpacing - realLocation.x, 0);
 
                 for (; gy < ymax; gy += PATTERN_SKIP[gx % P_X][gy % P_Y]) {
-                    //System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
-                    realLocation = realLocation.add(0, (gy + gx2) * SPACING - realLocation.y);
+                    realLocation = new MapLocation(gxSpacing, (gy + gx2) * SPACING);
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
+                    //System.out.println(realLocation);
 
                     rc.setIndicatorDot(realLocation, 255, 255, 0);
                     if (rc.canSenseLocation(checkLocation) && rc.senseTreeAtLocation(realLocation) == null && rc.onTheMap(checkLocation)) {

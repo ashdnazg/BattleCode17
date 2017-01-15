@@ -23,6 +23,8 @@ public class TreeStorage {
         treeHealth[t.getID() % knownTrees.length] = t.health;
         _updated[t.getID() % knownTrees.length] = true;
         ownTree[t.getID() % knownTrees.length] = true;
+        lastUpdate[t.getID() % knownTrees.length] = rc.getRoundNum();
+        System.out.println("New tree at " + knownTrees[t.getID() % knownTrees.length] + " with " + t.health + " hp");
     }
 
 
@@ -34,6 +36,9 @@ public class TreeStorage {
         int frame = rc.getRoundNum();
         for (int i = 0; i < knownTrees.length; i++) {
             _updated[i] = false;
+            if (treeHealth[i] > 0){
+                System.out.println(knownTrees[i] + "(" + ownTree[i] + "): " + treeHealth[i] + " -> " + (treeHealth[i] - GameConstants.BULLET_TREE_DECAY_RATE * (frame - lastUpdate[i])));
+            }
             treeHealth[i] -= GameConstants.BULLET_TREE_DECAY_RATE * (frame - lastUpdate[i]);
             lastUpdate[i] = frame;
         }
@@ -63,7 +68,6 @@ public class TreeStorage {
                         ownTrees++;
                         rc.setIndicatorDot(knownTrees[i], 255, 255, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }else{
-
                         rc.setIndicatorDot(knownTrees[i], 255, 100, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }
                 }

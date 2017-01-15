@@ -62,7 +62,7 @@ public class Soldier {
 
             MapLocation nextEnemy = null;
             nextLumberjack = null;
-            TreeInfo trees[] = rc.senseNearbyTrees();
+            TreeInfo trees[] = senseBiggestTrees();
             for (RobotInfo r : nearbyRobots) {
                 if (!r.getTeam().equals(rc.getTeam()) && (r.type != RobotType.SCOUT || rc.getID() % 7 == 0) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) > r.location.distanceTo(myLocation) * r.type.strideRadius + (r.type == RobotType.ARCHON ? 10 : 0))) {
@@ -104,6 +104,7 @@ public class Soldier {
                 }
 
             }
+            Movement.init(nearbyRobots, trees, bullets);
             boolean hasMoved = false;
             myLocation = rc.getLocation();
             float dist = 10000f;
