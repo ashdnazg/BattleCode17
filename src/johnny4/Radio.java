@@ -561,11 +561,11 @@ public class Radio {
         }
     }
 
-    public void setAlarm() {
+    public static void setAlarm() {
         write(321, rc.getRoundNum());
     }
 
-    public boolean getAlarm() {
+    public static boolean getAlarm() {
         int lastAlarm = read(321);
         return lastAlarm != 0 && (rc.getRoundNum() - lastAlarm) < 10;
     }

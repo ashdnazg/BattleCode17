@@ -22,19 +22,18 @@ public class Gardener {
     Grid grid;
     Movement movement;
     TreeStorage treeStorage;
-    BuildPlanner planner;
     MapLocation escapeLocation;
     final float MIN_CONSTRUCTION_MONEY;
 
 
     public Gardener(RobotController rc) {
+
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
         this.grid = new WellSpacedHexagonalClusters(rc);
         this.movement = new Movement(rc);
         this.treeStorage = new TreeStorage(rc);
-        this.planner = new BuildPlanner(rc, radio, treeStorage);
         this.buildDirs = new Direction[6];
         float angle = (float) Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -45,6 +44,9 @@ public class Gardener {
         this.health = rc.getHealth();
         this.roundsSinceAttack = 999999;
         this.MIN_CONSTRUCTION_MONEY = Math.min(GameConstants.BULLET_TREE_COST, RobotType.SCOUT.bulletCost);
+
+        BuildPlanner.rc = rc;
+        BuildPlanner.trees = this.treeStorage;
     }
 
     public void run() {
@@ -103,7 +105,7 @@ public class Gardener {
             // Trees
 
             movement.init(nearbyRobots, trees, bullets);
-            if (money > MIN_CONSTRUCTION_MONEY) planner.update(nearbyRobots);
+            if (money > MIN_CONSTRUCTION_MONEY) BuildPlanner.update(nearbyRobots);
             boolean hasMoved = false;
 
             if (frame % 9 == 0) {
@@ -111,7 +113,7 @@ public class Gardener {
             } else if (roundsSinceAttack >= ATTACK_COOLDOWN_TIME) {
 
                 //Try building new trees
-                if (money > MIN_CONSTRUCTION_MONEY && planner.buildTree()) {
+                if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree()) {
                     MapLocation treeloc = grid.getNearestPlantableLocation(myLocation, null);
                     if (treeloc != null) {
                         MapLocation walkloc = grid.getNearestWalkableLocation(treeloc);
@@ -141,7 +143,7 @@ public class Gardener {
             // Units
 
             if (rc.getTeamBullets() > RobotType.SCOUT.bulletCost) {
-                tryBuild(planner.getUnitToBuild());
+                tryBuild(BuildPlanner.getUnitToBuild());
             }
 
 

@@ -8,20 +8,13 @@ import battlecode.common.RobotType;
 public class BuildPlanner {
 
     static RobotController rc;
-    static Radio radio;
     static RobotInfo[] nearbyRobots;
     static TreeStorage trees;
 
     static float money = 0;
     static int nearbyProtectors = 0;
 
-    public BuildPlanner(RobotController rc, Radio radio, TreeStorage trees) {
-        this.rc = rc;
-        this.radio = radio;
-        this.trees = trees;
-    }
-
-    public void update(RobotInfo[] nearbyRobots){
+    public static void update(RobotInfo[] nearbyRobots){
         int frame = rc.getRoundNum();
 
         BuildPlanner.nearbyRobots = nearbyRobots;
@@ -34,17 +27,17 @@ public class BuildPlanner {
         }
     }
 
-    public boolean buildTree(){
-        return money > GameConstants.BULLET_TREE_COST && (!radio.getAlarm() || money > 200) && trees.ownTrees < 6;
+    public static boolean buildTree(){
+        return money > GameConstants.BULLET_TREE_COST && (!Radio.getAlarm() || money > 200) && trees.ownTrees < 6;
     }
 
-    public RobotType getUnitToBuild(){
+    public static RobotType getUnitToBuild(){
 
-        int ownCounts[] = radio.countAllies();
+        int ownCounts[] = Radio.countAllies();
         int ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];
         int ownLumberjacks = ownCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         int ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)];
-        int enemyCounts[] = radio.countEnemies();
+        int enemyCounts[] = Radio.countEnemies();
         int enemyScouts = enemyCounts[Radio.typeToInt(RobotType.SCOUT)];
         int enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         int enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
