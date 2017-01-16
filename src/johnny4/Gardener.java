@@ -26,18 +26,18 @@ public class Gardener {
     MapLocation lastRandomLocation;
 
     public Gardener(RobotController rc) {
-        System.out.println("Constructing gardener: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Constructing gardener: " + Clock.getBytecodeNum());
         this.rc = rc;
         this.radio = new Radio(rc);
-        System.out.println("a: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("a: " + Clock.getBytecodeNum());
         this.map = new Map(rc, radio);
-        System.out.println("b: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("b: " + Clock.getBytecodeNum());
         this.grid = new WellSpacedHexagonalClusters(rc);
-        System.out.println("c: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("c: " + Clock.getBytecodeNum());
         this.movement = new Movement(rc);
-        System.out.println("d: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("d: " + Clock.getBytecodeNum());
         TreeStorage.rc = rc;
-        System.out.println("e: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("e: " + Clock.getBytecodeNum());
         this.buildDirs = new Direction[6];
         float angle = (float) Math.PI / 3.0f;
         for (int i = 0; i < 6; i++) {
@@ -51,7 +51,7 @@ public class Gardener {
         lastRandomLocation = rc.getLocation();
 
         BuildPlanner.rc = rc;
-        System.out.println("Finished Constructing gardener: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Finished Constructing gardener: " + Clock.getBytecodeNum());
     }
 
     public void run() {
@@ -59,7 +59,7 @@ public class Gardener {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                if (Util.DEBUG) System.out.println("BYTECODE OVERFLOW");
             }
             Clock.yield();
         }
@@ -80,7 +80,7 @@ public class Gardener {
     protected void tick() {
         try {
             preTick();
-            System.out.println("Starting gardener: " + Clock.getBytecodeNum());
+            if (Util.DEBUG) System.out.println("Starting gardener: " + Clock.getBytecodeNum());
 
             //Sensing
             roundsSinceAttack++;
@@ -91,14 +91,14 @@ public class Gardener {
             TreeInfo[] trees = senseClosestTrees();
             MapLocation myLocation = rc.getLocation();
             float money = rc.getTeamBullets();
-            System.out.println("Own trees: " + TreeStorage.ownTrees);
+            if (Util.DEBUG) System.out.println("Own trees: " + TreeStorage.ownTrees);
 
             BuildPlanner.update(nearbyRobots, trees);
             if (BuildPlanner.myTrees < BuildPlanner.MAX_TREES_PER_GARDENER) {
                 Radio.reportActiveGardener();
             }
 
-            System.out.println("gardener post header: " + Clock.getBytecodeNum());
+            if (Util.DEBUG) System.out.println("gardener post header: " + Clock.getBytecodeNum());
             MapLocation nextEnemy = null;
             int nearbyProtectors = 0;
             for (RobotInfo r : nearbyRobots) {
@@ -114,16 +114,16 @@ public class Gardener {
             if (newHealth < health || nextEnemy != null) {
                 roundsSinceAttack = 0;
                 radio.setAlarm();
-                System.out.println("Alarm!");
+                if (Util.DEBUG) System.out.println("Alarm!");
             }
             if (nearbyProtectors > 0 && (trees.length > 6 || BuildPlanner.myTrees >= 2)) {
-                System.out.println("Resuming work, I am protected");
+                if (Util.DEBUG) System.out.println("Resuming work, I am protected");
                 roundsSinceAttack = ATTACK_COOLDOWN_TIME;
                 isFleeing = false;
             }
             health = newHealth;
 
-            System.out.println("gardener prepath: " + Clock.getBytecodeNum());
+            if (Util.DEBUG) System.out.println("gardener prepath: " + Clock.getBytecodeNum());
             // Trees
 
             movement.init(nearbyRobots, trees, bullets);
@@ -146,14 +146,14 @@ public class Gardener {
                         hasMoved = true;
                         movement.findPath(walkloc, null);
                         myLocation = rc.getLocation();
-                        rc.setIndicatorDot(walkloc, 0, 0, 255);
-                        rc.setIndicatorDot(treeloc, 0, 255, 0);
+                        if (Util.DEBUG) rc.setIndicatorDot(walkloc, 0, 0, 255);
+                        if (Util.DEBUG) rc.setIndicatorDot(treeloc, 0, 255, 0);
                         if ((myLocation.distanceTo(walkloc) < 0.01) && rc.canPlantTree(myLocation.directionTo(treeloc))) {
                             rc.plantTree(myLocation.directionTo(treeloc));
                             TreeStorage.plantedTree(rc.senseTreeAtLocation(treeloc));
                         }
                     } else {
-                        System.out.println("No space for tree found");
+                        if (Util.DEBUG) System.out.println("No space for tree found");
                     }
                 }
 
@@ -171,7 +171,7 @@ public class Gardener {
             TreeStorage.tryWater(); //Try to water any trees in range
 
             if (Clock.getBytecodesLeft() < 800) {
-                System.out.println("Aborting gardener");
+                if (Util.DEBUG) System.out.println("Aborting gardener");
                 return;
             }
 
@@ -187,7 +187,7 @@ public class Gardener {
 
             if (nextEnemy == null) {
                 if (isFleeing == true) {
-                    System.out.println("Gardener escaped");
+                    if (Util.DEBUG) System.out.println("Gardener escaped");
                 }
                 isFleeing = false;
             } else if (nextEnemy.distanceTo(myLocation) < 5 && nearbyProtectors <= 0) {
@@ -207,16 +207,16 @@ public class Gardener {
                     //Welp
                     isFleeing = false;
                     roundsSinceAttack = ATTACK_COOLDOWN_TIME;
-                    System.out.println("Gardener stuck, resigning");
+                    if (Util.DEBUG) System.out.println("Gardener stuck, resigning");
                 }
                 hasMoved = true;
             }
             if (!hasMoved) {
                 if (BuildPlanner.myTrees > 0) { //evade
-                    System.out.println("Evading possible bullets");
+                    if (Util.DEBUG) System.out.println("Evading possible bullets");
                     movement.findPath(myLocation, null);
                 } else {
-                    System.out.println("Walking randomly");
+                    if (Util.DEBUG) System.out.println("Walking randomly");
                     while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
                         lastRandomLocation = myLocation.add(randomDirection(), 100);
                     }
@@ -225,11 +225,11 @@ public class Gardener {
 
 
             if (rc.getRoundNum() - frame > 0) {
-                System.out.println("Gardener took " + (rc.getRoundNum() - frame) + " frames at " + frame);
+                if (Util.DEBUG) System.out.println("Gardener took " + (rc.getRoundNum() - frame) + " frames at " + frame);
             }
 
         } catch (Exception e) {
-            System.out.println("Gardener Exception");
+            if (Util.DEBUG) System.out.println("Gardener Exception");
             e.printStackTrace();
         }
     }

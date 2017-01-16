@@ -43,7 +43,7 @@ public class Archon {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                if (Util.DEBUG) System.out.println("BYTECODE OVERFLOW");
             }
             Clock.yield();
         }
@@ -69,12 +69,12 @@ public class Archon {
                 stuckLocation = myLocation;
             }
             if (rc.getRoundNum() - stuckSince > 69) {
-                System.out.println("Stuck archon reporting trees");
+                if (Util.DEBUG) System.out.println("Stuck archon reporting trees");
                 stuckSince = 100000;
                 for (TreeInfo t : trees) {
                     if (t.getTeam().equals(rc.getTeam())) continue;
                     if (t.location.distanceTo(myLocation) < 6) {
-                        System.out.println("Reported tree at " + t.location);
+                        if (Util.DEBUG) System.out.println("Reported tree at " + t.location);
                         radio.requestTreeCut(t);
                     }
                 }
@@ -113,14 +113,14 @@ public class Archon {
                 }
                 if (alternateBuildDir >= 0) {
 
-                    System.out.println("Only " + gardenersDir[alternateBuildDir] + " gardeners in direction " + directions[alternateBuildDir]);
+                    if (Util.DEBUG) System.out.println("Only " + gardenersDir[alternateBuildDir] + " gardeners in direction " + directions[alternateBuildDir]);
                     rc.hireGardener(directions[alternateBuildDir]);
                     Radio.reportBuild(RobotType.GARDENER);
                     gardenersSpawned++;
                     Radio.reportActiveGardener();
-                    System.out.println("Gardeners spawned: " + gardenersSpawned);
+                    if (Util.DEBUG) System.out.println("Gardeners spawned: " + gardenersSpawned);
                 }else{
-                    System.out.println("Cant build Gardener here");
+                    if (Util.DEBUG) System.out.println("Cant build Gardener here");
                 }
             }
 
@@ -133,7 +133,7 @@ public class Archon {
             // rc.move(lastDirection);
             // }
         } catch (Exception e) {
-            System.out.println("Archon Exception");
+            if (Util.DEBUG) System.out.println("Archon Exception");
             e.printStackTrace();
         }
     }

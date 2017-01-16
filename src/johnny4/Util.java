@@ -153,17 +153,17 @@ public class Util {
             }
         }
         if (cnt >= px.length) {
-            System.out.println("Exhausted array length");
+            if (Util.DEBUG) System.out.println("Exhausted array length");
         }
         if (mindist > 99999d) {
-            System.out.println("No collision found");
+            if (Util.DEBUG) System.out.println("No collision found");
             if (cnt >= px.length){
                 return false;
             }
         }
         clock = Clock.getBytecodeNum() - clock;
         if (clock > 300){
-            System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length));
+            if (Util.DEBUG) System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length));
         }
         return outcome;
     }
@@ -175,13 +175,13 @@ public class Util {
             float dx = enemy.location.x - lastEnemy.location.x;
             float dy = enemy.location.y - lastEnemy.location.y;
             float time = (rc.getLocation().distanceTo(enemy.location) - enemy.type.bodyRadius - rc.getType().bodyRadius) / rc.getType().bulletSpeed;
-            System.out.println(time + ": " + dx + "|" + dy);
-            System.out.println("From " + lastEnemy.location + " to " + enemy.location);
+            if (Util.DEBUG) System.out.println(time + ": " + dx + "|" + dy);
+            if (Util.DEBUG) System.out.println("From " + lastEnemy.location + " to " + enemy.location);
             nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
-            rc.setIndicatorLine(lastEnemy.location, enemy.location, 255, 255, 0);
-            rc.setIndicatorLine(enemy.location, nextEnemy, 255, 100, 0);
+            if (Util.DEBUG) rc.setIndicatorLine(lastEnemy.location, enemy.location, 255, 255, 0);
+            if (Util.DEBUG) rc.setIndicatorLine(enemy.location, nextEnemy, 255, 100, 0);
         }
-        rc.setIndicatorDot(nextEnemy, 255, 100, 0);
+        if (Util.DEBUG) rc.setIndicatorDot(nextEnemy, 255, 100, 0);
         return nextEnemy;
     }
 
@@ -206,10 +206,10 @@ public class Util {
             System.arraycopy(temp, 0, cache, 0, cnt);
             time = Clock.getBytecodeNum() - time;
             if (time > 300) {
-                System.out.println("Sensing trees took " + time);
+                if (Util.DEBUG) System.out.println("Sensing trees took " + time);
             }
             if (cache.length >= temp.length) {
-                System.out.println("Reached maximum tree count");
+                if (Util.DEBUG) System.out.println("Reached maximum tree count");
             }
         }
         return cache;
@@ -231,10 +231,10 @@ public class Util {
             System.arraycopy(temp2, 0, cache2, 0, cnt);
             time = Clock.getBytecodeNum() - time;
             if (time > 300) {
-                System.out.println("Sensing trees took " + time);
+                if (Util.DEBUG) System.out.println("Sensing trees took " + time);
             }
             if (cache2.length >= temp2.length) {
-                System.out.println("Reached maximum tree count");
+                if (Util.DEBUG) System.out.println("Reached maximum tree count");
             }
         }
         return cache2;

@@ -30,7 +30,7 @@ public class Soldier {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                if (Util.DEBUG) System.out.println("BYTECODE OVERFLOW");
             }
             Clock.yield();
         }
@@ -82,12 +82,12 @@ public class Soldier {
                 stuckLocation = myLocation;
             }
             if (rc.getRoundNum() - stuckSince > 69) {
-                System.out.println("Stuck soldier reporting trees");
+                if (Util.DEBUG) System.out.println("Stuck soldier reporting trees");
                 stuckSince = 100000;
                 for (TreeInfo t : trees) {
                     if (t.getTeam().equals(rc.getTeam())) continue;
                     if (t.location.distanceTo(myLocation) < 5.5) {
-                        System.out.println("Reported tree at " + t.location);
+                        if (Util.DEBUG) System.out.println("Reported tree at " + t.location);
                         radio.requestTreeCut(t);
                     }
                 }
@@ -97,7 +97,7 @@ public class Soldier {
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
-                System.out.println("Using long range target");
+                if (Util.DEBUG) System.out.println("Using long range target");
                 nextEnemy = map.getTarget(0, myLocation);
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
@@ -121,7 +121,7 @@ public class Soldier {
                 Direction fireDir = null;
                 if (!hasFired && evasionMode) {
                     if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2 + 3 * (int) (rc.getTeamBullets() / 150)) {
-                        System.out.println("No LOS");
+                        if (Util.DEBUG) System.out.println("No LOS");
                     } else {
                         hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
@@ -131,12 +131,12 @@ public class Soldier {
                     }
                 }
                 if (rc.getTeamBullets() > 50 && evasionMode) {
-                    System.out.println("Soldier entering aggression mode");
+                    if (Util.DEBUG) System.out.println("Soldier entering aggression mode");
                     movement.evadeBullets = false;
                     evasionMode = false;
                 }
                 if (rc.getTeamBullets() < 10 && !evasionMode) {
-                    System.out.println("Soldier entering evasion mode");
+                    if (Util.DEBUG) System.out.println("Soldier entering evasion mode");
                     evasionMode = true;
                     movement.evadeBullets = true;
                 }
@@ -159,7 +159,7 @@ public class Soldier {
 
                 if (!hasFired) {
                     if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2) {
-                        System.out.println("No LOS");
+                        if (Util.DEBUG) System.out.println("No LOS");
                     } else {
                         hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
@@ -177,13 +177,13 @@ public class Soldier {
 
             int cnt7 = Clock.getBytecodeNum();
             if (rc.getRoundNum() - frame > 0) {
-                System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
-                System.out.println("Timings " + cnt1 + " " + cnt2 + " " + cnt3 + " " + cnt4 + " " + cnt5 + " " + cnt6 + " " + cnt7);
+                if (Util.DEBUG) System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                if (Util.DEBUG) System.out.println("Timings " + cnt1 + " " + cnt2 + " " + cnt3 + " " + cnt4 + " " + cnt5 + " " + cnt6 + " " + cnt7);
             }
 
 
         } catch (Exception e) {
-            System.out.println("Soldier Exception");
+            if (Util.DEBUG) System.out.println("Soldier Exception");
             e.printStackTrace();
         }
     }
@@ -192,15 +192,15 @@ public class Soldier {
         MapLocation myLocation = rc.getLocation();
         float bullets = rc.getTeamBullets();
         if (dist - radius < 1.51 + Math.max(0, bullets / 50f - 2) && rc.canFirePentadShot()) {
-            System.out.println("Firing pentad");
+            if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
         } else if (dist - radius < 2.11 + Math.max(0, bullets / 50f - 2) && rc.canFireTriadShot()) {
-            System.out.println("Firing triad");
+            if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
         } else if (rc.canFireSingleShot()) {
-            System.out.println("Firing single bullet");
+            if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;
         }

@@ -45,19 +45,19 @@ public class SimpleHexagonalClusters extends Grid {
                 gx2 = (gx % 2) * 0.5f;
                 gxSpacing = gx * SPACING;
                 for (; gy < ymax; gy += PATTERN_SKIP_INVERSE_X[gy % P_Y]) {
-                    //System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
+                    //if (Util.DEBUG) System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
                     realLocation = new MapLocation(gxSpacing,(gy + gx2) * SPACING);
                     checkLocation = unitloc.equals(realLocation) ? realLocation : realLocation.add(new Direction((Math.round((unitloc.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
                     canSense = rc.canSenseLocation(checkLocation);
                     if ((!canSense || rc.onTheMap(checkLocation))) {
-                        rc.setIndicatorDot(realLocation, 0, 0, 255);
+                        if (Util.DEBUG) rc.setIndicatorDot(realLocation, 0, 0, 255);
                         dist = realLocation.distanceTo(myLocation);
                         if (dist < bestDist && (!canSense || !rc.isCircleOccupiedExceptByThisRobot(realLocation, RobotType.GARDENER.bodyRadius) || unitloc.distanceTo(realLocation) < 0.1f)) {
                             best = realLocation;
                             bestDist = dist;
                         }
                     }
-                    //System.out.println(Clock.getBytecodeNum());
+                    //if (Util.DEBUG) System.out.println(Clock.getBytecodeNum());
                 }
             }
         } catch (Exception ex) {
@@ -92,8 +92,8 @@ public class SimpleHexagonalClusters extends Grid {
             MapLocation checkLocation;
             for (gx = (int) ((myLocation.x - radius) / SPACING); gx < xmax; gx++) {
                 gy = ymin;
-                // System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
-                // System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN_SKIP[gx % P_X][gy % P_Y]);
+                // if (Util.DEBUG) System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
+                // if (Util.DEBUG) System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN_SKIP[gx % P_X][gy % P_Y]);
                 PATTERN_SKIP_X = PATTERN_SKIP[gx % P_X];
                 gy += (!PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_X[gy % P_Y] : 0;
                 gxSpacing = gx * SPACING;
@@ -102,9 +102,9 @@ public class SimpleHexagonalClusters extends Grid {
                 for (; gy < ymax; gy += PATTERN_SKIP_X[gy % P_Y]) {
                     realLocation = new MapLocation(gxSpacing, (gy + gx2) * SPACING);
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
-                    //System.out.println(realLocation);
+                    //if (Util.DEBUG) System.out.println(realLocation);
 
-                    rc.setIndicatorDot(realLocation, 255, 255, 0);
+                    if (Util.DEBUG) rc.setIndicatorDot(realLocation, 255, 255, 0);
                     if (rc.canSenseLocation(checkLocation) && rc.senseTreeAtLocation(realLocation) == null && rc.onTheMap(checkLocation)) {
                         dist = realLocation.distanceTo(myLocation);
                         if (dist < bestDist && !rc.isCircleOccupiedExceptByThisRobot(realLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
@@ -112,17 +112,17 @@ public class SimpleHexagonalClusters extends Grid {
                             bestDist = dist;
                         }
                     }
-                    //System.out.println(Clock.getBytecodeNum());
+                    //if (Util.DEBUG) System.out.println(Clock.getBytecodeNum());
                 }
             }
             if (best != null)
-                rc.setIndicatorDot(best, 0, 255, 0);
+                if (Util.DEBUG) rc.setIndicatorDot(best, 0, 255, 0);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         time = Clock.getBytecodeNum() - time;
         if (time > 1000){
-            System.out.println("Getting nearest plantable location took " + time);
+            if (Util.DEBUG) System.out.println("Getting nearest plantable location took " + time);
         }
         plannedLocation = best;
         return best;

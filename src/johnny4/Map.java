@@ -32,7 +32,7 @@ public class Map {
             lastSenseFrame = frame;
             nearbyRobots = rc.senseNearbyRobots();
             Radio.reportEnemies(nearbyRobots);
-            //System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
+            //if (Util.DEBUG) System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
             return nearbyRobots;
         }
         //int clocks = Clock.getBytecodeNum();
@@ -89,13 +89,13 @@ public class Map {
         float x, y, dx, dy, dist;
         int unitData, ut;
         for (int i = ecnt + 100; i >= 101; i--) {
-            //System.out.println("1: " + Clock.getBytecodeNum());
+            //if (Util.DEBUG) System.out.println("1: " + Clock.getBytecodeNum());
             unitData = rc.readBroadcast(i);
-            //System.out.println("1.2: " + Clock.getBytecodeNum());
+            //if (Util.DEBUG) System.out.println("1.2: " + Clock.getBytecodeNum());
             if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge)
                 continue;
             ut = (unitData & 0b00000000000000000000111000000000) >> 9;
-            //System.out.println("2: " + Clock.getBytecodeNum());
+            //if (Util.DEBUG) System.out.println("2: " + Clock.getBytecodeNum());
 
             x = (unitData & 0b11111111110000000000000000000000) >> 22;
             y = (unitData & 0b00000000001111111111000000000000) >> 12;
@@ -183,8 +183,8 @@ public class Map {
             if (previousIntel == null || previousIntel.creationTime < creationTime){
                 intel.removeAll(toremove);
                 intel.add(this);
-                //System.out.println("Sensed enemy at " + location);
-                //System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
+                //if (Util.DEBUG) System.out.println("Sensed enemy at " + location);
+                //if (Util.DEBUG) System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
             }
         }
 

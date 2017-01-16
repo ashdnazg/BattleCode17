@@ -80,12 +80,12 @@ public class Movement {
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
-        System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE);
+        if (Util.DEBUG) System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE);
     }
 
     // Call this every frame before using
     public static void init(RobotInfo[] robots_, TreeInfo[] trees_, BulletInfo[] bullets_) {
-        System.out.println("Starting init " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Starting init " + Clock.getBytecodeNum());
         lastInit = rc.getRoundNum();
         robots = robots_ != null ? robots_ : new RobotInfo[0];
         trees = trees_ != null ? trees_ : new TreeInfo[0];
@@ -168,21 +168,21 @@ public class Movement {
         }
         if (noEnemies) { // only keep distance to lumberjacks in combat
             threatsLen = 0;
-            System.out.println("No threats, hugging friendly lumberjacks");
+            if (Util.DEBUG) System.out.println("No threats, hugging friendly lumberjacks");
         }
         if (myLocation.distanceTo(stuckLocation) > strideDistance * 1.1) {
             stuckLocation = myLocation;
             stuckSince = lastInit;
         }
-        System.out.println("ending init " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("ending init " + Clock.getBytecodeNum());
     }
 
     static MapLocation oldTarget = null;
 
     public boolean findPath(MapLocation target, Direction fireDir) throws GameActionException {
-        System.out.println("Starting findPath " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Starting findPath " + Clock.getBytecodeNum());
         if (target == null) {
-            System.out.println("Pathfinding to null, that's easy");
+            if (Util.DEBUG) System.out.println("Pathfinding to null, that's easy");
             return false;
         }
         if (oldTarget != null && oldTarget.distanceTo(target) > 2) {
@@ -193,11 +193,11 @@ public class Movement {
             new RuntimeException("Movement wasn't initialized since: " + lastInit).printStackTrace();
         }
         if (DEBUG) {
-            System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
+            if (Util.DEBUG) System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
         }
         this.fireDir = fireDir;
 
-        System.out.println("Somewhere in findPath " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Somewhere in findPath " + Clock.getBytecodeNum());
 
         boolean gonnaBeHit = false;
         Direction bulletDir = randomDirection();
@@ -213,10 +213,10 @@ public class Movement {
         float olddist = myLocation.distanceTo(target);
         if (olddist < 0.0001f){
             if (valueMove(Direction.getNorth(), 0) < 0.0001 && !gonnaBeHit) {
-                System.out.println("I'm already at target");
+                if (Util.DEBUG) System.out.println("I'm already at target");
                 return false;
             }else{
-                System.out.println("I'm already at target but it sucks being around here");
+                if (Util.DEBUG) System.out.println("I'm already at target but it sucks being around here");
                 target = target.add(bulletDir.rotateLeftDegrees(90 * (bugdir ? 1.001f : -1.001f)), strideDistance);
             }
         }
@@ -237,27 +237,27 @@ public class Movement {
                     }
                 }
             }
-            rc.setIndicatorLine(myLocation, target, 0, 0, 255);
+            if (Util.DEBUG) rc.setIndicatorLine(myLocation, target, 0, 0, 255);
             if (best != null) {
                 Direction toTree = myLocation.directionTo(best.location);
                 float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));
                 if (Math.abs(moveDir.radiansBetween(toTree)) < correctionAngle) {
                     if (DEBUG) {
-                        System.out.println("Found blocking tree at angle " + bestval);
+                        if (Util.DEBUG) System.out.println("Found blocking tree at angle " + bestval);
                     }
-                    rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
+                    if (Util.DEBUG) rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
                     //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
                     moveDir = toTree.rotateLeftRads((bugdir ? 1 : -1) * correctionAngle);
 
-                    rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+                    if (Util.DEBUG) rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
                 }
             }
         }
 
-        System.out.println("Somewhere else in findPath " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Somewhere else in findPath " + Clock.getBytecodeNum());
         if (olddist > 2 * strideDistance && lastInit - stuckSince > 4) {
             if (DEBUG) {
-                System.out.println("Switching bugdir because of stuck");
+                if (Util.DEBUG) System.out.println("Switching bugdir because of stuck");
             }
             stuckSince = rc.getRoundNum();
             bugdir = !bugdir;
@@ -266,15 +266,15 @@ public class Movement {
         boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
         boolean retval = bugMove(moveDir, Math.min(strideDistance, target.distanceTo(myLocation)));
         if (DEBUG) {
-            System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
+            if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
         if (retval && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || hadLos && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
             if (DEBUG) {
-                System.out.println("Switching bugdir because of distance");
+                if (Util.DEBUG) System.out.println("Switching bugdir because of distance");
             }
             bugdir = !bugdir;
         }
-        System.out.println("end of findPath " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("end of findPath " + Clock.getBytecodeNum());
         return retval;
 
     }
@@ -292,7 +292,7 @@ public class Movement {
         if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
         float max = 0;
         if (evadeBullets && fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
-            //System.out.println(dir + " would collide with own bullet");
+            //if (Util.DEBUG) System.out.println(dir + " would collide with own bullet");
             max = 0.9f;
         }
         nloc = myLocation.add(dir, rc.getType().strideRadius);
@@ -301,7 +301,7 @@ public class Movement {
 
             threat = threats[i];
             if ((threat.x - nloc.x) * (threat.x - nloc.x) + (threat.y - nloc.y) * (threat.y - nloc.y) < threat.radiusSquared) {
-                //System.out.println(nloc + " would be too close to " + threat.description + " at " + threat.loc);
+                //if (Util.DEBUG) System.out.println(nloc + " would be too close to " + threat.description + " at " + threat.loc);
                 max = Math.max(max, threat.radius - nloc.distanceTo(threat.loc) + 1);
             }
         }
@@ -337,17 +337,17 @@ public class Movement {
     private boolean bugdir = rand() > 0.5f;
 
     private boolean bugMove(Direction dir, float dist) {
-        System.out.println("Start bugmove: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("Start bugmove: " + Clock.getBytecodeNum());
         float ret = LJ_tryMove(dir, 52, 3, bugdir, dist);
         if (ret >= 180) {
             bugdir = !bugdir;
-            System.out.println("Switching bugdir to evade enemy");
+            if (Util.DEBUG) System.out.println("Switching bugdir to evade enemy");
         }
         if (rand() < 0.02f || ret < 0 && rand() < 0.2f) {
             bugdir = !bugdir;
-            System.out.println("Switching bugdir");
+            if (Util.DEBUG) System.out.println("Switching bugdir");
         }
-        System.out.println("end bugmove: " + Clock.getBytecodeNum());
+        if (Util.DEBUG) System.out.println("end bugmove: " + Clock.getBytecodeNum());
         return ret > -0.01f;
     }
 
@@ -382,9 +382,6 @@ public class Movement {
                     Direction d;
 
                     while (currentCheck <= checksPerSide) {
-                        if (DEBUG) {
-                            System.out.println(Clock.getBytecodeNum() + ": Checking angle" + degreeOffset * currentCheck + " in left dir " + left);
-                        }
                         if (left) {
                             d = dir.rotateLeftDegrees(degreeOffset * currentCheck);
                         } else {
@@ -393,7 +390,7 @@ public class Movement {
                         int clock2 = Clock.getBytecodeNum();
                         t = valueMove(d, dist);
                         int clock3 = Clock.getBytecodeNum();
-                        rc.setIndicatorDot(myLocation.add(d, dist), 255 - (int) (t * 25), 255 - (int) (t * 25), 255 - (int) (t * 25));
+                        if (Util.DEBUG) rc.setIndicatorDot(myLocation.add(d, dist), 255 - (int) (t * 25), 255 - (int) (t * 25), 255 - (int) (t * 25));
                         if (t < 0.01) {
                             rc.move(d, dist);
                             myLocation = rc.getLocation();

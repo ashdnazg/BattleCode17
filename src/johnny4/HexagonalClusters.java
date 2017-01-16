@@ -25,7 +25,7 @@ public class HexagonalClusters extends Grid {
         MapLocation best = null;
         float bestDist = 1000000;
         float dist;
-        System.out.println(OFFSET);
+        if (Util.DEBUG) System.out.println(OFFSET);
         try {
             float radius = 5;
             int xmax = (int) ((myLocation.x + radius) / SPACING);
@@ -38,18 +38,18 @@ public class HexagonalClusters extends Grid {
                 gy += (PATTERN[((gy + (int) (OFFSET * gx)) % len + len) % len]) ? PATTERN_SKIP_INVERSE[((gy + (int) (OFFSET * gx)) % len + len) % len] : 0;
 
                 for (; gy < ymax; gy += PATTERN_SKIP_INVERSE[((gy + (int) (OFFSET * gx)) % len + len) % len]) {
-                    //System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
+                    //if (Util.DEBUG) System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
                     realLocation = new MapLocation(gx * SPACING, ((gy + 0.5f * (gx % 2)) * SPACING));
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
                     if ((!rc.canSenseLocation(checkLocation) || rc.onTheMap(checkLocation))) {
-                        //rc.setIndicatorDot(realLocation, 0, 0, 255);
+                        //if (Util.DEBUG) rc.setIndicatorDot(realLocation, 0, 0, 255);
                         dist = realLocation.distanceTo(myLocation);
                         if (dist < bestDist && !rc.isCircleOccupiedExceptByThisRobot(realLocation, RobotType.GARDENER.bodyRadius)) {
                             best = realLocation;
                             bestDist = dist;
                         }
                     }
-                    //System.out.println(Clock.getBytecodeNum());
+                    //if (Util.DEBUG) System.out.println(Clock.getBytecodeNum());
                 }
             }
         } catch (Exception ex) {
@@ -66,7 +66,7 @@ public class HexagonalClusters extends Grid {
         float OFFSET = HexagonalClusters.OFFSET;
         int len = PATTERN.length;
         MapLocation best = null;
-        System.out.println(OFFSET);
+        if (Util.DEBUG) System.out.println(OFFSET);
         myLocation = myLocation.add(Direction.getEast(), rand() * 0.01f);
         float bestDist = 1000000;
         float dist;
@@ -85,11 +85,11 @@ public class HexagonalClusters extends Grid {
                 gy += (!PATTERN[((gy + (int) (OFFSET * gx)) % len + len) % len]) ? PATTERN_SKIP[((gy + (int) (OFFSET * gx)) % len + len) % len] : 0;
 
                 for (; gy < ymax; gy += PATTERN_SKIP[((gy + (int) (OFFSET * gx)) % len + len) % len]) {
-                    //System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
+                    //if (Util.DEBUG) System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
                     realLocation = new MapLocation(gx * SPACING, (gy + 0.5f * (gx % 2)) * SPACING);
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
 
-                    //rc.setIndicatorDot(realLocation, 255, 255, 0);
+                    //if (Util.DEBUG) rc.setIndicatorDot(realLocation, 255, 255, 0);
                     if (rc.canSenseLocation(checkLocation) && rc.senseTreeAtLocation(realLocation) == null && rc.onTheMap(checkLocation)) {
                         dist = realLocation.distanceTo(myLocation);
                         if (dist < bestDist && !rc.isCircleOccupiedExceptByThisRobot(realLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
@@ -97,17 +97,17 @@ public class HexagonalClusters extends Grid {
                             bestDist = dist;
                         }
                     }
-                    //System.out.println(Clock.getBytecodeNum());
+                    //if (Util.DEBUG) System.out.println(Clock.getBytecodeNum());
                 }
             }
             if (best != null)
-                rc.setIndicatorDot(best, 0, 255, 0);
+                if (Util.DEBUG) rc.setIndicatorDot(best, 0, 255, 0);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         time = Clock.getBytecodeNum() - time;
         if (time > 1000){
-            System.out.println("Getting nearest plantable location took " + time);
+            if (Util.DEBUG) System.out.println("Getting nearest plantable location took " + time);
         }
         plannedLocation = best;
         return best;

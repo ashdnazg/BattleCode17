@@ -119,7 +119,7 @@ public class Radio {
     }
 
     public static void updateEnemyCounts() throws GameActionException {
-        //System.out.println("before updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        //if (Util.DEBUG) System.out.println("before updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
         if (!haveBeenFirst) {
             setEnemyCounter(0);
             haveBeenFirst = true;
@@ -127,7 +127,7 @@ public class Radio {
             enemyIDToPos = new int[180][];
             enemyPosToID = new int[100];
         }
-        //System.out.println("updating counts last: " + last);
+        //if (Util.DEBUG) System.out.println("updating counts last: " + last);
         enemyCounts[0] = 0;
         enemyCounts[1] = 0;
         enemyCounts[2] = 0;
@@ -151,7 +151,7 @@ public class Radio {
         int ID, ID_a, ID_b, age, info, h1, n1, b1, h2, n2, b2, h3, n3, b3, type;
         while (pos < last) {
             ID = enemyPosToID[pos - 101];
-            //System.out.println("checking for eviction ID: " + ID);
+            //if (Util.DEBUG) System.out.println("checking for eviction ID: " + ID);
             ID_a = ID % 180;
             ID_b = ID / 180;
             age = enemyIDToAge[ID_a][ID_b];
@@ -167,7 +167,7 @@ public class Radio {
 
             // evict units after not seeing them for 32 rounds
             if ((age == frame32) || (((deleteBloom[n1] & b1) != 0) && ((deleteBloom[n2] & b2) != 0))) {
-                //System.out.println("evicting from pos: " + pos);
+                //if (Util.DEBUG) System.out.println("evicting from pos: " + pos);
                 enemyIDToAge[ID_a][ID_b] = 0;
                 enemyIDToPos[ID_a][ID_b] = 0;
                 writeNeeded = true;
@@ -196,9 +196,9 @@ public class Radio {
         int infoPos;
         for (; pos < lastReport; pos += 2) {
             report = rc.readBroadcast(pos);
-            //System.out.println("reading new report from pos: " + pos + " info: " + report);
+            //if (Util.DEBUG) System.out.println("reading new report from pos: " + pos + " info: " + report);
             ID = rc.readBroadcast(pos + 1);
-            //System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000111000000000) >> 9));
+            //if (Util.DEBUG) System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000111000000000) >> 9));
             ID_a = ID % 180;
             ID_b = ID / 180;
             if (enemyIDToAge[ID_a] == null) {
@@ -265,12 +265,12 @@ public class Radio {
         rc.broadcast(418, enemyCounts[4]);
         rc.broadcast(419, enemyCounts[5]);
 
-        System.out.println("Enemy Archons: " + enemyCounts[0]);
-        System.out.println("Enemy Gardeners: " + enemyCounts[1]);
-        System.out.println("Enemy Lumberjacks: " + enemyCounts[2]);
-        System.out.println("Enemy Soldiers: " + enemyCounts[3]);
-        System.out.println("Enemy Tanks: " + enemyCounts[4]);
-        System.out.println("Enemy Scouts: " + enemyCounts[5]);
+        if (Util.DEBUG) System.out.println("Enemy Archons: " + enemyCounts[0]);
+        if (Util.DEBUG) System.out.println("Enemy Gardeners: " + enemyCounts[1]);
+        if (Util.DEBUG) System.out.println("Enemy Lumberjacks: " + enemyCounts[2]);
+        if (Util.DEBUG) System.out.println("Enemy Soldiers: " + enemyCounts[3]);
+        if (Util.DEBUG) System.out.println("Enemy Tanks: " + enemyCounts[4]);
+        if (Util.DEBUG) System.out.println("Enemy Scouts: " + enemyCounts[5]);
 
 
         rc.broadcast(420, reportBloom[0]);
@@ -280,17 +280,17 @@ public class Radio {
         rc.broadcast(424, reportBloom[4]);
         rc.broadcast(425, reportBloom[5]);
 
-        //System.out.println("after updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        //if (Util.DEBUG) System.out.println("after updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
     }
 
 
     public static void keepAlive() throws GameActionException {
-        // System.out.println("before: " + Clock.getBytecodeNum());
+        // if (Util.DEBUG) System.out.println("before: " + Clock.getBytecodeNum());
         // Check if it's the first unit to call keepAlive this round
         int previousRoundNum = rc.readBroadcast(413);
         if (previousRoundNum < frame) {
             rc.broadcast(413, frame);
-            // System.out.println("I am first");
+            // if (Util.DEBUG) System.out.println("I am first");
             allyCounts[0] = Counter.commit(400) + Counter.commit(406);
             allyCounts[1] = Counter.commit(401) + Counter.commit(407);
             allyCounts[2] = Counter.commit(402) + Counter.commit(408);
@@ -303,10 +303,10 @@ public class Radio {
 
             updateEnemyCounts();
 
-            System.out.println("Allied Scouts: " + countAllies(RobotType.SCOUT));
-            System.out.println("Allied Soldiers: " + countAllies(RobotType.SOLDIER));
-            System.out.println("Allied Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
-            System.out.println("Allied Gardeners: " + countAllies(RobotType.GARDENER));
+            if (Util.DEBUG) System.out.println("Allied Scouts: " + countAllies(RobotType.SCOUT));
+            if (Util.DEBUG) System.out.println("Allied Soldiers: " + countAllies(RobotType.SOLDIER));
+            if (Util.DEBUG) System.out.println("Allied Lumberjacks: " + countAllies(RobotType.LUMBERJACK));
+            if (Util.DEBUG) System.out.println("Allied Gardeners: " + countAllies(RobotType.GARDENER));
 
 
         } else {
@@ -347,7 +347,7 @@ public class Radio {
                 Counter.increment(406 + robotType);
             }
         }
-        // System.out.println("after: " + Clock.getBytecodeNum());
+        // if (Util.DEBUG) System.out.println("after: " + Clock.getBytecodeNum());
     }
 
     public static void reportBuild(RobotType robotType) throws GameActionException {
@@ -361,7 +361,7 @@ public class Radio {
     }
 
     public static void reportEnemies(RobotInfo[] ris) throws GameActionException {
-        //System.out.println("before reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        //if (Util.DEBUG) System.out.println("before reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
         int length = ris.length;
         int numReports = rc.readBroadcast(201);
         if (numReports == 98) {
@@ -401,7 +401,7 @@ public class Radio {
             info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9) | (frame / 8);
             rc.broadcast(numReports + 202, info);
             rc.broadcast(numReports + 203, ID);
-            //System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
+            //if (Util.DEBUG) System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
             numReports += 2;
             if (numReports == 98) {
                 break;
@@ -432,7 +432,7 @@ public class Radio {
             rc.broadcast(425, reportBloom[5] | tempBloom[5]);
             tempBloom[5] = 0;
         }
-        //System.out.println("after reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
+        //if (Util.DEBUG) System.out.println("after reporting enemies: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
     }
 
 
@@ -466,13 +466,13 @@ public class Radio {
         rc.broadcast(201, numReports + 2);
 
 
-        // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
+        // if (Util.DEBUG) System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
     }
 
 
     public static void deleteEnemyReport(MapLocation location) throws GameActionException {
-        System.out.println("Clearing invalid report at " + location);
-        rc.setIndicatorDot(location, 255, 0, 0);
+        if (Util.DEBUG) System.out.println("Clearing invalid report at " + location);
+        if (Util.DEBUG) rc.setIndicatorDot(location, 255, 0, 0);
         int info = ((int) Math.round(location.x) << 10) | ((int) Math.round(location.y));
         int numDeletes = rc.readBroadcast(427);
         if (numDeletes == 22) {
@@ -480,7 +480,7 @@ public class Radio {
         }
         rc.broadcast(427, numDeletes + 1);
         rc.broadcast(428 + numDeletes, info);
-        // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
+        // if (Util.DEBUG) System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
     }
 
     public static float getUnitX(int info) {
@@ -581,7 +581,7 @@ public class Radio {
 
     public static boolean getAlarm() throws GameActionException {
         int lastAlarm = rc.readBroadcast(321);
-        System.out.println("Last alarm was " + lastAlarm);
+        if (Util.DEBUG) System.out.println("Last alarm was " + lastAlarm);
         return lastAlarm != 0 && (rc.getRoundNum() - lastAlarm) < 10;
     }
 

@@ -26,7 +26,7 @@ public class Tank {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                if (Util.DEBUG) System.out.println("BYTECODE OVERFLOW");
             }
             Clock.yield();
         }
@@ -71,27 +71,27 @@ public class Tank {
                 lastTarget = best;
             } else {
                 lastTarget = null;
-                map.generateFarTargets(myLocation, 3, 0);
+                map.generateFarTargets(myLocation, 9, 0);
                 nextEnemy = map.getTarget(0, myLocation);
             }
             float dist = 10000f;
             if (nextEnemy != null) {
-                System.out.println("Aiming at " + nextEnemy);
+                if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
                 if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius)) {
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
-                    System.out.println("Fire!");
+                    if (Util.DEBUG) System.out.println("Fire!");
                 }
             } else {
-                //System.out.println("No target");
+                //if (Util.DEBUG) System.out.println("No target");
                 //tryMove(randomDirection());
             }
             if (rc.getRoundNum() - frame > 0) {
-                System.out.println("Tank took " + (rc.getRoundNum() - frame) + " frames at " + frame);
+                if (Util.DEBUG) System.out.println("Tank took " + (rc.getRoundNum() - frame) + " frames at " + frame);
             }
 
 
         } catch (Exception e) {
-            System.out.println("Tank Exception");
+            if (Util.DEBUG) System.out.println("Tank Exception");
             e.printStackTrace();
         }
     }

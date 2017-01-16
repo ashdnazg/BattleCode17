@@ -79,26 +79,26 @@ public class BuildPlanner {
             return false;
         }
 
-        System.out.println("numGardeners: " + ownGardeners);
-        System.out.println("nearby Gardeners: " + nearbyGardeners);
-        System.out.println("nearby Trees: " + nearbyBulletTrees);
+        if (Util.DEBUG) System.out.println("numGardeners: " + ownGardeners);
+        if (Util.DEBUG) System.out.println("nearby Gardeners: " + nearbyGardeners);
+        if (Util.DEBUG) System.out.println("nearby Trees: " + nearbyBulletTrees);
         if (ownGardeners == 0 || nearbyBulletTrees > 1 && nearbyGardeners == 0) {
             return true;
         }
 
         if (frame % ((Radio.countAllies(RobotType.ARCHON) - 1) * Math.log(nearbyGardeners * 2 + 1) * 5 + 1) > 0) {
-            System.out.println("Waiting for other Archon, Chance: " + (Math.log(Archon.gardenersSpawned * 2 + 1) * 10 + 1));
+            if (Util.DEBUG) System.out.println("Waiting for other Archon, Chance: " + (Math.log(Archon.gardenersSpawned * 2 + 1) * 10 + 1));
             return false;
         }
 
         int activeGardeners = Radio.countActiveGardeners();
-        System.out.println("activeGardeners: " + activeGardeners);
+        if (Util.DEBUG) System.out.println("activeGardeners: " + activeGardeners);
         if (activeGardeners == 0 && ownSoldiers + ownLumberjacks >= ownGardeners) {
             return true;
         }
 
         boolean rich = money > 120;
-        System.out.println("rich: " + rich);
+        if (Util.DEBUG) System.out.println("rich: " + rich);
         if (rich && ownGardeners <= (ownSoldiers + ownLumberjacks) / 2 + rc.getRoundNum() / 150) {
             return true;
         }
@@ -116,15 +116,15 @@ public class BuildPlanner {
 
         if (nearbyProtectors > 4) return null; //dont overcrowd
 
-        System.out.println("own scouts: " + ownScouts);
-        System.out.println("own soldiers: " + ownSoldiers);
-        System.out.println("own gardeners: " + ownGardeners);
-        System.out.println("own lumberjacks: " + ownLumberjacks);
-        System.out.println("enemy scouts: " + enemyScouts);
-        System.out.println("enemy soldiers: " + enemySoldiers);
-        System.out.println("enemy gardeners: " + enemyGardeners);
-        System.out.println("enemy lumberjacks: " + enemyLumberjacks);
-        System.out.println("nearby trees: " + nearbyTrees.length);
+        if (Util.DEBUG) System.out.println("own scouts: " + ownScouts);
+        if (Util.DEBUG) System.out.println("own soldiers: " + ownSoldiers);
+        if (Util.DEBUG) System.out.println("own gardeners: " + ownGardeners);
+        if (Util.DEBUG) System.out.println("own lumberjacks: " + ownLumberjacks);
+        if (Util.DEBUG) System.out.println("enemy scouts: " + enemyScouts);
+        if (Util.DEBUG) System.out.println("enemy soldiers: " + enemySoldiers);
+        if (Util.DEBUG) System.out.println("enemy gardeners: " + enemyGardeners);
+        if (Util.DEBUG) System.out.println("enemy lumberjacks: " + enemyLumberjacks);
+        if (Util.DEBUG) System.out.println("nearby trees: " + nearbyTrees.length);
 
 
         boolean alarm = Radio.getAlarm();

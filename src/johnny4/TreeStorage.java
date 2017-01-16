@@ -25,7 +25,7 @@ public class TreeStorage {
         _updated[t.getID() % knownTrees.length] = true;
         ownTree[t.getID() % knownTrees.length] = true;
         lastUpdate[t.getID() % knownTrees.length] = rc.getRoundNum();
-        System.out.println("New tree at " + knownTrees[t.getID() % knownTrees.length] + " with " + t.health + " hp");
+        if (Util.DEBUG) System.out.println("New tree at " + knownTrees[t.getID() % knownTrees.length] + " with " + t.health + " hp");
     }
 
 
@@ -38,7 +38,7 @@ public class TreeStorage {
         for (int i = 0; i < knownTrees.length; i++) {
             _updated[i] = false;
             if (treeHealth[i] > 0){
-                System.out.println(knownTrees[i] + "(" + ownTree[i] + "): " + treeHealth[i] + " -> " + (treeHealth[i] - GameConstants.BULLET_TREE_DECAY_RATE * (frame - lastUpdate[i])));
+                if (Util.DEBUG) System.out.println(knownTrees[i] + "(" + ownTree[i] + "): " + treeHealth[i] + " -> " + (treeHealth[i] - GameConstants.BULLET_TREE_DECAY_RATE * (frame - lastUpdate[i])));
             }
             treeHealth[i] -= GameConstants.BULLET_TREE_DECAY_RATE * (frame - lastUpdate[i]);
             lastUpdate[i] = frame;
@@ -62,15 +62,15 @@ public class TreeStorage {
                 if (!_updated[i] && rc.canSenseLocation(knownTrees[i])) {
                     treeHealth[i] = 0;
                     ownTree[i] = false;
-                    rc.setIndicatorDot(knownTrees[i], 255, 0, 0);
+                    if (Util.DEBUG) rc.setIndicatorDot(knownTrees[i], 255, 0, 0);
                 } else {
                     storedTrees++;
                     if (ownTree[i]) {
                         ownTrees++;
-                        rc.setIndicatorDot(knownTrees[i], 255, 255, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
+                        if (Util.DEBUG) rc.setIndicatorDot(knownTrees[i], 255, 255, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }else{
                         otherTrees ++;
-                        rc.setIndicatorDot(knownTrees[i], 255, 100, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
+                        if (Util.DEBUG) rc.setIndicatorDot(knownTrees[i], 255, 100, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }
                 }
             }else{
@@ -80,8 +80,8 @@ public class TreeStorage {
         int time4 = Clock.getBytecodeNum();
         time = Clock.getBytecodeNum() - time;
         if (time > 1000) {
-            System.out.println("Updating trees took " + time);
-            System.out.println(time1 + " " + time2 + " " + time3 + " " + time4);
+            if (Util.DEBUG) System.out.println("Updating trees took " + time);
+            if (Util.DEBUG) System.out.println(time1 + " " + time2 + " " + time3 + " " + time4);
         }
     }
 
@@ -93,7 +93,7 @@ public class TreeStorage {
                 rc.water(knownTrees[i]);
                 treeHealth[i] = Math.min(GameConstants.BULLET_TREE_MAX_HEALTH, treeHealth[i] + GameConstants.WATER_HEALTH_REGEN_RATE);
                 lastUpdate[i] = rc.getRoundNum();
-                System.out.println("Watered tree at " + knownTrees[i] + " back to " + treeHealth[i] + "/" + GameConstants.BULLET_TREE_MAX_HEALTH + " hp.");
+                if (Util.DEBUG) System.out.println("Watered tree at " + knownTrees[i] + " back to " + treeHealth[i] + "/" + GameConstants.BULLET_TREE_MAX_HEALTH + " hp.");
                 lastWater = rc.getRoundNum();
                 return;
             }
@@ -122,7 +122,7 @@ public class TreeStorage {
                     treeHealth[i] = Math.min(GameConstants.BULLET_TREE_MAX_HEALTH, treeHealth[i] + GameConstants.WATER_HEALTH_REGEN_RATE);
                     lastWater = frame;
                     lastUpdate[i] = rc.getRoundNum();
-                    System.out.println("Watered tree at " + knownTrees[i] + " back to " + treeHealth[i] + "/" + GameConstants.BULLET_TREE_MAX_HEALTH + " hp.");
+                    if (Util.DEBUG) System.out.println("Watered tree at " + knownTrees[i] + " back to " + treeHealth[i] + "/" + GameConstants.BULLET_TREE_MAX_HEALTH + " hp.");
                 }
                 dist = /*knownTrees[i].distanceTo(myLocation) **/ (treeHealth[i]);
                 for (int g = 0; g < gcnt; g++) {
@@ -141,13 +141,13 @@ public class TreeStorage {
         }
         time = Clock.getBytecodeNum() - time;
         if (time > 1000) {
-            System.out.println("Getting nearest waterable location took " + time);
+            if (Util.DEBUG) System.out.println("Getting nearest waterable location took " + time);
         }
         toWater = best;
         if (best >= 0) {
             return knownTrees[best];
         } else {
-            System.out.println("Couldn't find tree to water");
+            if (Util.DEBUG) System.out.println("Couldn't find tree to water");
             return null;
         }
 

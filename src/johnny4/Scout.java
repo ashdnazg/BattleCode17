@@ -32,7 +32,7 @@ public class Scout {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                if (Util.DEBUG) System.out.println("BYTECODE OVERFLOW");
             }
             Clock.yield();
         }
@@ -57,10 +57,10 @@ public class Scout {
                 isShaker = radio.countAllies(RobotType.SCOUT) <= 2  && rand() > 0.3f || rand() < 0.2f;
                 initialized = true;
                 if (isAggro){
-                    Movement.MIN_ENEMY_DIST = 5;
+                    Movement.MIN_ENEMY_DIST = 4.5f;
                 }
             }
-            System.out.println("This scout is shaker: " + isShaker + ", roamer: " + isRoamer + " and aggro: " + isAggro);
+            if (Util.DEBUG) System.out.println("This scout is shaker: " + isShaker + ", roamer: " + isRoamer + " and aggro: " + isAggro);
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
@@ -101,7 +101,7 @@ public class Scout {
             }
             if (nextCivilian == null) {
                 longRangeCiv = true;
-                System.out.println("Using long range civilian " + Clock.getBytecodeNum());
+                if (Util.DEBUG) System.out.println("Using long range civilian " + Clock.getBytecodeNum());
                 if (frame % 3 == 0) {
                     map.generateFarTargets(myLocation, 1000, 0);
                 }
@@ -130,7 +130,7 @@ public class Scout {
                 dist = myLocation.distanceTo(nextEnemy);
             }
 
-            System.out.println("Checking safe " + Clock.getBytecodeNum());
+            if (Util.DEBUG) System.out.println("Checking safe " + Clock.getBytecodeNum());
 
             boolean safe = false;
             boolean cantfire = false;
@@ -141,7 +141,7 @@ public class Scout {
                     }
                     if (myLocation.distanceTo(ti.location) + RobotType.SCOUT.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET < ti.radius || nextCivilian != null && myLocation.distanceTo(nextCivilian) - RobotType.SCOUT.bodyRadius - GameConstants.BULLET_SPAWN_OFFSET > ti.location.distanceTo(nextCivilian) - ti.radius && Math.abs(nextCivilian.directionTo(myLocation).degreesBetween(nextCivilian.directionTo(ti.location))) < 10) {
                         cantfire = true;
-                        System.out.println("Can't fire from here");
+                        if (Util.DEBUG) System.out.println("Can't fire from here");
                     }
                 }
             }
@@ -149,15 +149,15 @@ public class Scout {
             movement.evadeBullets = !safe;
             if (!safe) {
             } else {
-                System.out.println("Scout safe, dont evade");
+                if (Util.DEBUG) System.out.println("Scout safe, dont evade");
             }
             float lumberDist = 10000f;
 
 
             //Movement
-            System.out.println("Starting movement " + Clock.getBytecodeNum());
+            if (Util.DEBUG) System.out.println("Starting movement " + Clock.getBytecodeNum());
             if (toShake != null && dist > 5) {
-                //System.out.println("Shaking " + toShake.getLocation());
+                //if (Util.DEBUG) System.out.println("Shaking " + toShake.getLocation());
                 if (!hasMoved && !movement.findPath(toShake.getLocation(), null)) {
                     toShake = null;
                 } else {
@@ -166,17 +166,17 @@ public class Scout {
                 }
                 if (rc.canShake(toShake.getID())) {
                     rc.shake(toShake.getID());
-                    System.out.println("Shaken " + toShake.getLocation());
+                    if (Util.DEBUG) System.out.println("Shaken " + toShake.getLocation());
                     toShake = null;
                 }
             }
             if (!hasMoved) {
                 toShake = null;
                 if (nearbyAllies > 5 + rc.getID() % 5) { // Don't stay in clusterfucks, go somewhere else
-                    //System.out.println("Too many allies.");
+                    //if (Util.DEBUG) System.out.println("Too many allies.");
                 }
                 if (nextCivilian != null && nearbyAllies < 5 + rc.getID() % 5) {
-                    //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
+                    //if (Util.DEBUG) System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
 
                     float attackDistance = 3.3f; //Distance from which to start firing at enemies
                     if (!longRangeCiv && nextCivilianInfo.moveCount <= 0) {
@@ -198,7 +198,7 @@ public class Scout {
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
                             } else {
-                                System.out.println("No LOS");
+                                if (Util.DEBUG) System.out.println("No LOS");
                             }
                         }
                         if (!hasMoved && !longRangeCiv) { //Try to hide behind tree
@@ -233,11 +233,11 @@ public class Scout {
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
                             } else {
-                                System.out.println("No LOS");
+                                if (Util.DEBUG) System.out.println("No LOS");
                             }
                         }
                     }else{
-                        System.out.println("Enemy out of range");
+                        if (Util.DEBUG) System.out.println("Enemy out of range");
                     }
                 } else { //No civilian, search the map
                     if (!hasMoved) {
@@ -247,17 +247,17 @@ public class Scout {
                     }
                 }
                 if (Clock.getBytecodesLeft() < 1000) {
-                    System.out.println("Aborting scout at " + myLocation + " early");
+                    if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
                     return;
                 }
                 for (TreeInfo t : trees) {
                     if (t.getContainedBullets() > 0 && rc.canShake(t.location)) {
                         rc.shake(t.location);
-                        System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
+                        if (Util.DEBUG) System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
                     }
                     if (t.containedRobot != null) {
                         radio.requestTreeCut(t);
-                        //System.out.println("Requesting christmas tree to be cut!");
+                        //if (Util.DEBUG) System.out.println("Requesting christmas tree to be cut!");
                     }
                     if (Clock.getBytecodesLeft() < 100) return;
                 }
@@ -270,12 +270,12 @@ public class Scout {
                     }
                 }
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
-                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy);
+                    if (Util.DEBUG) System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy);
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("Scout Exception");
+            if (Util.DEBUG) System.out.println("Scout Exception");
             e.printStackTrace();
         }
     }
