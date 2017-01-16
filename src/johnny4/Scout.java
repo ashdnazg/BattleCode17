@@ -54,7 +54,7 @@ public class Scout {
             preTick();
             if (!initialized) {
                 isAggro = radio.countAllies(RobotType.SCOUT) >= 2 && rand() > 0.8f;
-                isShaker = radio.countAllies(RobotType.SCOUT) <= 2  && rand() > 0.3f || rand() < 0.2f;
+                isShaker = radio.countAllies(RobotType.SCOUT) <= 2  && rand() > 0.0f || rand() < 0.2f;
                 initialized = true;
                 if (isAggro){
                     Movement.MIN_ENEMY_DIST = 4.5f;
@@ -263,7 +263,7 @@ public class Scout {
                 }
                 if (toShake == null && isShaker) {
                     for (TreeInfo t : trees) {
-                        if (t.getContainedBullets() > 10) {
+                        if (t.getContainedBullets() > 1.5 * t.location.distanceTo(myLocation)) {
                             toShake = t;
                             break;
                         }
