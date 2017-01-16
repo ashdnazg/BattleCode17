@@ -22,28 +22,37 @@ public class SimpleHexagonalClusters extends Grid {
     @Override
     public MapLocation getNearestWalkableLocation(MapLocation myLocation) {
         MapLocation best = null;
+        boolean foundBest = false;
         MapLocation unitloc = rc.getLocation();
         float bestDist = 1000000;
         float dist;
+        boolean canSense;
         try {
             float radius = 5;
             int xmax = (int) ((myLocation.x + radius) / SPACING);
             int ymax = (int) ((myLocation.y + radius) / SPACING);
             int ymin = Math.max(0, (int) ((myLocation.y - radius) / SPACING));
             int gx, gy, i;
-            MapLocation realLocation;
-            MapLocation checkLocation;
+            float gx2, gxSpacing;
+            int[] PATTERN_SKIP_INVERSE_X;
+            MapLocation realLocation = new MapLocation(0,0);
+            MapLocation checkLocation = new MapLocation(0,0);
+            Direction dir = new Direction(0);
             for (gx = (int) ((myLocation.x - radius) / SPACING); gx < xmax; gx++) {
                 gy = ymin;
-                gy += (PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_INVERSE[gx % P_X][gy % P_Y] : 0;
-
-                for (; gy < ymax; gy += PATTERN_SKIP_INVERSE[gx % P_X][gy % P_Y]) {
-                    realLocation = new MapLocation(gx * SPACING, ((gy + 0.5f * (gx % 2)) * SPACING));
+                PATTERN_SKIP_INVERSE_X = PATTERN_SKIP_INVERSE[gx % P_X];
+                gy += (PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_INVERSE_X[gy % P_Y] : 0;
+                gx2 = (gx % 2) * 0.5f;
+                gxSpacing = gx * SPACING;
+                for (; gy < ymax; gy += PATTERN_SKIP_INVERSE_X[gy % P_Y]) {
+                    //System.out.println("f " + Clock.getBytecodeNum() + ": " + PATTERN[((gy + (int) (OFFSET * gx )) % len + len) % len]);
+                    realLocation = new MapLocation(gxSpacing,(gy + gx2) * SPACING);
                     checkLocation = unitloc.equals(realLocation) ? realLocation : realLocation.add(new Direction((Math.round((unitloc.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
-                    if ((!rc.canSenseLocation(checkLocation) || rc.onTheMap(checkLocation))) {
-                        //rc.setIndicatorDot(realLocation, 0, 0, 255);
+                    canSense = rc.canSenseLocation(checkLocation);
+                    if ((!canSense || rc.onTheMap(checkLocation))) {
+                        rc.setIndicatorDot(realLocation, 0, 0, 255);
                         dist = realLocation.distanceTo(myLocation);
-                        if (dist < bestDist && (!rc.canSenseLocation(checkLocation) || !rc.isCircleOccupiedExceptByThisRobot(realLocation, RobotType.GARDENER.bodyRadius) || unitloc.distanceTo(realLocation) < 0.1f)) {
+                        if (dist < bestDist && (!canSense || !rc.isCircleOccupiedExceptByThisRobot(realLocation, RobotType.GARDENER.bodyRadius) || unitloc.distanceTo(realLocation) < 0.1f)) {
                             best = realLocation;
                             bestDist = dist;
                         }
@@ -58,6 +67,7 @@ public class SimpleHexagonalClusters extends Grid {
     }
 
     MapLocation plannedLocation = null;
+    int lastReplan = 0;
 
     @Override
     public MapLocation getNearestPlantableLocation(MapLocation myLocation, TreeInfo[] treeInfos) {
@@ -67,26 +77,32 @@ public class SimpleHexagonalClusters extends Grid {
         float bestDist = 1000000;
         float dist;
         try {
-            if (plannedLocation != null && rc.canSenseLocation(plannedLocation) && rc.senseTreeAtLocation(plannedLocation) == null && !rc.isCircleOccupiedExceptByThisRobot(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
+            if (plannedLocation != null && rc.getRoundNum() - lastReplan < 10 && rc.canSenseAllOfCircle(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f) && rc.senseTreeAtLocation(plannedLocation) == null && !rc.isCircleOccupiedExceptByThisRobot(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
                 return plannedLocation;
             }
+            lastReplan = rc.getRoundNum();
             float radius = senseRadius;
             int xmax = (int) ((myLocation.x + radius) / SPACING);
             int ymax = (int) ((myLocation.y + radius) / SPACING);
             int ymin = Math.max(0, (int) ((myLocation.y - radius) / SPACING));
             int gx, gy, i;
-            MapLocation realLocation;
+            float gxSpacing, gx2;
+            int[] PATTERN_SKIP_X;
+            MapLocation realLocation = new MapLocation(0,0);
             MapLocation checkLocation;
             for (gx = (int) ((myLocation.x - radius) / SPACING); gx < xmax; gx++) {
                 gy = ymin;
-                System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
-                System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN_SKIP[gx % P_X][gy % P_Y]);
-                gy += (!PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP[gx % P_X][gy % P_Y] : 0;
+                // System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
+                // System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN_SKIP[gx % P_X][gy % P_Y]);
+                PATTERN_SKIP_X = PATTERN_SKIP[gx % P_X];
+                gy += (!PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_X[gy % P_Y] : 0;
+                gxSpacing = gx * SPACING;
+                gx2 = 0.5f * (gx % 2);
 
-                for (; gy < ymax; gy += PATTERN_SKIP[gx % P_X][gy % P_Y]) {
-                    System.out.println(gx + "|" + gy + " " + Clock.getBytecodeNum() + ": " + PATTERN[gx % P_X][gy % P_Y]);
-                    realLocation = new MapLocation(gx * SPACING, (gy + 0.5f * (gx % 2)) * SPACING);
+                for (; gy < ymax; gy += PATTERN_SKIP_X[gy % P_Y]) {
+                    realLocation = new MapLocation(gxSpacing, (gy + gx2) * SPACING);
                     checkLocation = realLocation.add(new Direction((Math.round((myLocation.directionTo(realLocation).radians - 0.25f * 3.14159265f) / (0.5f * 3.14159265f)) * 0.5f * 3.14159265f + 0.25f * 3.14159265f)), 2);
+                    //System.out.println(realLocation);
 
                     rc.setIndicatorDot(realLocation, 255, 255, 0);
                     if (rc.canSenseLocation(checkLocation) && rc.senseTreeAtLocation(realLocation) == null && rc.onTheMap(checkLocation)) {
@@ -105,7 +121,7 @@ public class SimpleHexagonalClusters extends Grid {
             ex.printStackTrace();
         }
         time = Clock.getBytecodeNum() - time;
-        if (time > 1000) {
+        if (time > 1000){
             System.out.println("Getting nearest plantable location took " + time);
         }
         plannedLocation = best;

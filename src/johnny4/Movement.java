@@ -199,14 +199,25 @@ public class Movement {
 
         System.out.println("Somewhere in findPath " + Clock.getBytecodeNum());
 
+        boolean gonnaBeHit = false;
+        Direction bulletDir = randomDirection();
+        if (evadeBullets) {
+            for (BulletInfo bi : bullets) {
+                if (willCollideWithMe(myLocation, bi)){
+                    gonnaBeHit = true;
+                    bulletDir = bi.dir;
+                    break;
+                }
+            }
+        }
         float olddist = myLocation.distanceTo(target);
         if (olddist < 0.0001f){
-            if (valueMove(Direction.getNorth(), 0) < 0.0001) {
+            if (valueMove(Direction.getNorth(), 0) < 0.0001 && !gonnaBeHit) {
                 System.out.println("I'm already at target");
                 return false;
             }else{
                 System.out.println("I'm already at target but it sucks being around here");
-                target = target.add(Direction.getNorth(), 0.01f);
+                target = target.add(bulletDir.rotateLeftDegrees(90 * (bugdir ? 1.001f : -1.001f)), strideDistance);
             }
         }
         Direction moveDir = myLocation.directionTo(target);
