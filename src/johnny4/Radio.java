@@ -11,7 +11,8 @@ public class Radio {
     //Integer 101-200:  Enemy Info
     //Integer 201:  Enemy Reports count
     //Integer 202-300:  Enemy Reports
-    //Integer 301-320:  Requested trees to remove according to priority
+    //Integer 301:      Tree cutting requests counter
+    //Integer 302-320:  Requested trees to remove according to priority
     //Integer 321:      ALARM ALARM
     //Integer 400-405:  active unit counters
     //Integer 406-411:  under construction unit counters
@@ -501,7 +502,7 @@ public class Radio {
 
     // returns the index, so you can mark it as cut later
     public static boolean requestTreeCut(TreeInfo ti) throws GameActionException {
-        int index = rc.getType() == RobotType.ARCHON ? 301 : 304;
+        int index = rc.getType() == RobotType.ARCHON ? 302 : 305;
         int zero_index = -1;
         int data;
         for (; index <= 320; ++index) {
@@ -517,12 +518,13 @@ public class Radio {
         }
         int info = ((int) Math.round(ti.location.x) << 22) | ((int) Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
         rc.broadcast(zero_index, info);
+        rc.broadcast(301, rc.readBroadcast(301) + 1);
         return true;
     }
 
     public static MapLocation findTreeToCut() throws GameActionException {
         int data;
-        for (int index = 301; index <= 320; ++index) {
+        for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
             if (data != 0) {
                 return new MapLocation(getUnitX(data), getUnitY(data));
@@ -534,7 +536,7 @@ public class Radio {
     public static MapLocation findClosestTreeToCut(MapLocation myLocation) throws GameActionException {
         MapLocation tree, closest = null;
         int data;
-        for (int index = 301; index <= 320; ++index) {
+        for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
             if (data != 0) {
                 tree = new MapLocation(getUnitX(data), getUnitY(data));
@@ -549,12 +551,18 @@ public class Radio {
     public static void reportTreeCut(MapLocation location) throws GameActionException {
         int loc = ((int) location.x << 22) | ((int) location.y << 12);
         int data;
-        for (int index = 301; index <= 320; ++index) {
+        for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
             if (((data ^ loc) & 0b11111111111111111111000000000000) == 0) {
                 rc.broadcast(index, 0);
+                rc.broadcast(301, rc.readBroadcast(301) - 1);
+                break;
             }
         }
+    }
+
+    public static int countTreeCutRequests() throws GameActionException {
+        return rc.readBroadcast(301);
     }
 
 
