@@ -32,7 +32,7 @@ public class Gardener {
         System.out.println("a: " + Clock.getBytecodeNum());
         this.map = new Map(rc, radio);
         System.out.println("b: " + Clock.getBytecodeNum());
-        this.grid = new SimpleHexagonalClusters(rc);
+        this.grid = new WellSpacedHexagonalClusters(rc);
         System.out.println("c: " + Clock.getBytecodeNum());
         this.movement = new Movement(rc);
         System.out.println("d: " + Clock.getBytecodeNum());
