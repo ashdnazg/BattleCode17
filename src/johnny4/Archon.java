@@ -43,7 +43,7 @@ public class Archon {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                if (Util.DEBUG) System.out.println("BYTECODE OVERFLOW");
+                System.out.println("BYTECODE OVERFLOW");
             }
             Clock.yield();
         }
