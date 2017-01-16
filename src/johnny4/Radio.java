@@ -20,6 +20,9 @@ public class Radio {
     //Integer 414 - 419: enemy unit counters // updated by Archon only
     //Integer 420 - 425: reports bloom filter
     //Integer 426: active gardener counter
+    //Integer 427: Enemy delete requests count
+    //Integer 428 - 449: Enemy delete requests
+
 
     //Info: X (0-9) Y (10-19) Type (20-22) Timestamp (23-31)
 
@@ -38,6 +41,8 @@ public class Radio {
     static int[] enemyCounts = new int[6];
     static int[] reportBloom = new int[6];
     static int[] tempBloom = new int[6];
+
+    static int[] deleteBloom = new int[3];
 
     // only used by Archon
     static int[][] enemyIDToPos;
@@ -89,6 +94,29 @@ public class Radio {
         rc.broadcast(1, newCounter);
     }
 
+
+    public static void processDeleteRequests() throws GameActionException {
+        deleteBloom[0] = 0;
+        deleteBloom[1] = 0;
+        deleteBloom[2] = 0;
+
+        int numDeletes = rc.readBroadcast(427);
+        int info, h1, n1, b1, h2, n2, b2;
+        for (int i = 0; i < numDeletes;++i) {
+            info = rc.readBroadcast(i + 428);
+            h1 = (info * 41 + 23) % 96;
+            n1 = h1 / 32;
+            b1 = 1 << (h1 % 32);
+            h2 = (info * 97 + 67) % 96;
+            n2 = h2 / 32;
+            b2 = 1 << (h2 % 32);
+            deleteBloom[n1] |= b1;
+            deleteBloom[n2] |= b2;
+        }
+
+        rc.broadcast(427, 0);
+    }
+
     public static void updateEnemyCounts() throws GameActionException {
         //System.out.println("before updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
         if (!haveBeenFirst) {
@@ -98,8 +126,6 @@ public class Radio {
             enemyIDToPos = new int[180][];
             enemyPosToID = new int[100];
         }
-        int pos = 101;
-        int last = getEnemyCounter() + 101;
         //System.out.println("updating counts last: " + last);
         enemyCounts[0] = 0;
         enemyCounts[1] = 0;
@@ -115,17 +141,31 @@ public class Radio {
         reportBloom[4] = 0;
         reportBloom[5] = 0;
 
+        int pos = 101;
+        int last = getEnemyCounter() + 101;
+
         int report = rc.readBroadcast(pos);
         boolean writeNeeded = false;
         int frame32 = frame % 32 + 1;
+        int ID, ID_a, ID_b, age, info, h1, n1, b1, h2, n2, b2, h3, n3, b3, type;
         while (pos < last) {
-            int ID = enemyPosToID[pos - 101];
+            ID = enemyPosToID[pos - 101];
             //System.out.println("checking for eviction ID: " + ID);
-            int ID_a = ID % 180;
-            int ID_b = ID / 180;
-            int age = enemyIDToAge[ID_a][ID_b];
+            ID_a = ID % 180;
+            ID_b = ID / 180;
+            age = enemyIDToAge[ID_a][ID_b];
+
+            info = report >> 12;
+            h1 = (info * 41 + 23) % 96;
+            n1 = h1 / 32;
+            b1 = 1 << (h1 % 32);
+            h2 = (info * 97 + 67) % 96;
+            n2 = h2 / 32;
+            b2 = 1 << (h2 % 32);
+
+
             // evict units after not seeing them for 32 rounds
-            if (age == frame32) {
+            if ((age == frame32) || (((deleteBloom[n1] & b1) != 0) && ((deleteBloom[n2] & b2) != 0))) {
                 //System.out.println("evicting from pos: " + pos);
                 enemyIDToAge[ID_a][ID_b] = 0;
                 enemyIDToPos[ID_a][ID_b] = 0;
@@ -136,7 +176,7 @@ public class Radio {
 
                 continue;
             }
-            int type = (report & 0b00000000000000000000111000000000) >> 9;
+            type = (report & 0b00000000000000000000111000000000) >> 9;
             enemyCounts[type]++;
             if (writeNeeded) {
                 rc.broadcast(pos, report);
@@ -152,13 +192,14 @@ public class Radio {
 
         pos = 202;
         int lastReport = 202 + rc.readBroadcast(201);
+        int infoPos;
         for (;pos < lastReport; pos += 2) {
             report = rc.readBroadcast(pos);
             //System.out.println("reading new report from pos: " + pos + " info: " + report);
-            int ID = rc.readBroadcast(pos + 1);
+            ID = rc.readBroadcast(pos + 1);
             //System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000111000000000) >> 9));
-            int ID_a = ID % 180;
-            int ID_b = ID / 180;
+            ID_a = ID % 180;
+            ID_b = ID / 180;
             if (enemyIDToAge[ID_a] == null) {
                 if (last == 201 || (byteCodeLimit - Clock.getBytecodeNum() < 5000)) {
                     continue;
@@ -166,19 +207,19 @@ public class Radio {
                 enemyIDToAge[ID_a] = new int[180];
                 enemyIDToPos[ID_a] = new int[180];
             } else {
-                int infoPos = enemyIDToPos[ID_a][ID_b];
+                infoPos = enemyIDToPos[ID_a][ID_b];
                 if (infoPos > 0) {
                     rc.broadcast(infoPos, report);
 
-                    int h1 = ID % 192;
-                    int n1 = h1 / 32;
-                    int b1 = 1 << (h1 % 32);
-                    int h2 = (ID * 41 + 23) % 192;
-                    int n2 = h2 / 32;
-                    int b2 = 1 << (h2 % 32);
-                    int h3 = (ID * 97 + 67) % 192;
-                    int n3 = h3 / 32;
-                    int b3 = 1 << (h3 % 32);
+                    h1 = ID % 192;
+                    n1 = h1 / 32;
+                    b1 = 1 << (h1 % 32);
+                    h2 = (ID * 41 + 23) % 192;
+                    n2 = h2 / 32;
+                    b2 = 1 << (h2 % 32);
+                    h3 = (ID * 97 + 67) % 192;
+                    n3 = h3 / 32;
+                    b3 = 1 << (h3 % 32);
                     reportBloom[n1] |= b1;
                     reportBloom[n2] |= b2;
                     reportBloom[n3] |= b3;
@@ -191,15 +232,15 @@ public class Radio {
             if (last == 201) {
                 continue;
             }
-            int h1 = ID % 192;
-            int n1 = h1 / 32;
-            int b1 = 1 << (h1 % 32);
-            int h2 = (ID * 41 + 23) % 192;
-            int n2 = h2 / 32;
-            int b2 = 1 << (h2 % 32);
-            int h3 = (ID * 97 + 67) % 192;
-            int n3 = h3 / 32;
-            int b3 = 1 << (h3 % 32);
+            h1 = ID % 192;
+            n1 = h1 / 32;
+            b1 = 1 << (h1 % 32);
+            h2 = (ID * 41 + 23) % 192;
+            n2 = h2 / 32;
+            b2 = 1 << (h2 % 32);
+            h3 = (ID * 97 + 67) % 192;
+            n3 = h3 / 32;
+            b3 = 1 << (h3 % 32);
             reportBloom[n1] |= b1;
             reportBloom[n2] |= b2;
             reportBloom[n3] |= b3;
@@ -208,7 +249,7 @@ public class Radio {
             enemyIDToPos[ID_a][ID_b] = last;
             enemyPosToID[last - 101] = ID;
             rc.broadcast(last++, report);
-            int type = (report & 0b00000000000000000000111000000000) >> 9;
+            type = (report & 0b00000000000000000000111000000000) >> 9;
             enemyCounts[type]++;
         }
 
@@ -256,6 +297,8 @@ public class Radio {
             allyCounts[4] = Counter.commit(404) + Counter.commit(410);
             allyCounts[5] = Counter.commit(405) + Counter.commit(411);
             activeGardenersCount = Counter.commit(426);
+
+            processDeleteRequests();
 
             updateEnemyCounts();
 
@@ -323,22 +366,23 @@ public class Radio {
         if (numReports == 98) {
             return;
         }
+        int ID, h1, n1, b1, h2, n2, b2, h3, n3, b3, info;
         for (int i = 0; i < length; ++i) {
             RobotInfo ri = ris[i];
             if (ri.team == myTeam) {
                 continue;
             }
-            int ID = ri.ID;
+            ID = ri.ID;
 
-            int h1 = ID % 192;
-            int n1 = h1 / 32;
-            int b1 = 1 << (h1 % 32);
-            int h2 = (ID * 41 + 23) % 192;
-            int n2 = h2 / 32;
-            int b2 = 1 << (h2 % 32);
-            int h3 = (ID * 97 + 67) % 192;
-            int n3 = h3 / 32;
-            int b3 = 1 << (h3 % 32);
+            h1 = ID % 192;
+            n1 = h1 / 32;
+            b1 = 1 << (h1 % 32);
+            h2 = (ID * 41 + 23) % 192;
+            n2 = h2 / 32;
+            b2 = 1 << (h2 % 32);
+            h3 = (ID * 97 + 67) % 192;
+            n3 = h3 / 32;
+            b3 = 1 << (h3 % 32);
 
 
             if ((reportBloom[n1] & b1) != 0) {
@@ -353,7 +397,7 @@ public class Radio {
             tempBloom[n2] |= b2;
             tempBloom[n3] |= b3;
 
-            int info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9) | (frame / 8);
+            info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9) | (frame / 8);
             rc.broadcast(numReports + 202, info);
             rc.broadcast(numReports + 203, ID);
             //System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
@@ -425,6 +469,18 @@ public class Radio {
         // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
     }
 
+
+    public static void deleteEnemyReport(MapLocation location) throws GameActionException {
+        int info = ((int) Math.round(location.x) << 10) | ((int) Math.round(location.y));
+        int numDeletes = rc.readBroadcast(427);
+        if (numDeletes == 22) {
+            return;
+        }
+        rc.broadcast(427, numDeletes + 1);
+        rc.broadcast(428 + numDeletes, info);
+        // System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
+    }
+
     public static float getUnitX(int info) {
         return (info & 0b11111111110000000000000000000000) >> 22;
     }
@@ -447,8 +503,9 @@ public class Radio {
     public static boolean requestTreeCut(TreeInfo ti) throws GameActionException {
         int index = rc.getType() == RobotType.ARCHON ? 301 : 304;
         int zero_index = -1;
+        int data;
         for (; index <= 320; ++index) {
-            int data = rc.readBroadcast(index);
+            data = rc.readBroadcast(index);
             if (data == 0) {
                 zero_index = index;
             } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0) {
@@ -464,8 +521,9 @@ public class Radio {
     }
 
     public static MapLocation findTreeToCut() throws GameActionException {
+        int data;
         for (int index = 301; index <= 320; ++index) {
-            int data = rc.readBroadcast(index);
+            data = rc.readBroadcast(index);
             if (data != 0) {
                 return new MapLocation(getUnitX(data), getUnitY(data));
             }
@@ -475,8 +533,9 @@ public class Radio {
 
     public static MapLocation findClosestTreeToCut(MapLocation myLocation) throws GameActionException {
         MapLocation tree, closest = null;
+        int data;
         for (int index = 301; index <= 320; ++index) {
-            int data = rc.readBroadcast(index);
+            data = rc.readBroadcast(index);
             if (data != 0) {
                 tree = new MapLocation(getUnitX(data), getUnitY(data));
                 if (closest == null || closest.distanceTo(myLocation) > tree.distanceTo(myLocation)) {
@@ -489,8 +548,9 @@ public class Radio {
 
     public static void reportTreeCut(MapLocation location) throws GameActionException {
         int loc = ((int) location.x << 22) | ((int) location.y << 12);
+        int data;
         for (int index = 301; index <= 320; ++index) {
-            int data = rc.readBroadcast(index);
+            data = rc.readBroadcast(index);
             if (((data ^ loc) & 0b11111111111111111111000000000000) == 0) {
                 rc.broadcast(index, 0);
             }
