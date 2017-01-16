@@ -30,7 +30,7 @@ public class Soldier {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                BYTECODE();
             }
             Clock.yield();
         }
@@ -166,6 +166,7 @@ public class Soldier {
                         if (hasFired) {
                             bullets = rc.senseNearbyBullets();
                         }
+                        Movement.lastLOS = frame;
                     }
                 }
             } else if (!hasMoved) {
@@ -177,8 +178,10 @@ public class Soldier {
 
             int cnt7 = Clock.getBytecodeNum();
             if (rc.getRoundNum() - frame > 0) {
-                if (Util.DEBUG) System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
-                if (Util.DEBUG) System.out.println("Timings " + cnt1 + " " + cnt2 + " " + cnt3 + " " + cnt4 + " " + cnt5 + " " + cnt6 + " " + cnt7);
+                if (Util.DEBUG)
+                    System.out.println("Soldier took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                if (Util.DEBUG)
+                    System.out.println("Timings " + cnt1 + " " + cnt2 + " " + cnt3 + " " + cnt4 + " " + cnt5 + " " + cnt6 + " " + cnt7);
             }
 
 

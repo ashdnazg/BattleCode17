@@ -12,7 +12,8 @@ public class Movement {
     static int lastInit = -1;
     static RobotInfo[] robots;
     static TreeInfo[] trees;
-    static BulletInfo[] bullets;
+    static BulletInfo[] bullets = new BulletInfo[5];
+    static int bulletLen = 0;
     static MapLocation myLocation;
     static Direction fireDir;
     static Team myTeam, enemyTeam;
@@ -89,9 +90,8 @@ public class Movement {
         lastInit = rc.getRoundNum();
         robots = robots_ != null ? robots_ : new RobotInfo[0];
         trees = trees_ != null ? trees_ : new TreeInfo[0];
-        bullets = bullets_ != null ? bullets_ : new BulletInfo[0];
         myLocation = rc.getLocation();
-        threatsLen = 0;
+        threatsLen = bulletLen = 0;
         boolean noEnemies = true;
         float dist;
         boolean active, friendly, lj;
@@ -101,6 +101,10 @@ public class Movement {
         if (currentThreat == null) {
             threats[threatsLen] = new Threat();
             currentThreat = threats[threatsLen];
+        }
+        for (int i = 0; i < bullets_.length; i++){
+            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > strideDistance + bullets_[i].speed + robotType.bodyRadius) break;
+            bullets[bulletLen++] = bullets_[i];
         }
 
         for (RobotInfo ri : robots) {
@@ -178,6 +182,7 @@ public class Movement {
     }
 
     static MapLocation oldTarget = null;
+    static int lastLOS = 0;
 
     public boolean findPath(MapLocation target, Direction fireDir) throws GameActionException {
         if (Util.DEBUG) System.out.println("Starting findPath " + Clock.getBytecodeNum());
@@ -202,10 +207,10 @@ public class Movement {
         boolean gonnaBeHit = false;
         Direction bulletDir = randomDirection();
         if (evadeBullets) {
-            for (BulletInfo bi : bullets) {
-                if (willCollideWithMe(myLocation, bi)){
+            for (int i = 0; i < bulletLen; i++){
+                if (willCollideWithMe(myLocation, bullets[i])){
                     gonnaBeHit = true;
-                    bulletDir = bi.dir;
+                    bulletDir = bullets[i].dir;
                     break;
                 }
             }
@@ -263,12 +268,12 @@ public class Movement {
             bugdir = !bugdir;
         }
 
-        boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
+        //boolean hadLos = checkLineOfFire(myLocation, target, trees, robots, robotType.bodyRadius);
         boolean retval = bugMove(moveDir, Math.min(strideDistance, target.distanceTo(myLocation)));
         if (DEBUG) {
             if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
-        if (retval && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || hadLos && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
+        if (retval && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 1 && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
             if (DEBUG) {
                 if (Util.DEBUG) System.out.println("Switching bugdir because of distance");
             }
@@ -309,7 +314,7 @@ public class Movement {
         br = robotType.bodyRadius * robotType.bodyRadius;
 
         if (evadeBullets) {
-            for (int i = 0; i < bullets.length; i++) {
+            for (int i = 0; i < bulletLen; i++) {
                 b1 = bullets[i].location;
                 b2 = bullets[i].location.add(bullets[i].dir, bullets[i].speed / 2);
                 b3 = bullets[i].location.add(bullets[i].dir, bullets[i].speed);
@@ -402,15 +407,15 @@ public class Movement {
                             bestDeg = degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
                         }
                         currentCheck++;
-                        if (Clock.getBytecodesLeft() < 500) break; //emergency brake
+                        if (Clock.getBytecodesLeft() < 800) break; //emergency brake
                     }
-                    if (Clock.getBytecodesLeft() < 500) break;
+                    if (Clock.getBytecodesLeft() < 800) break;
                     if (attempt >= maxAttempt) break;
                     dist = attemptDist[attempt++];
                 } while (true);
                 left = !left;
                 dist = strideDistance;
-                if (Clock.getBytecodesLeft() < 500) break;
+                if (Clock.getBytecodesLeft() < 800) break;
             }
             if (bestVal > 9.9) {
                 return -1f;

@@ -8,6 +8,7 @@ import static johnny4.Util.checkLineOfFire;
 import static johnny4.Util.randomDirection;
 import static johnny4.Util.tryMove;
 import static johnny4.Util.preTick;
+import static johnny4.Util.*;
 
 public class Tank {
 
@@ -28,7 +29,7 @@ public class Tank {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                BYTECODE();
             }
             Clock.yield();
         }
@@ -54,6 +55,7 @@ public class Tank {
 
             MapLocation nextEnemy = null;
             RobotInfo best = null;
+            movement.init(nearbyRobots, trees, rc.senseNearbyBullets());
 
             for (RobotInfo e : nearbyRobots) {
                 if (e.getTeam().equals(rc.getTeam().opponent())) {

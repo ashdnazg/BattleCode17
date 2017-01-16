@@ -59,7 +59,7 @@ public class Gardener {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                BYTECODE();
             }
             Clock.yield();
         }
@@ -167,6 +167,10 @@ public class Gardener {
                         hasMoved = true;
                     }
                 }
+            }
+            if (Clock.getBytecodesLeft() < 800) {
+                if (Util.DEBUG) System.out.println("Aborting gardener");
+                return;
             }
             TreeStorage.tryWater(); //Try to water any trees in range
 

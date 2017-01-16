@@ -51,7 +51,7 @@ public class Lumberjack {
             int frame = rc.getRoundNum();
             tick();
             if (frame != rc.getRoundNum()) {
-                System.out.println("BYTECODE OVERFLOW");
+                BYTECODE();
             }
             Clock.yield();
         }

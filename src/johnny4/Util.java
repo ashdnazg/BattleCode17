@@ -10,7 +10,7 @@ public class Util {
 
     static RobotController rc;
     static Random rnd;
-    static final boolean DEBUG = true;
+    static final boolean DEBUG = false;
 
     /**
      * Returns a random Direction
@@ -41,6 +41,16 @@ public class Util {
             rnd = new Random(rc.getID() * rc.getRoundNum());
         }
         return rnd.nextFloat();
+    }
+
+
+    static void BYTECODE() {
+        try {
+            System.out.println("BYTECODE OVERFLOW");
+            rc.setIndicatorLine(rc.getLocation().add(Direction.getNorth(), 30), rc.getLocation().add(Direction.getSouth(), 30), 255, 0, 0);
+            rc.setIndicatorLine(rc.getLocation().add(Direction.getEast(), 30), rc.getLocation().add(Direction.getWest(), 30), 255, 0, 0);
+        } catch (Exception ex) {
+        }
     }
 
     /**
@@ -157,13 +167,14 @@ public class Util {
         }
         if (mindist > 99999d) {
             if (Util.DEBUG) System.out.println("No collision found");
-            if (cnt >= px.length){
+            if (cnt >= px.length) {
                 return false;
             }
         }
         clock = Clock.getBytecodeNum() - clock;
-        if (clock > 300){
-            if (Util.DEBUG) System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length));
+        if (clock > 300) {
+            if (Util.DEBUG)
+                System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length));
         }
         return outcome;
     }
