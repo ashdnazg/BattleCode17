@@ -56,6 +56,9 @@ public class Scout {
                 isAggro = radio.countAllies(RobotType.SCOUT) >= 2 && rand() > 0.8f;
                 isShaker = radio.countAllies(RobotType.SCOUT) <= 2  && rand() > 0.3f || rand() < 0.2f;
                 initialized = true;
+                if (isAggro){
+                    Movement.MIN_ENEMY_DIST = 5;
+                }
             }
             System.out.println("This scout is shaker: " + isShaker + ", roamer: " + isRoamer + " and aggro: " + isAggro);
             int frame = rc.getRoundNum();
