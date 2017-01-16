@@ -14,11 +14,13 @@ public class Tank {
     RobotController rc;
     Map map;
     Radio radio;
+    Movement movement;
 
     public Tank(RobotController rc) {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        this.movement = new Movement(rc);
     }
 
     public void run() {
@@ -76,6 +78,7 @@ public class Tank {
             }
             float dist = 10000f;
             if (nextEnemy != null) {
+                movement.findPath(nextEnemy, null);
                 if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
                 if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius)) {
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
