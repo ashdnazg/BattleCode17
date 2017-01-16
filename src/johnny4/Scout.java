@@ -25,6 +25,7 @@ public class Scout {
             visitedBroadcasts[i] = new MapLocation(0, 0);
         }
         lastRandomLocation = map.archonPos[(int) (map.archonPos.length * rand())];
+        lastCivContact = rc.getRoundNum();
     }
 
     public void run() {
@@ -46,6 +47,7 @@ public class Scout {
     BulletInfo[] bullets;
     MapLocation[] visitedBroadcasts = new MapLocation[10];
     int rollingBroadcastIndex = 0;
+    int lastCivContact = 0;
 
 
     float circleDir = 0f;
@@ -76,6 +78,11 @@ public class Scout {
             boolean longRangeCiv = false;
             boolean longRangeEnemy = false;
             int nearbyAllies = 0;
+            if (frame - lastCivContact > 90 && !isAggro){
+                isAggro = true;
+
+                if (DEBUG) System.out.println("Converting to aggro");
+            }
 
             //Sensing/Radio
 
@@ -114,6 +121,12 @@ public class Scout {
                     Radio.deleteEnemyReport(nextCivilian);
                 }
                 //if (nextCivilian == null) nextCivilian = map.getTarget(3, myLocation);
+            }else{
+                lastCivContact = frame;
+                if (rand() < 0.05 && isAggro){
+                    isAggro = false;
+                    if (DEBUG) System.out.println("Converting to anticiv");
+                }
             }
             if (nextCivilianInfo != null && lastCivilianInfo != null) {
                 nextCivilian = predict(nextCivilianInfo, lastCivilianInfo);

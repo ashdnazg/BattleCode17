@@ -158,12 +158,12 @@ public class Lumberjack {
                         toBeCut = ti;
                     }
                 }
-                if (toBeCut != null && rc.canChop(toBeCut.location)) {
-                    rc.chop(toBeCut.location);
-                    hasChopped = true;
-                    hasMoved = true;
-                    if (Util.DEBUG) System.out.println("Chopped tobecut");
-                } else if (toBeCut != null) {
+
+                if (toBeCut != null) {
+                    if (rc.canChop(toBeCut.location)) {
+                        rc.chop(toBeCut.location);
+                        hasChopped = true;
+                    }
                     if (!hasMoved && movement.findPath(toBeCut.location.add(toBeCut.location.directionTo(myLocation), toBeCut.radius + RobotType.LUMBERJACK.bodyRadius + 0.001f), null)) {
                         myLocation = rc.getLocation();
                     }
