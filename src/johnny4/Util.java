@@ -36,8 +36,8 @@ public class Util {
         }
     }
 
-    static float rand(){
-        if (rnd == null){
+    static float rand() {
+        if (rnd == null) {
             rnd = new Random(rc.getID() * rc.getRoundNum());
         }
         return rnd.nextFloat();
@@ -93,87 +93,103 @@ public class Util {
     static private float[] py = new float[25];
     static private float[] pr = new float[25];
     static private boolean[] pg = new boolean[25];
-    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius){
+
+    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) {
         float cx = 0.5f * (start.x + target.x);
         float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
-        double rs = Math.sqrt((cx - target.x) * (cx - target.x) + (cy - target.y) * (cy - target.y));
-        float x,y,r;
+        double rs = 0.5 * (start.distanceTo(target) - shooterRadius);
+        float x, y, r;
         int cnt = 0;
+        int clock = Clock.getBytecodeNum();
         Team enemy = rc.getTeam().opponent();
-        for (TreeInfo t : trees){
+        int i;
+        RobotInfo robot;
+        TreeInfo tree;
+        for (i = 0; i < trees.length; i++) {
             if (cnt >= px.length) break;
-            x = t.location.x;
-            y = t.location.y;
-            r = t.radius;
-            if ((x-cx)*(x-cx) + (y-cy)*(y-cy) < (rs + r) * (rs + r)){
+            tree = trees[i];
+            x = tree.location.x;
+            y = tree.location.y;
+            r = tree.radius;
+            if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < (rs + r) * (rs + r)) {
                 px[cnt] = x;
                 py[cnt] = y;
                 pr[cnt] = r + 0.0001f;
                 pg[cnt++] = false;
             }
         }
-        for (RobotInfo rb : robots){
+        for (i = 0; i < robots.length; i++) {
             if (cnt >= px.length) break;
-            x = rb.location.x;
-            y = rb.location.y;
-            r = rb.type.bodyRadius;
-            if ((x-cx)*(x-cx) + (y-cy)*(y-cy) < (rs + r) * (rs + r)){
+            robot = robots[i];
+            x = robot.location.x;
+            y = robot.location.y;
+            r = robot.type.bodyRadius;
+            if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < (rs + r) * (rs + r)) {
                 px[cnt] = x;
                 py[cnt] = y;
                 pr[cnt] = r + 0.0001f;
-                pg[cnt++] = rb.team == enemy;
+                pg[cnt++] = robot.team.equals(enemy);
             }
-        }
-        if (cnt >= px.length){
-            System.out.println("Exhausted array length");
         }
 
         double toTrgX = target.x - start.x;
         double toTrgY = target.y - start.y;
-        double mag = Math.sqrt(toTrgX*toTrgX + toTrgY*toTrgY);
+        double mag = Math.sqrt(toTrgX * toTrgX + toTrgY * toTrgY);
         toTrgX /= mag;
         toTrgY /= mag;
-        double dx,dy,distParallel, distPerpendicular, perpx, perpy;
+        double dx, dy, distParallel, distPerpendicular, perpx, perpy;
         double mindist = 100000d;
         boolean outcome = true;
-        for (int i = 0; i < cnt; i++){
+        for (i = 0; i < cnt; i++) {
             dx = px[i] - start.x;
             dy = py[i] - start.y;
             distParallel = toTrgX * dx + toTrgY * dy;
             perpx = dx - distParallel * toTrgX;
             perpy = dy - distParallel * toTrgY;
             distPerpendicular = (perpx * perpx + perpy * perpy);
-            if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i] && distParallel < mindist){
+            if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i] && distParallel < mindist) {
                 mindist = distParallel;
                 outcome = pg[i];
             }
         }
+        if (cnt >= px.length) {
+            System.out.println("Exhausted array length");
+        }
         if (mindist > 99999d) {
             System.out.println("No collision found");
+            if (cnt >= px.length){
+                return false;
+            }
+        }
+        clock = Clock.getBytecodeNum() - clock;
+        if (clock > 300){
+            System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length));
         }
         return outcome;
     }
 
 
-    static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy) throws GameActionException{
+    static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy) throws GameActionException {
         MapLocation nextEnemy = enemy.location;
-        if (lastEnemy != null && lastEnemy.getID() == enemy.getID()){
+        if (lastEnemy != null && lastEnemy.getID() == enemy.getID()) {
             float dx = enemy.location.x - lastEnemy.location.x;
             float dy = enemy.location.y - lastEnemy.location.y;
             float time = (rc.getLocation().distanceTo(enemy.location) - enemy.type.bodyRadius - rc.getType().bodyRadius) / rc.getType().bulletSpeed;
             System.out.println(time + ": " + dx + "|" + dy);
             System.out.println("From " + lastEnemy.location + " to " + enemy.location);
             nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
+            rc.setIndicatorLine(lastEnemy.location, enemy.location, 255, 255, 0);
+            rc.setIndicatorLine(enemy.location, nextEnemy, 255, 100, 0);
         }
-        rc.setIndicatorDot(nextEnemy, 255, 0, 0);
+        rc.setIndicatorDot(nextEnemy, 255, 100, 0);
         return nextEnemy;
     }
 
 
-
-    static TreeInfo[] temp = new TreeInfo[20];
+    static TreeInfo[] temp = new TreeInfo[8];
     static TreeInfo[] cache = new TreeInfo[0];
-    static TreeInfo[] senseBiggestTrees(){
+
+    static TreeInfo[] senseBiggestTrees() {
         if (rc.getRoundNum() % 3 == 0) {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
@@ -182,43 +198,42 @@ public class Util {
                 trees = rc.senseNearbyTrees(4);
             }
             for (int i = 0; i < trees.length; i++) {
-                if (trees[i].radius > 0.9 && cnt < temp.length)
+                if (cnt >= temp.length) break;
+                if (trees[i].radius > 0.9)
                     temp[cnt++] = trees[i];
             }
             cache = new TreeInfo[cnt];
             System.arraycopy(temp, 0, cache, 0, cnt);
             time = Clock.getBytecodeNum() - time;
-            if (time > 300){
+            if (time > 300) {
                 System.out.println("Sensing trees took " + time);
             }
-            if (cache.length >= temp.length){
+            if (cache.length >= temp.length) {
                 System.out.println("Reached maximum tree count");
             }
         }
         return cache;
     }
 
-    static TreeInfo[] temp2 = new TreeInfo[20];
+    static TreeInfo[] temp2 = new TreeInfo[8];
     static TreeInfo[] cache2 = new TreeInfo[0];
-    static TreeInfo[] senseClosestTrees(){
+
+    static TreeInfo[] senseClosestTrees() {
         if (rc.getRoundNum() % 3 == 0) {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
-            if (trees.length > temp2.length) {
-                trees = rc.senseNearbyTrees(3f);
-            }
             for (int i = 0; i < trees.length; i++) {
-                if (cnt < temp2.length)
-                    temp2[cnt++] = trees[i];
+                if (cnt >= temp2.length) break;
+                temp2[cnt++] = trees[i];
             }
             cache2 = new TreeInfo[cnt];
             System.arraycopy(temp2, 0, cache2, 0, cnt);
             time = Clock.getBytecodeNum() - time;
-            if (time > 300){
+            if (time > 300) {
                 System.out.println("Sensing trees took " + time);
             }
-            if (cache2.length >= temp2.length){
+            if (cache2.length >= temp2.length) {
                 System.out.println("Reached maximum tree count");
             }
         }

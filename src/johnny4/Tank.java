@@ -71,7 +71,8 @@ public class Tank {
                 lastTarget = best;
             } else {
                 lastTarget = null;
-                //nextEnemy = map.getTarget(myLocation, 0, 9);
+                map.generateFarTargets(myLocation, 3, 0);
+                nextEnemy = map.getTarget(0, myLocation);
             }
             float dist = 10000f;
             if (nextEnemy != null) {

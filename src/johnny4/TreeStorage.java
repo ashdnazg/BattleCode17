@@ -13,6 +13,7 @@ public class TreeStorage {
     static int lastWater;
 
     static int ownTrees = 0;
+    static int otherTrees = 0;
     static int storedTrees = 0;
     static int toWater = -1; //remember last result, so it doesnt change
 
@@ -54,7 +55,7 @@ public class TreeStorage {
         }
 
         storedTrees = 0;
-        ownTrees = 0;
+        ownTrees = otherTrees = 0;
         int time3 = Clock.getBytecodeNum();
         for (int i = 0; i < knownTrees.length; i++) {
             if (treeHealth[i] > 0) {
@@ -68,6 +69,7 @@ public class TreeStorage {
                         ownTrees++;
                         rc.setIndicatorDot(knownTrees[i], 255, 255, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }else{
+                        otherTrees ++;
                         rc.setIndicatorDot(knownTrees[i], 255, 100, (int)(255 * treeHealth[i] / GameConstants.BULLET_TREE_MAX_HEALTH));
                     }
                 }

@@ -69,6 +69,7 @@ public class WellSpacedHexagonalClusters extends Grid {
     }
 
     MapLocation plannedLocation = null;
+    int lastReplan = 0;
 
     @Override
     public MapLocation getNearestPlantableLocation(MapLocation myLocation, TreeInfo[] treeInfos) {
@@ -78,9 +79,10 @@ public class WellSpacedHexagonalClusters extends Grid {
         float bestDist = 1000000;
         float dist;
         try {
-            if (plannedLocation != null && rc.canSenseAllOfCircle(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f) && rc.senseTreeAtLocation(plannedLocation) == null && !rc.isCircleOccupiedExceptByThisRobot(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
+            if (plannedLocation != null && rc.getRoundNum() - lastReplan < 10 && rc.canSenseAllOfCircle(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f) && rc.senseTreeAtLocation(plannedLocation) == null && !rc.isCircleOccupiedExceptByThisRobot(plannedLocation, GameConstants.BULLET_TREE_RADIUS + 0.05f)) {
                 return plannedLocation;
             }
+            lastReplan = rc.getRoundNum();
             float radius = senseRadius;
             int xmax = (int) ((myLocation.x + radius) / SPACING);
             int ymax = (int) ((myLocation.y + radius) / SPACING);

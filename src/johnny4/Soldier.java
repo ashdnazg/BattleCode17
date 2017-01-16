@@ -42,7 +42,7 @@ public class Soldier {
     BulletInfo bullets[];
     MapLocation nextLumberjack;
     boolean evasionMode = true;
-    final float MIN_EVASION_DIST = 6f;
+    final float MIN_EVASION_DIST = 5f;
 
     protected void tick() {
         try {
@@ -72,12 +72,12 @@ public class Soldier {
                     enemyType = r.type;
                 }
             }
-            if (nextEnemyInfo != null && lastEnemyInfo != null){
+            if (nextEnemyInfo != null && lastEnemyInfo != null) {
                 nextEnemy = predict(nextEnemyInfo, lastEnemyInfo);
             }
             lastEnemyInfo = nextEnemyInfo;
 
-            if (myLocation.distanceTo(stuckLocation) > 5) {
+            if (myLocation.distanceTo(stuckLocation) > 7) {
                 stuckSince = frame;
                 stuckLocation = myLocation;
             }
@@ -86,7 +86,7 @@ public class Soldier {
                 stuckSince = 100000;
                 for (TreeInfo t : trees) {
                     if (t.getTeam().equals(rc.getTeam())) continue;
-                    if (t.location.distanceTo(myLocation) < 5) {
+                    if (t.location.distanceTo(myLocation) < 5.5) {
                         System.out.println("Reported tree at " + t.location);
                         radio.requestTreeCut(t);
                     }
@@ -99,12 +99,11 @@ public class Soldier {
                 longrange = true;
                 System.out.println("Using long range target");
                 nextEnemy = map.getTarget(0, myLocation);
+                if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
+                    Radio.deleteEnemyReport(nextEnemy);
+                }
                 if (frame % 9 == 0) {
-                    map.generateFarTargets(myLocation, 10, 0.8f * RobotType.SOLDIER.sensorRadius);
-                    if (nextEnemy == null) {
-                        System.out.println("Soldier looking for old targets");
-                        map.generateFarTargets(myLocation, 40 + rc.getID() % 60, RobotType.SOLDIER.sensorRadius * 4);
-                    }
+                    map.generateFarTargets(myLocation, 1000, 0);
                 }
 
             }
@@ -120,10 +119,10 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                if (!hasFired) {
-                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2){
+                if (!hasFired && evasionMode) {
+                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2 + 3 * (int) (rc.getTeamBullets() / 150)) {
                         System.out.println("No LOS");
-                    }else {
+                    } else {
                         hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
                         if (hasFired) {
@@ -133,11 +132,13 @@ public class Soldier {
                 }
                 if (rc.getTeamBullets() > 50 && evasionMode) {
                     System.out.println("Soldier entering aggression mode");
+                    movement.evadeBullets = false;
                     evasionMode = false;
                 }
                 if (rc.getTeamBullets() < 10 && !evasionMode) {
                     System.out.println("Soldier entering evasion mode");
                     evasionMode = true;
+                    movement.evadeBullets = true;
                 }
                 cnt4 = Clock.getBytecodeNum();
                 if (evasionMode && !longrange && (dist < MIN_EVASION_DIST)) {
@@ -157,9 +158,9 @@ public class Soldier {
                 }
 
                 if (!hasFired) {
-                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2){
+                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2) {
                         System.out.println("No LOS");
-                    }else {
+                    } else {
                         hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
                         if (hasFired) {
@@ -190,11 +191,11 @@ public class Soldier {
     boolean tryFire(MapLocation nextEnemy, float dist, float radius) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
         float bullets = rc.getTeamBullets();
-        if (dist - radius < 1.51 + bullets / 100f && rc.canFirePentadShot()) {
+        if (dist - radius < 1.51 + Math.max(0, bullets / 50f - 2) && rc.canFirePentadShot()) {
             System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (dist - radius < 2.11 + bullets / 100f && rc.canFireTriadShot()) {
+        } else if (dist - radius < 2.11 + Math.max(0, bullets / 50f - 2) && rc.canFireTriadShot()) {
             System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;

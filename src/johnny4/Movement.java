@@ -41,7 +41,7 @@ public class Movement {
         attemptDist[1] = 0.5f;
         switch (robotType) {
             case SCOUT:
-                MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.81f + RobotType.LUMBERJACK.strideRadius;
+                MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 3.5f;
                 GO_STRAIGHT_DISTANCE = 4;
@@ -51,7 +51,7 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
-                GO_STRAIGHT_DISTANCE = 1;
+                GO_STRAIGHT_DISTANCE = 100;
                 break;
             case SOLDIER:
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
@@ -206,11 +206,11 @@ public class Movement {
                 return false;
             }else{
                 System.out.println("I'm already at target but it sucks being around here");
-                target.add(Direction.getNorth(), 0.01f);
+                target = target.add(Direction.getNorth(), 0.01f);
             }
         }
         Direction moveDir = myLocation.directionTo(target);
-        if (fireDir != null && Math.abs(moveDir.degreesBetween(fireDir)) < MIN_MOVE_TO_FIRE_ANGLE) {
+        if (fireDir != null && evadeBullets && Math.abs(moveDir.degreesBetween(fireDir)) < MIN_MOVE_TO_FIRE_ANGLE) {
             moveDir = fireDir.rotateLeftDegrees((bugdir ? 1.001f : -1.001f) * MIN_MOVE_TO_FIRE_ANGLE);
 
         }
@@ -280,7 +280,7 @@ public class Movement {
         Threat threat;
         if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
         float max = 0;
-        if (fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
+        if (evadeBullets && fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
             //System.out.println(dir + " would collide with own bullet");
             max = 0.9f;
         }

@@ -10,15 +10,16 @@ public class Scout {
     Map map;
     Radio radio;
     Movement movement;
-    final boolean isShaker;
+    boolean isShaker;
     final boolean isRoamer;
+    boolean isAggro;
+    boolean initialized = false;
 
     public Scout(RobotController rc) {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
         this.movement = new Movement(rc);
-        isShaker = rc.getID() % 5 == 0;
         isRoamer = rc.getID() % 2 == 0;
         for (int i = 0; i < visitedBroadcasts.length; i++) {
             visitedBroadcasts[i] = new MapLocation(0, 0);
@@ -51,6 +52,12 @@ public class Scout {
     protected void tick() {
         try {
             preTick();
+            if (!initialized) {
+                isAggro = radio.countAllies(RobotType.SCOUT) >= 2 && rand() > 0.8f;
+                isShaker = radio.countAllies(RobotType.SCOUT) <= 2  && rand() > 0.3f || rand() < 0.2f;
+                initialized = true;
+            }
+            System.out.println("This scout is shaker: " + isShaker + ", roamer: " + isRoamer + " and aggro: " + isAggro);
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
@@ -76,7 +83,7 @@ public class Scout {
 
                 RobotType ut = r.getType();
                 if (!r.getTeam().equals(rc.getTeam())) {
-                    if ((ut == RobotType.GARDENER) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
+                    if ((ut == RobotType.GARDENER || isAggro && ut != RobotType.ARCHON) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
                         nextCivilian = r.location;
                         nextCivilianInfo = r;
                         civMinDist = (lastCivilian != null && r.location.distanceTo(lastCivilian) < 3) ? 0f : (r.location.distanceTo(myLocation));
@@ -91,49 +98,15 @@ public class Scout {
             }
             if (nextCivilian == null) {
                 longRangeCiv = true;
-                if (!isRoamer) {
-                    if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
-                        nextCivilian = lastCivilian;
-                    } else {
-                        //nextCivilian = map.getTarget(myLocation, 2, 10, 0.8f * RobotType.SCOUT.sensorRadius);
-                        lastCivilian = null;
-                    }
-                    if (nextCivilian == null) {
-                        //nextCivilian = map.getTarget(myLocation, 2, 30, 3.5f * RobotType.SCOUT.sensorRadius);
-                        if (nextCivilian == null) {
-                            System.out.println("no target");
-                        }
-                    }
-                } else {
-                    //nextCivilian = map.getTarget(myLocation, 2, 20, 0.8f * RobotType.SCOUT.sensorRadius);
-                    if (nextCivilian == null) {
-                        if (lastCivilian != null && lastCivilian.distanceTo(myLocation) > 0.8f * RobotType.SCOUT.sensorRadius) {
-                            nextCivilian = lastCivilian;
-                        } else {
-                            lastCivilian = null;
-                            MapLocation[] broadcasts = rc.senseBroadcastingRobotLocations();
-                            if (broadcasts.length > 0) {
-                                for (MapLocation bc : broadcasts) {
-                                    boolean invalid = false;
-                                    for (MapLocation known : visitedBroadcasts) {
-                                        if (known.distanceTo(bc) < 6) {
-                                            invalid = true;
-                                        }
-                                    }
-                                    if (invalid) continue;
-                                    if (nextCivilian == null || nextCivilian.distanceTo(myLocation) < bc.distanceTo(myLocation)) {
-                                        nextCivilian = bc;
-                                    }
-                                }
-                                if (nextCivilian != null) {
-                                    visitedBroadcasts[rollingBroadcastIndex++] = nextCivilian;
-                                    rollingBroadcastIndex %= visitedBroadcasts.length;
-                                }
-                                System.out.println("Going to broadcaster at " + nextCivilian);
-                            }
-                        }
-                    }
+                System.out.println("Using long range civilian " + Clock.getBytecodeNum());
+                if (frame % 3 == 0) {
+                    map.generateFarTargets(myLocation, 1000, 0);
                 }
+                nextCivilian = map.getTarget(isAggro ? 1 : 2, myLocation);
+                if (nextCivilian != null && nextCivilian.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius) {
+                    Radio.deleteEnemyReport(nextCivilian);
+                }
+                //if (nextCivilian == null) nextCivilian = map.getTarget(3, myLocation);
             }
             if (nextCivilianInfo != null && lastCivilianInfo != null) {
                 nextCivilian = predict(nextCivilianInfo, lastCivilianInfo);
@@ -153,6 +126,8 @@ public class Scout {
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
             }
+
+            System.out.println("Checking safe " + Clock.getBytecodeNum());
 
             boolean safe = false;
             boolean cantfire = false;
@@ -177,6 +152,7 @@ public class Scout {
 
 
             //Movement
+            System.out.println("Starting movement " + Clock.getBytecodeNum());
             if (toShake != null && dist > 5) {
                 //System.out.println("Shaking " + toShake.getLocation());
                 if (!hasMoved && !movement.findPath(toShake.getLocation(), null)) {
@@ -199,26 +175,26 @@ public class Scout {
                 if (nextCivilian != null && nearbyAllies < 5 + rc.getID() % 5) {
                     //System.out.println("attacking " + nextCivilian + " : " + longRangeCiv);
 
-                    float attackDistance = 3.1f; //Distance from which to start firing at enemies
+                    float attackDistance = 3.3f; //Distance from which to start firing at enemies
                     if (!longRangeCiv && nextCivilianInfo.moveCount <= 0) {
                         attackDistance += 4;
                     }
-                    if (nextCivilian.distanceTo(myLocation) - civSize > attackDistance) {
+                    if (nextCivilian.distanceTo(myLocation) - civSize > attackDistance || longRangeCiv) {
                         if (!hasMoved && !movement.findPath(nextCivilian, null)) {
                         } else {
                             hasMoved = true;
                             myLocation = rc.getLocation();
                         }
                     }
-                    if (nextCivilian.distanceTo(myLocation) - civSize < attackDistance) {
+                    if (!longRangeCiv && Math.min(nextCivilian.distanceTo(myLocation), nextCivilianInfo.location.distanceTo(myLocation)) - civSize < attackDistance) {
                         boolean hasFired = longRangeCiv || cantfire; //Don't shoot at units outside vision
                         Direction fireDir = null;
-                        if (!hasFired ) {
+                        if (!hasFired) {
                             if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
-                            }else{
+                            } else {
                                 System.out.println("No LOS");
                             }
                         }
@@ -253,15 +229,17 @@ public class Scout {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
-                            }else{
+                            } else {
                                 System.out.println("No LOS");
                             }
                         }
+                    }else{
+                        System.out.println("Enemy out of range");
                     }
                 } else { //No civilian, search the map
                     if (!hasMoved) {
                         while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
-                            lastRandomLocation = myLocation.add(randomDirection(), 20);
+                            lastRandomLocation = myLocation.add(randomDirection(), 100);
                         }
                     }
                 }

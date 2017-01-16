@@ -103,7 +103,7 @@ public class Radio {
 
         int numDeletes = rc.readBroadcast(427);
         int info, h1, n1, b1, h2, n2, b2;
-        for (int i = 0; i < numDeletes;++i) {
+        for (int i = 0; i < numDeletes; ++i) {
             info = rc.readBroadcast(i + 428);
             h1 = (info * 41 + 23) % 96;
             n1 = h1 / 32;
@@ -194,7 +194,7 @@ public class Radio {
         pos = 202;
         int lastReport = 202 + rc.readBroadcast(201);
         int infoPos;
-        for (;pos < lastReport; pos += 2) {
+        for (; pos < lastReport; pos += 2) {
             report = rc.readBroadcast(pos);
             //System.out.println("reading new report from pos: " + pos + " info: " + report);
             ID = rc.readBroadcast(pos + 1);
@@ -265,12 +265,12 @@ public class Radio {
         rc.broadcast(418, enemyCounts[4]);
         rc.broadcast(419, enemyCounts[5]);
 
-        System.out.println("Enemy Archons: "     + enemyCounts[0]);
-        System.out.println("Enemy Gardeners: "   + enemyCounts[1]);
+        System.out.println("Enemy Archons: " + enemyCounts[0]);
+        System.out.println("Enemy Gardeners: " + enemyCounts[1]);
         System.out.println("Enemy Lumberjacks: " + enemyCounts[2]);
-        System.out.println("Enemy Soldiers: "    + enemyCounts[3]);
-        System.out.println("Enemy Tanks: "       + enemyCounts[4]);
-        System.out.println("Enemy Scouts: "      + enemyCounts[5]);
+        System.out.println("Enemy Soldiers: " + enemyCounts[3]);
+        System.out.println("Enemy Tanks: " + enemyCounts[4]);
+        System.out.println("Enemy Scouts: " + enemyCounts[5]);
 
 
         rc.broadcast(420, reportBloom[0]);
@@ -436,7 +436,6 @@ public class Radio {
     }
 
 
-
     public static void reportEnemy(MapLocation location, RobotType type, int ID) throws GameActionException {
         int h1 = ID % 192;
         int n1 = h1 / 32;
@@ -472,6 +471,8 @@ public class Radio {
 
 
     public static void deleteEnemyReport(MapLocation location) throws GameActionException {
+        System.out.println("Clearing invalid report at " + location);
+        rc.setIndicatorDot(location, 255, 0, 0);
         int info = ((int) Math.round(location.x) << 10) | ((int) Math.round(location.y));
         int numDeletes = rc.readBroadcast(427);
         if (numDeletes == 22) {
