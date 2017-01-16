@@ -63,17 +63,13 @@ public class Soldier {
 
             MapLocation nextEnemy = null;
             RobotInfo nextEnemyInfo = null;
-            nextLumberjack = null;
-            TreeInfo trees[] = senseBiggestTrees();
+            TreeInfo trees[] = senseClosestTrees();
             for (RobotInfo r : nearbyRobots) {
-                if (!r.getTeam().equals(rc.getTeam()) && (r.type != RobotType.SCOUT || rc.getID() % 7 == 0) &&
+                if (!r.getTeam().equals(rc.getTeam()) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) > r.location.distanceTo(myLocation) * r.type.strideRadius + (r.type == RobotType.ARCHON ? 10 : 0))) {
                     nextEnemy = r.location;
                     nextEnemyInfo = r;
                     enemyType = r.type;
-                }
-                if (r.getTeam().equals(rc.getTeam()) && r.type == RobotType.LUMBERJACK && (nextLumberjack == null || nextLumberjack.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
-                    nextLumberjack = r.location;
                 }
             }
             if (nextEnemyInfo != null && lastEnemyInfo != null){
@@ -101,6 +97,7 @@ public class Soldier {
             boolean longrange = false;
             if (nextEnemy == null) {
                 longrange = true;
+                System.out.println("Using long range target");
                 nextEnemy = map.getTarget(0, myLocation);
                 if (frame % 9 == 0) {
                     map.generateFarTargets(myLocation, 10, 0.8f * RobotType.SOLDIER.sensorRadius);
@@ -123,11 +120,15 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 9f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
-                    hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
-                    fireDir = myLocation.directionTo(nextEnemy);
-                    if (hasFired) {
-                        bullets = rc.senseNearbyBullets();
+                if (!hasFired) {
+                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2){
+                        System.out.println("No LOS");
+                    }else {
+                        hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
+                        fireDir = myLocation.directionTo(nextEnemy);
+                        if (hasFired) {
+                            bullets = rc.senseNearbyBullets();
+                        }
                     }
                 }
                 if (rc.getTeamBullets() > 50 && evasionMode) {
@@ -155,8 +156,16 @@ public class Soldier {
                     }
                 }
 
-                if (!hasFired && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 9f / enemyType.strideRadius + rc.getTeamBullets() / 100) {
-                    hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
+                if (!hasFired) {
+                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2){
+                        System.out.println("No LOS");
+                    }else {
+                        hasFired = tryFire(nextEnemy, dist, enemyType.bodyRadius);
+                        fireDir = myLocation.directionTo(nextEnemy);
+                        if (hasFired) {
+                            bullets = rc.senseNearbyBullets();
+                        }
+                    }
                 }
             } else if (!hasMoved) {
                 while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !movement.findPath(lastRandomLocation, null)) {

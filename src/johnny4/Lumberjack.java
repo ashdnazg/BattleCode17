@@ -19,6 +19,7 @@ public class Lumberjack {
     RobotInfo[] nearbyRobots = new RobotInfo[0];
     MapLocation lastRandomLocation;
     TreeInfo[] trees;
+    boolean fakeTask = true;
 
     public Lumberjack(RobotController rc) {
         this.rc = rc;
@@ -66,20 +67,25 @@ public class Lumberjack {
             myLocation = rc.getLocation();
             bullets = rc.senseNearbyBullets();
             nearbyRobots = map.sense();
-            trees = senseBiggestTrees();
+            trees = senseClosestTrees();
 
             boolean alarm = radio.getAlarm();
 
             movement.init(nearbyRobots, trees, bullets);
 
             // acquire tree cutting requests
-            if (currentTreeTarget == null) {
-                currentTreeTarget = radio.findClosestTreeToCut(myLocation);
-                treeInSenseSince = 100000;
+            if (currentTreeTarget == null || fakeTask) {
+                MapLocation mp = radio.findClosestTreeToCut(myLocation);
+                if (mp != null) {
+                    currentTreeTarget = mp;
+                    treeInSenseSince = 100000;
+                    fakeTask = false;
+                }
             }
 
             // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
             MapLocation nextEnemy = null;
+            MapLocation nextTree = currentTreeTarget;
             float enemyRadius = 1;
             boolean longrange = false;
             for (RobotInfo ri : nearbyRobots) {
@@ -91,17 +97,35 @@ public class Lumberjack {
                     enemyRadius = ri.type.bodyRadius;
                 }
             }
-            if (nextEnemy == null) {
-                System.out.println("Using long range target");
-                if (frame % 9 == 0){
+            if (nextEnemy != null && fakeTask) {
+                currentTreeTarget = null;
+            }
+
+            if (nextEnemy == null && !alarm && currentTreeTarget == null) {
+                for (TreeInfo ti : trees) {
+                    if (ti.team.equals(rc.getTeam())) continue;
+                    if (nextTree == null || nextTree.distanceTo(myLocation) > ti.location.distanceTo(myLocation)) {
+                        nextTree = ti.location;
+                    }
+                }
+                if (nextTree != null) {
+                    currentTreeTarget = nextTree;
+                    treeInSenseSince = 100000;
+                    fakeTask = true;
+                }
+            }
+            if ((alarm || currentTreeTarget == null) && nextEnemy == null) {
+                if (frame % 9 == 0) {
                     map.generateFarTargets(myLocation, 50, RobotType.LUMBERJACK.sensorRadius);
                 }
+                System.out.println("Using long range target");
                 longrange = true;
                 nextEnemy = map.getTarget(0, myLocation);
             }
             boolean hasStriked = tryStrike();
             boolean hasChopped = false;
             boolean hasMoved = false;
+            System.out.println("STATUS enemy: " + nextEnemy + " tree: " + currentTreeTarget + " alarm: " + alarm);
 
 
             if (longrange && !hasChopped) hasChopped = tryChop();
@@ -109,7 +133,7 @@ public class Lumberjack {
             myLocation = rc.getLocation();
             if (guardener != null && !hasMoved && myLocation.distanceTo(guardener.location) > RobotType.LUMBERJACK.sensorRadius + 3) {
                 movement.findPath(guardener.location, null); //protect your padawan
-                hasMoved =true;
+                hasMoved = true;
             }
             if (!alarm && currentTreeTarget != null) {
                 System.out.println("Chopping tree at " + currentTreeTarget);
@@ -137,7 +161,7 @@ public class Lumberjack {
                         hasChopped = true;
                     }
                 } else {
-                    if (!hasMoved&& movement.findPath(currentTreeTarget, null)) {
+                    if (!hasMoved && movement.findPath(currentTreeTarget, null)) {
                         hasMoved = true;
                         myLocation = rc.getLocation();
                     }
@@ -185,6 +209,7 @@ public class Lumberjack {
             }
             if (!hasMoved && !rc.hasAttacked() && !hasChopped && choppable == null) {
 
+                System.out.println("Moving randomly");
                 while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
                     lastRandomLocation = myLocation.add(randomDirection(), 20);
                 }
@@ -247,9 +272,9 @@ public class Lumberjack {
         return false;
     }
 
-    private boolean tryChop() throws GameActionException{
-        for (TreeInfo ti : trees){
-            if (!ti.getTeam().equals(rc.getTeam()) && rc.canChop(ti.location)){
+    private boolean tryChop() throws GameActionException {
+        for (TreeInfo ti : trees) {
+            if (!ti.getTeam().equals(rc.getTeam()) && rc.canChop(ti.location)) {
                 rc.chop(ti.location);
                 return true;
             }

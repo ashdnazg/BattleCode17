@@ -91,10 +91,13 @@ public class BuildPlanner {
         boolean canSoldier = money > RobotType.SOLDIER.bulletCost;
         boolean canLumberjack = money > RobotType.LUMBERJACK.bulletCost;
         boolean canScout = money > RobotType.SCOUT.bulletCost;
+        boolean rich = money > 200;
+
+        if (nearbyProtectors > 4) return null; //dont overcrowd
 
 
-        boolean alarm = Radio.getAlarm() && nearbyProtectors < 2;
-        boolean needSoldiers = (ownSoldiers < (enemySoldiers + enemyLumberjacks)) || (ownSoldiers < (enemyScouts / 2));
+        boolean alarm = Radio.getAlarm() ;
+        boolean needSoldiers = (ownSoldiers < (enemySoldiers + enemyLumberjacks)) || (ownSoldiers < (enemyScouts / 2)) || rich;
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (ownLumberjacks < 1) || (ownLumberjacks < (ownSoldiers / 3));
@@ -112,6 +115,8 @@ public class BuildPlanner {
                 return RobotType.SOLDIER;
             }
         }
+
+        if (alarm && !rich) return null;
 
         if (needSoldiers && canSoldier) {
             return RobotType.SOLDIER;

@@ -86,6 +86,8 @@ public class Gardener {
             int frame = rc.getRoundNum();
             radio.frame = frame;
             bullets = rc.senseNearbyBullets();
+            RobotInfo[] nearbyRobots = map.sense();
+            TreeInfo[] trees = senseClosestTrees();
             MapLocation myLocation = rc.getLocation();
             float money = rc.getTeamBullets();
             System.out.println("Own trees: " + TreeStorage.ownTrees);
@@ -94,8 +96,6 @@ public class Gardener {
                 Radio.reportActiveGardener();
             }
 
-            RobotInfo[] nearbyRobots = map.sense();
-            TreeInfo[] trees = senseBiggestTrees();
             System.out.println("gardener post header: " + Clock.getBytecodeNum());
             MapLocation nextEnemy = null;
             for (RobotInfo r : nearbyRobots) {

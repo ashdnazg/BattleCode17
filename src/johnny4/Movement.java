@@ -210,8 +210,8 @@ public class Movement {
             }
         }
         Direction moveDir = myLocation.directionTo(target);
-        if (fireDir != null) {
-            moveDir = moveDir.rotateLeftDegrees((bugdir ? 1.001f : -1.001f) * MIN_MOVE_TO_FIRE_ANGLE);
+        if (fireDir != null && Math.abs(moveDir.degreesBetween(fireDir)) < MIN_MOVE_TO_FIRE_ANGLE) {
+            moveDir = fireDir.rotateLeftDegrees((bugdir ? 1.001f : -1.001f) * MIN_MOVE_TO_FIRE_ANGLE);
 
         }
         if (robotType != RobotType.SCOUT && olddist > 0.9 * strideDistance) {

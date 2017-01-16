@@ -171,7 +171,7 @@ public class Util {
 
 
 
-    static TreeInfo[] temp = new TreeInfo[25];
+    static TreeInfo[] temp = new TreeInfo[20];
     static TreeInfo[] cache = new TreeInfo[0];
     static TreeInfo[] senseBiggestTrees(){
         if (rc.getRoundNum() % 3 == 0) {
@@ -179,7 +179,7 @@ public class Util {
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
             if (trees.length > 50) {
-                trees = rc.senseNearbyTrees(5);
+                trees = rc.senseNearbyTrees(4);
             }
             for (int i = 0; i < trees.length; i++) {
                 if (trees[i].radius > 0.9 && cnt < temp.length)
@@ -196,6 +196,33 @@ public class Util {
             }
         }
         return cache;
+    }
+
+    static TreeInfo[] temp2 = new TreeInfo[20];
+    static TreeInfo[] cache2 = new TreeInfo[0];
+    static TreeInfo[] senseClosestTrees(){
+        if (rc.getRoundNum() % 3 == 0) {
+            int time = Clock.getBytecodeNum();
+            int cnt = 0;
+            TreeInfo trees[] = rc.senseNearbyTrees();
+            if (trees.length > temp2.length) {
+                trees = rc.senseNearbyTrees(3f);
+            }
+            for (int i = 0; i < trees.length; i++) {
+                if (cnt < temp2.length)
+                    temp2[cnt++] = trees[i];
+            }
+            cache2 = new TreeInfo[cnt];
+            System.arraycopy(temp2, 0, cache2, 0, cnt);
+            time = Clock.getBytecodeNum() - time;
+            if (time > 300){
+                System.out.println("Sensing trees took " + time);
+            }
+            if (cache2.length >= temp2.length){
+                System.out.println("Reached maximum tree count");
+            }
+        }
+        return cache2;
     }
 
     /**
