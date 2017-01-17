@@ -181,15 +181,17 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
+                float minfiredist = 10f / enemyType.strideRadius + 2 + 3 * (int) (rc.getTeamBullets() / 150);
                 if (!hasFired && evasionMode) {
-                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2 + 3 * (int) (rc.getTeamBullets() / 150)) {
-                        if (Util.DEBUG) System.out.println("No LOS");
-                    } else {
+                    if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
-                        fireDir = (guardener == null ? myLocation : guardener.location).directionTo(nextEnemy);
+                        fireDir = myLocation.directionTo(nextEnemy);
                         if (hasFired) {
                             bullets = rc.senseNearbyBullets();
                         }
+                        Movement.lastLOS = frame;
+                    } else {
+                        if (Util.DEBUG) System.out.println("No LOS");
                     }
                 }
                 if (enemyType != RobotType.SOLDIER || (rc.getTeamBullets() > 50 && evasionMode)) {
@@ -220,15 +222,15 @@ public class Soldier {
                 }
 
                 if (!hasFired) {
-                    if (!checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < 5f / enemyType.strideRadius + 2) {
-                        if (Util.DEBUG) System.out.println("No LOS");
-                    } else {
+                    if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
                         if (hasFired) {
                             bullets = rc.senseNearbyBullets();
                         }
                         Movement.lastLOS = frame;
+                    } else {
+                        if (Util.DEBUG) System.out.println("No LOS");
                     }
                 }
             } else if (!hasMoved) {
