@@ -94,6 +94,7 @@ public class Gardener {
             TreeInfo[] trees = senseClosestTrees();
             MapLocation myLocation = rc.getLocation();
             float money = rc.getTeamBullets();
+            boolean mustFindSpaceForTree = false;
             if (Util.DEBUG) System.out.println("Own trees: " + TreeStorage.ownTrees);
 
             BuildPlanner.update(nearbyRobots, trees);
@@ -164,6 +165,7 @@ public class Gardener {
                         }
                     } else {
                         if (Util.DEBUG) System.out.println("No space for tree found");
+                        mustFindSpaceForTree = true;
                     }
                 }
 
@@ -230,20 +232,21 @@ public class Gardener {
                 hasMoved = true;
             }
             if (!hasMoved) {
-                if (BuildPlanner.myTrees > 0) { //evade
+                if (BuildPlanner.myTrees > 0 || !mustFindSpaceForTree) { //evade
                     if (Util.DEBUG) System.out.println("Evading possible bullets");
                     movement.findPath(myLocation, null);
-                } else {
-                    // if (Util.DEBUG) System.out.println("Walking randomly");
-                    // while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
-                        // lastRandomLocation = myLocation.add(randomDirection(), 100);
-                    // }
+                } else { //runs only when looking for tree space
+                    if (Util.DEBUG) System.out.println("Walking randomly");
+                    while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
+                        lastRandomLocation = myLocation.add(randomDirection(), 100);
+                    }
                 }
             }
 
 
             if (rc.getRoundNum() - frame > 0) {
-                if (Util.DEBUG) System.out.println("Gardener took " + (rc.getRoundNum() - frame) + " frames at " + frame);
+                if (Util.DEBUG)
+                    System.out.println("Gardener took " + (rc.getRoundNum() - frame) + " frames at " + frame);
             }
 
         } catch (Exception e) {
