@@ -15,6 +15,7 @@ public class Soldier {
     RobotInfo lastEnemyInfo;
     RobotInfo guardener = null;
     int guardenerID = -1;
+    int lastContactWithGuardener = -1000;
     final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius;
 
     public Soldier(RobotController rc) {
@@ -32,6 +33,7 @@ public class Soldier {
                 if (ri.type == RobotType.GARDENER) {
                     guardener = ri;
                     guardenerID = ri.ID;
+                    lastContactWithGuardener = rc.getRoundNum();
                 }
                 if (ri.type == RobotType.SOLDIER) {
                     hasGuardener = true;
@@ -97,19 +99,18 @@ public class Soldier {
             MapLocation nextEnemy = null;
             RobotInfo nextEnemyInfo = null;
             TreeInfo trees[] = senseClosestTrees();
-            guardener = null;
             boolean hasGuardener = false;
             for (RobotInfo ri : nearbyRobots) {
                 if (ri.getTeam().equals(rc.getTeam())) {
                     if (guardenerID == ri.ID) {
                         guardener = ri;
-                    } else
-
-                    if (ri.type == RobotType.GARDENER) {
+                        lastContactWithGuardener = rc.getRoundNum();
+                    } else if (ri.type == RobotType.GARDENER) {
                         guardener = ri;
                         guardenerID = ri.ID;
+                        lastContactWithGuardener = rc.getRoundNum();
                     }
-                    if (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER) {
+                    if (ri.type == RobotType.SOLDIER) {
                         hasGuardener = true;
                     }
                 }
@@ -120,7 +121,7 @@ public class Soldier {
                     enemyType = ri.type;
                 }
             }
-            if (guardener == null || hasGuardener) {
+            if ((frame - lastContactWithGuardener) > 40 || hasGuardener) {
                 guardenerID = -1;
                 guardener = null;
             }

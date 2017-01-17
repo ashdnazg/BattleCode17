@@ -115,7 +115,7 @@ public class Lumberjack {
                         guardener = ri;
                         guardenerID = ri.ID;
                     }
-                    if (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER) {
+                    if (ri.type == RobotType.SOLDIER) {
                         hasGuardener = true;
                     }
                 }

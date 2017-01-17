@@ -31,6 +31,7 @@ public class BuildPlanner {
     static float closestDanger;
     static int graceRounds;
     static float startArchonDist;
+    static int lastScoutRound = 0;
 
     public static void init() {
         frame = rc.getRoundNum();
@@ -84,6 +85,7 @@ public class BuildPlanner {
             if (nextEnemy == null || closestDanger > curDist) {
                 switch (r.type) {
                     case SCOUT:
+                        lastScoutRound = frame;
                     case LUMBERJACK:
                     case SOLDIER:
                     case TANK:
@@ -123,7 +125,7 @@ public class BuildPlanner {
             return true;
         }
 
-        return (nearbyProtectors > nearbyEnemies);
+        return ((frame - lastScoutRound) > 100) || (nearbyProtectors > nearbyEnemies);
     }
 
 
@@ -204,7 +206,7 @@ public class BuildPlanner {
         }
 
 
-        if (allOrNothing || nearbyProtectors < 1) { //in danger
+        if (allOrNothing || (nearbyProtectors < 1) && (frame - lastScoutRound) < 100) { //in danger
             if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
             } else if (needSoldiers && canSoldier) {
