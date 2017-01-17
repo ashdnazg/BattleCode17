@@ -226,7 +226,7 @@ public class Scout {
                     hasMoved = true;
                     myLocation = rc.getLocation();
                 }
-                if (rc.canShake(toShake.getID())) {
+                if (toShake != null && rc.canShake(toShake.getID())) {
                     rc.shake(toShake.getID());
                     if (Util.DEBUG) System.out.println("Shaken " + toShake.getLocation());
                     toShake = null;
