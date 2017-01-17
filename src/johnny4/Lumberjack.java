@@ -138,6 +138,9 @@ public class Lumberjack {
                     if (nextTree == null || nextTree.distanceTo(myLocation) > ti.location.distanceTo(myLocation)) {
                         nextTree = ti.location;
                     }
+                    if (ti.containedBullets > 0 && rc.canShake(ti.location)) {
+                        rc.shake(ti.location);
+                    }
                 }
                 if (nextTree != null) {
                     currentTreeTarget = nextTree;
