@@ -184,13 +184,20 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("enemy gardeners: " + enemyGardeners);
         if (Util.DEBUG) System.out.println("enemy lumberjacks: " + enemyLumberjacks);
         if (Util.DEBUG) System.out.println("nearby trees: " + nearbyTrees.length);
+        if (Util.DEBUG) System.out.println("tree cutting requests: " + Radio.countTreeCutRequests());
 
 
         boolean needSoldiers = (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks)) || rich;
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));
+        needLumberJacks = (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests() - 5, ownSoldiers + 1 + (rich ? 10 : 0)));
+
         boolean needScouts = (ownScouts < 2 + ((ownLumberjacks + ownSoldiers) / 2)) || ownScouts < enemyScouts;
+        if (Util.DEBUG) System.out.println("needSoldiers: " + needSoldiers);
+        if (Util.DEBUG) System.out.println("noScouts: " + noScouts);
+        if (Util.DEBUG) System.out.println("needLumberJacks: " + needLumberJacks);
+        if (Util.DEBUG) System.out.println("needScouts: " + needScouts);
 
         if (noScouts && canScout) {
             return RobotType.SCOUT;
@@ -212,7 +219,7 @@ public class BuildPlanner {
             } else if (needSoldiers && canSoldier) {
                 return RobotType.SOLDIER;
             } else if (nextEnemy != null && nextEnemy.type == RobotType.SCOUT && canLumberjack) {
-                return (nearbyTrees.length < 7) ? RobotType.LUMBERJACK : RobotType.SCOUT;
+                return /*(nearbyTrees.length < 7) ? RobotType.LUMBERJACK : */RobotType.SCOUT;
             } else if (canSoldier) {
                 return RobotType.SOLDIER;
             }

@@ -16,7 +16,7 @@ public class Soldier {
     RobotInfo guardener = null;
     int guardenerID = -1;
     int lastContactWithGuardener = -1000;
-    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius;
+    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 5;
 
     public Soldier(RobotController rc) {
         this.rc = rc;
@@ -156,8 +156,11 @@ public class Soldier {
                     Radio.deleteEnemyReport(nextEnemy);
                 }
                 if (frame % 9 == 0) {
-                    map.generateFarTargets(myLocation, 1000, 0);
+                    map.generateFarTargets(guardener == null ? myLocation : guardener.location, 1000, 0);
                 }
+            }else{
+
+                if (Util.DEBUG) System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
             }
             Movement.init(nearbyRobots, trees, bullets);
             boolean hasMoved = false;
@@ -172,7 +175,7 @@ public class Soldier {
                     hasMoved = true;
                     if (Util.DEBUG) System.out.println("Returning to guardener");
                 }
-                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > RobotType.SOLDIER.sensorRadius) {
+                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
                     nextEnemy = null;
                 }
             }

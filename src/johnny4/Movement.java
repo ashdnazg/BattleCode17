@@ -24,6 +24,7 @@ public class Movement {
     static float attemptDist[];
     static float MIN_FRIENDLY_LUMBERJACK_DIST;
     static float MIN_ENEMY_LUMBERJACK_DIST; //overrides enemy dist
+    static float MIN_ENEMY_SCOUT_DIST;//overrides enemy dist
     static float MIN_ENEMY_DIST;
     static float MIN_MOVE_TO_FIRE_ANGLE;
     static float GO_STRAIGHT_DISTANCE;
@@ -45,6 +46,7 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 3.5f;
+                MIN_ENEMY_SCOUT_DIST = 3.5f;
                 GO_STRAIGHT_DISTANCE = 4;
                 attemptDist[1] = 1.1f;
                 break;
@@ -52,18 +54,21 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
+                MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 100;
                 break;
             case SOLDIER:
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
+                MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 4;
                 break;
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 5f;
+                MIN_ENEMY_SCOUT_DIST = 5f;
                 GO_STRAIGHT_DISTANCE = 0;
                 break;
             case ARCHON:
@@ -71,6 +76,7 @@ public class Movement {
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
                 MIN_ENEMY_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 0;
+                MIN_ENEMY_SCOUT_DIST = 0f;
                 evadeBullets = false;
                 break;
             default:
@@ -78,6 +84,7 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
                 MIN_ENEMY_DIST = 0f;
+                MIN_ENEMY_SCOUT_DIST = 0f;
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
@@ -143,6 +150,23 @@ public class Movement {
                     currentThreat.y = ri.location.y;
                     currentThreat.radius = MIN_ENEMY_LUMBERJACK_DIST;
                     currentThreat.radiusSquared = MIN_ENEMY_LUMBERJACK_DIST * MIN_ENEMY_LUMBERJACK_DIST;
+                    //currentThreat.description = "enemy lumberjack";
+                    currentThreat = threats[++threatsLen];
+                    if (currentThreat == null) {
+                        threats[threatsLen] = new Threat();
+                        currentThreat = threats[threatsLen];
+                    }
+                    continue;
+                }
+            }
+            if (MIN_ENEMY_SCOUT_DIST > 0.01 && ri.type == RobotType.SCOUT) {
+                dist = ri.location.distanceTo(myLocation) - strideDistance;
+                if (dist < MIN_ENEMY_SCOUT_DIST) {
+                    currentThreat.loc = ri.location;
+                    currentThreat.x = ri.location.x;
+                    currentThreat.y = ri.location.y;
+                    currentThreat.radius = MIN_ENEMY_SCOUT_DIST;
+                    currentThreat.radiusSquared = MIN_ENEMY_SCOUT_DIST * MIN_ENEMY_SCOUT_DIST;
                     //currentThreat.description = "enemy lumberjack";
                     currentThreat = threats[++threatsLen];
                     if (currentThreat == null) {
