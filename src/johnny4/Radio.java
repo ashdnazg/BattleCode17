@@ -503,7 +503,7 @@ public class Radio {
 
     // returns the index, so you can mark it as cut later
     public static boolean requestTreeCut(TreeInfo ti) throws GameActionException {
-        int index = rc.getType() == RobotType.ARCHON ? 302 : 305;
+        int index = ti.containedRobot != null ? 302 : 305;
         int zero_index = -1;
         int data;
         for (; index <= 320; ++index) {
