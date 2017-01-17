@@ -125,7 +125,7 @@ public class BuildPlanner {
             return true;
         }
 
-        return ((frame - lastScoutRound) > 100) || (nearbyProtectors > nearbyEnemies);
+        return ((frame - lastScoutRound) > 40) || (nearbyProtectors > nearbyEnemies);
     }
 
 

@@ -24,6 +24,8 @@ public class Gardener {
     MapLocation escapeLocation;
     final float MIN_CONSTRUCTION_MONEY;
     MapLocation lastRandomLocation;
+    RobotInfo nearestProtector;
+    int lastProtectorContact = -1000;
 
     public Gardener(RobotController rc) {
         if (Util.DEBUG) System.out.println("Constructing gardener: " + Clock.getBytecodeNum());
@@ -107,9 +109,16 @@ public class Gardener {
                         (r.type == RobotType.SCOUT || r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
                     nextEnemy = r.location;
                 }
-                if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.LUMBERJACK || r.type == RobotType.SCOUT || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
+                if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
+                    if (nearestProtector == null || nearestProtector.location.distanceTo(myLocation) < r.location.distanceTo(myLocation)) {
+                        nearestProtector = r;
+                        lastProtectorContact = frame;
+                    }
                     nearbyProtectors++;
                 }
+            }
+            if (frame - lastProtectorContact > 50) {
+                nearestProtector = null;
             }
             float newHealth = rc.getHealth();
             if (newHealth < health || nextEnemy != null) {
@@ -204,7 +213,11 @@ public class Gardener {
             }
             if ((roundsSinceAttack < ATTACK_COOLDOWN_TIME || nextEnemy != null && myLocation.distanceTo(nextEnemy) < 6) && !hasMoved) {
                 if (nextEnemy != null) {
-                    escapeLocation = nextEnemy.add(nextEnemy.directionTo(myLocation), 10);
+                    if (nearestProtector != null) {
+                        escapeLocation = nextEnemy.add(nextEnemy.directionTo(nearestProtector.location), 10);
+                    } else {
+                        escapeLocation = nextEnemy.add(nextEnemy.directionTo(myLocation), 10);
+                    }
                 }
                 if (movement.findPath(escapeLocation, null)) {
                     myLocation = rc.getLocation();
