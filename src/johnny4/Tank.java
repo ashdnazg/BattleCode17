@@ -77,12 +77,15 @@ public class Tank {
                 lastTarget = null;
                 map.generateFarTargets(myLocation, 9, 0);
                 nextEnemy = map.getTarget(0, myLocation);
+                if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.TANK.sensorRadius) {
+                    Radio.deleteEnemyReport(nextEnemy);
+                }
             }
             float dist = 10000f;
             if (nextEnemy != null) {
                 movement.findPath(nextEnemy, null);
                 if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
-                if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius)) {
+                if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius) && !myLocation.equals(nextEnemy)) {
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     if (Util.DEBUG) System.out.println("Fire!");
                 }

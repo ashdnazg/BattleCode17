@@ -40,7 +40,7 @@ public class WellSpacedHexagonalClusters extends Grid {
             MapLocation realLocation = new MapLocation(0,0);
             MapLocation checkLocation = new MapLocation(0,0);
             Direction dir = new Direction(0);
-            for (gx = (int) ((myLocation.x - radius) / SPACING); gx < xmax; gx++) {
+            for (gx = Math.max(0,(int) ((myLocation.x - radius) / SPACING)); gx < xmax; gx++) {
                 gy = ymin;
                 PATTERN_SKIP_INVERSE_X = PATTERN_SKIP_INVERSE[gx % P_X];
                 gy += (PATTERN[gx % P_X][gy % P_Y]) ? PATTERN_SKIP_INVERSE_X[gy % P_Y] : 0;

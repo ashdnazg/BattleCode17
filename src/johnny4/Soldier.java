@@ -193,6 +193,7 @@ public class Soldier {
 
     boolean tryFire(MapLocation nextEnemy, float dist, float radius) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
+        if (nextEnemy.equals(myLocation)) return false;
         float bullets = rc.getTeamBullets();
         if (dist - radius < 1.51 + Math.max(0, bullets / 50f - 2) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
