@@ -52,6 +52,7 @@ public class Gardener {
 
         BuildPlanner.rc = rc;
         if (Util.DEBUG) System.out.println("Finished Constructing gardener: " + Clock.getBytecodeNum());
+        BuildPlanner.init();
     }
 
     public void run() {
@@ -220,10 +221,10 @@ public class Gardener {
                     if (Util.DEBUG) System.out.println("Evading possible bullets");
                     movement.findPath(myLocation, null);
                 } else {
-                    if (Util.DEBUG) System.out.println("Walking randomly");
-                    while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
-                        lastRandomLocation = myLocation.add(randomDirection(), 100);
-                    }
+                    // if (Util.DEBUG) System.out.println("Walking randomly");
+                    // while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
+                        // lastRandomLocation = myLocation.add(randomDirection(), 100);
+                    // }
                 }
             }
 

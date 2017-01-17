@@ -8,8 +8,8 @@ public class Map {
 
     RobotController rc;
     Radio radio;
-    MapLocation[] archonPos;
-    int _type;
+    static MapLocation[] enemyArchonPos;
+    static MapLocation[] ourArchonPos;
     static MapLocation[] farTargets = new MapLocation[6];
     static float[] tempDist = new float[6];
     static float[] tempX = new float[6];
@@ -21,8 +21,8 @@ public class Map {
     public Map(RobotController rc, Radio radio) {
         this.rc = rc;
         this.radio = radio;
-        archonPos = rc.getInitialArchonLocations(rc.getTeam().opponent());
-
+        ourArchonPos = rc.getInitialArchonLocations(rc.getTeam());
+        enemyArchonPos = rc.getInitialArchonLocations(rc.getTeam().opponent());
         // init vision
     }
 

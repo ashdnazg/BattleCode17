@@ -13,6 +13,7 @@ public class BuildPlanner {
     static int nearbyProtectors = 0;
     static int nearbyGardeners = 0;
     static int nearbyBulletTrees = 0;
+    static int nearbyEnemies = 0;
     static RobotInfo nextEnemy = null;
 
     static int ownScouts;
@@ -24,11 +25,35 @@ public class BuildPlanner {
     static int enemySoldiers;
     static int enemyGardeners;
     static int frame;
+    static int totalEnemies;
+    static boolean alarm;
     static float myTrees;
+    static float closestDanger;
+    static int graceRounds;
 
-
-    public static void update(RobotInfo[] nearbyRobots, TreeInfo[] nearbyTrees) {
+    public static void init() {
         frame = rc.getRoundNum();
+        if (frame > 10) {
+            graceRounds = 0;
+            return;
+        }
+
+        MapLocation myLocation = rc.getLocation();
+        closestDanger = 1e10f;
+        float curDist;
+        for (MapLocation archonPos: Map.enemyArchonPos) {
+            curDist = archonPos.distanceTo(myLocation);
+            if (curDist < closestDanger) {
+                closestDanger = curDist;
+            }
+        }
+        graceRounds = (int) (closestDanger / RobotType.SCOUT.strideRadius) + 11;
+        System.out.println("grace rounds:" + graceRounds);
+    }
+
+    public static void update(RobotInfo[] nearbyRobots, TreeInfo[] nearbyTrees) throws GameActionException {
+        frame = rc.getRoundNum();
+        --graceRounds;
 
         BuildPlanner.nearbyRobots = nearbyRobots;
         BuildPlanner.nearbyTrees = nearbyTrees;
@@ -36,16 +61,36 @@ public class BuildPlanner {
         money = rc.getTeamBullets();
         nextEnemy = null;
         MapLocation myLocation = rc.getLocation();
+        boolean friendly;
+        closestDanger = 1e10f;
+        float curDist;
         for (RobotInfo r : nearbyRobots) {
-            if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
-                nearbyProtectors++;
+            friendly = r.team == rc.getTeam();
+            if (friendly) {
+                switch (r.type) {
+                    case LUMBERJACK:
+                    case SOLDIER:
+                        nearbyProtectors++;
+                        break;
+                    case GARDENER:
+                        nearbyGardeners++;
+                        break;
+                }
+                continue;
             }
-            if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.GARDENER)) {
-                nearbyGardeners++;
-            }
-            if (!r.getTeam().equals(rc.getTeam()) && (nextEnemy == null || nextEnemy.location.distanceTo(myLocation) > r.location.distanceTo(myLocation)) &&
-                    (r.type == RobotType.SCOUT || r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
-                nextEnemy = r;
+            nearbyEnemies++;
+            curDist = r.location.distanceTo(myLocation);
+            if (nextEnemy == null || closestDanger > curDist) {
+                switch (r.type) {
+                    case SCOUT:
+                    case LUMBERJACK:
+                    case SOLDIER:
+                    case TANK:
+                        nextEnemy = r;
+                        closestDanger = curDist;
+                        break;
+                }
+
             }
         }
         Team myTeam = rc.getTeam();
@@ -54,12 +99,14 @@ public class BuildPlanner {
                 nearbyBulletTrees++;
             }
         }
+        alarm = Radio.getAlarm();
         int ownCounts[] = Radio.countAllies();
         ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];
         ownLumberjacks = ownCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)];
         ownGardeners = ownCounts[Radio.typeToInt(RobotType.GARDENER)];
         int enemyCounts[] = Radio.countEnemies();
+        totalEnemies = enemyCounts[0] + enemyCounts[1] + enemyCounts[2] + enemyCounts[3] + enemyCounts[4] + enemyCounts[5];
         enemyScouts = enemyCounts[Radio.typeToInt(RobotType.SCOUT)];
         enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
@@ -68,13 +115,20 @@ public class BuildPlanner {
     }
 
     public static boolean buildTree() throws GameActionException {
-        return money > GameConstants.BULLET_TREE_COST && (/*!Radio.getAlarm() &&*/ myTrees * ownGardeners < frame / 100 + 1 || money > 100) && myTrees < MAX_TREES_PER_GARDENER;
+        if (myTrees >= MAX_TREES_PER_GARDENER || money < GameConstants.BULLET_TREE_COST) {
+            return false;
+        }
+        if (graceRounds > 40) {
+            return true;
+        }
+
+        return (nearbyProtectors > nearbyEnemies);
     }
 
 
     public static boolean hireGardener() throws GameActionException {
         money = rc.getTeamBullets();
-        boolean haveMoney = money > RobotType.GARDENER.bulletCost;
+        boolean haveMoney = money > ((nextEnemy == null) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
         if (!haveMoney) {
             return false;
         }
@@ -113,6 +167,7 @@ public class BuildPlanner {
         boolean canLumberjack = money > RobotType.LUMBERJACK.bulletCost;
         boolean canScout = money > RobotType.SCOUT.bulletCost;
         boolean rich = money > 160 && rc.getRoundNum() > 80;
+        boolean enemyWasScouted = totalEnemies > 2;
 
         if (nearbyProtectors > 4) return null; //dont overcrowd
 
@@ -127,20 +182,22 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("nearby trees: " + nearbyTrees.length);
 
 
-        boolean alarm = Radio.getAlarm();
         boolean needSoldiers = (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks)) || rich;
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));
         boolean needScouts = (ownScouts < 2 + ((ownLumberjacks + ownSoldiers) / 2)) || ownScouts < enemyScouts;
 
+        if (noScouts && canScout) {
+            return RobotType.SCOUT;
+        }
 
-        if (nextEnemy != null && nearbyProtectors < 1) { //in danger
+        if (nearbyProtectors < 1) { //in danger
             if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
             } else if (needSoldiers && canSoldier) {
                 return RobotType.SOLDIER;
-            } else if (nextEnemy.type == RobotType.SCOUT && canLumberjack) {
+            } else if (nextEnemy != null && nextEnemy.type == RobotType.SCOUT && canLumberjack) {
                 return (nearbyTrees.length < 7) ? RobotType.LUMBERJACK : RobotType.SCOUT;
             } else if (canSoldier) {
                 return RobotType.SOLDIER;
@@ -150,14 +207,11 @@ public class BuildPlanner {
         if (alarm && !rich && nextEnemy == null) return null;
 
 
-        if (noScouts && canScout) {
-            return RobotType.SCOUT;
-        }
-        if (needScouts && canScout) {
+        if (enemyWasScouted && needScouts && canScout) {
             return RobotType.SCOUT;
         }
 
-        if (needSoldiers && canSoldier) {
+        if (enemyWasScouted && needSoldiers && canSoldier) {
             return RobotType.SOLDIER;
         }
         if (needLumberJacks && canLumberjack) {

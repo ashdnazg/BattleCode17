@@ -24,7 +24,17 @@ public class Scout {
         for (int i = 0; i < visitedBroadcasts.length; i++) {
             visitedBroadcasts[i] = new MapLocation(0, 0);
         }
-        lastRandomLocation = map.archonPos[(int) (map.archonPos.length * rand())];
+
+        MapLocation myLocation = rc.getLocation();
+        float dist = 1e10f;
+        float curDist;
+        for (MapLocation archonPos: map.enemyArchonPos) {
+            curDist = archonPos.distanceTo(myLocation);
+            if (curDist < dist) {
+                lastRandomLocation = archonPos;
+                dist = curDist;
+            }
+        }
         lastCivContact = rc.getRoundNum();
     }
 

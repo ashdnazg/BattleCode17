@@ -58,10 +58,6 @@ public class Archon {
             MapLocation myLocation = rc.getLocation();
             RobotInfo[] nearbyRobots = map.sense();
 
-            boolean inDanger = rc.senseNearbyRobots(RobotType.ARCHON.sensorRadius, enemyTeam).length > 0;
-            boolean alarm = radio.getAlarm();
-            boolean rich = rc.getTeamBullets() > 200;
-
             TreeInfo[] trees = senseClosestTrees();
 
             if (myLocation.distanceTo(stuckLocation) > 6) {

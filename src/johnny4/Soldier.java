@@ -13,6 +13,9 @@ public class Soldier {
     final boolean isRoamer;
     MapLocation lastRandomLocation;
     RobotInfo lastEnemyInfo;
+    RobotInfo guardener = null;
+    int guardenerID;
+    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius - 5;
 
     public Soldier(RobotController rc) {
         this.rc = rc;
@@ -22,7 +25,37 @@ public class Soldier {
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
         this.isRoamer = rc.getID() % 2 == 0;
-        lastRandomLocation = map.archonPos[(int) (map.archonPos.length * rand())];
+
+        boolean hasGuardener = false;
+        for (RobotInfo ri : rc.senseNearbyRobots()) {
+            if (ri.getTeam().equals(rc.getTeam())) {
+                if (ri.type == RobotType.GARDENER) {
+                    guardener = ri;
+                    guardenerID = ri.ID;
+                }
+                if (ri.type == RobotType.LUMBERJACK) {
+                    hasGuardener = true;
+                }
+            }
+        }
+
+
+
+        float dist = 1e10f;
+        float curDist;
+        for (MapLocation archonPos: map.enemyArchonPos) {
+            curDist = archonPos.distanceTo(stuckLocation);
+            if (curDist < dist) {
+                lastRandomLocation = archonPos;
+                dist = curDist;
+            }
+        }
+
+
+        if (hasGuardener || dist < 20f) {
+            guardener = null;
+            guardenerID = 0;
+        }
     }
 
     public void run() {
@@ -64,13 +97,20 @@ public class Soldier {
             MapLocation nextEnemy = null;
             RobotInfo nextEnemyInfo = null;
             TreeInfo trees[] = senseClosestTrees();
+            guardener = null;
             for (RobotInfo r : nearbyRobots) {
+                if (guardenerID == r.ID) {
+                    guardener = r;
+                }
                 if (!r.getTeam().equals(rc.getTeam()) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) > r.location.distanceTo(myLocation) * r.type.strideRadius + (r.type == RobotType.ARCHON ? 10 : 0))) {
                     nextEnemy = r.location;
                     nextEnemyInfo = r;
                     enemyType = r.type;
                 }
+            }
+            if (guardener == null) {
+                guardenerID = 0;
             }
             if (nextEnemyInfo != null && lastEnemyInfo != null) {
                 nextEnemy = predict(nextEnemyInfo, lastEnemyInfo);
@@ -105,7 +145,6 @@ public class Soldier {
                 if (frame % 9 == 0) {
                     map.generateFarTargets(myLocation, 1000, 0);
                 }
-
             }
             Movement.init(nearbyRobots, trees, bullets);
             boolean hasMoved = false;
@@ -114,6 +153,16 @@ public class Soldier {
             int cnt3 = Clock.getBytecodeNum();
             int cnt4, cnt5, cnt6;
             cnt4 = cnt5 = cnt6 = 0;
+            if (guardener != null) {
+                if (myLocation.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
+                    movement.findPath(guardener.location, null); //protect your padawan
+                    hasMoved = true;
+                    if (Util.DEBUG) System.out.println("Returning to guardener");
+                }
+                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
+                    nextEnemy = null;
+                }
+            }
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
 
