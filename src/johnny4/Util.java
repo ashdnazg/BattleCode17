@@ -200,7 +200,7 @@ public class Util {
     static TreeInfo[] temp = new TreeInfo[8];
     static TreeInfo[] cache = new TreeInfo[0];
 
-    static TreeInfo[] senseBiggestTrees() {
+    static TreeInfo[] senseBiggestTrees() throws GameActionException {
         if (rc.getRoundNum() % 3 == 0 || cache.length == 0) {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
@@ -215,10 +215,13 @@ public class Util {
 
             for (int i = 0; i < len; i++) {
                 ti = trees[i];
-                if (ti.radius > 0.9 && cnt < maxCnt)
+                if (ti.radius > 0.9 && cnt < maxCnt) {
                     temp[cnt++] = ti;
-
-                if (ti.containedBullets > 0 || ti.containedRobot != null && cnt2 < maxCnt) {
+                }
+                if (ti.containedRobot != null) {
+                    Radio.requestTreeCut(ti);
+                }
+                if (ti.containedBullets > 0 && cnt2 < maxCnt) {
                     temp[cnt2++] = ti;
                 }
             }
@@ -238,14 +241,20 @@ public class Util {
     static TreeInfo[] temp2 = new TreeInfo[8];
     static TreeInfo[] cache2 = new TreeInfo[0];
 
-    static TreeInfo[] senseClosestTrees() {
-        if (rc.getRoundNum() % 3 == 0) {
+    static TreeInfo[] senseClosestTrees() throws GameActionException {
+        if (rc.getRoundNum() % 3 == 0 || cache2.length == 0) {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
+            TreeInfo ti;
             for (int i = 0; i < trees.length; i++) {
-                if (cnt >= temp2.length) break;
-                temp2[cnt++] = trees[i];
+                ti = trees[i];
+                if (cnt < temp2.length) {
+                    temp2[cnt++] = ti;
+                }
+                if (ti.containedRobot != null) {
+                    Radio.requestTreeCut(ti);
+                }
             }
             cache2 = new TreeInfo[cnt];
             System.arraycopy(temp2, 0, cache2, 0, cnt);

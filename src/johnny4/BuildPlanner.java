@@ -189,7 +189,7 @@ public class BuildPlanner {
         boolean needSoldiers = (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks)) || rich;
         boolean noScouts = ownScouts == 0;
 
-        boolean needLumberJacks = (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));
+        boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));
         boolean needScouts = (ownScouts < 2 + ((ownLumberjacks + ownSoldiers) / 2)) || ownScouts < enemyScouts;
 
         if (noScouts && canScout) {
@@ -197,7 +197,7 @@ public class BuildPlanner {
         }
 
         if (allOrNothing) {
-            if (ownSoldiers == 0) {
+            if (ownSoldiers < 2) {
                 return RobotType.SOLDIER;
             }
             if (ownLumberjacks == 0) {

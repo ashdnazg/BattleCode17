@@ -297,10 +297,6 @@ public class Scout {
                         if (Util.DEBUG)
                             System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
                     }
-                    if (t.containedRobot != null) {
-                        radio.requestTreeCut(t);
-                        //if (Util.DEBUG) System.out.println("Requesting christmas tree to be cut!");
-                    }
                     if (Clock.getBytecodesLeft() < 100) return;
                 }
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
