@@ -306,14 +306,19 @@ public class Lumberjack {
         if (rc.canStrike()) {
             int enemies, friendlies;
             enemies = friendlies = 0;
+            boolean madeContact = false;
             for (RobotInfo ri : nearbyRobots) {
                 if (ri.location.distanceTo(myLocation) < RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + ri.type.bodyRadius + 0.001f) {
                     if (ri.getTeam().equals(rc.getTeam())) {
                         friendlies += getWeight(ri.type);
                     } else {
                         enemies += getWeight(ri.type);
+                        madeContact = madeContact || ri.type != RobotType.SCOUT;
                     }
                 }
+            }
+            if (madeContact) {
+                Radio.reportContact();
             }
             if (1.1f * enemies > friendlies) {
                 rc.strike();

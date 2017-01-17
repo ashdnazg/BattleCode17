@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Radio {
 
-    //Integer 0:        Archon Counter
+    //Integer 0:        Contact boolean
     //Integer 1:        Enemy Counter
     //Integer 2:        Unit Counter
     //Integer 4-100:    Unit Info
@@ -500,6 +500,14 @@ public class Radio {
         return intToType((info & 0b00000000000000000000111000000000) >> 9);
     }
 
+
+    public static boolean getLandContact() throws GameActionException {
+        return rc.readBroadcast(0) != 0;
+    }
+
+    public static void reportContact() throws GameActionException {
+        rc.broadcast(0, 1);
+    }
 
     // returns the index, so you can mark it as cut later
     public static boolean requestTreeCut(TreeInfo ti) throws GameActionException {

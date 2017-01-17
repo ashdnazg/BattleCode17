@@ -262,9 +262,6 @@ public class Soldier {
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
         float bullets = rc.getTeamBullets();
-        if (enemyType == RobotType.ARCHON && bullets < 110) {
-            return false;
-        }
         if (enemyType == RobotType.SCOUT) {
             if (bullets < 110 && dist > 5.0f) {
                 return false;
@@ -282,6 +279,10 @@ public class Soldier {
                     return true;
                 }
             }
+            return false;
+        }
+        Radio.reportContact();
+        if (enemyType == RobotType.ARCHON && bullets < 110) {
             return false;
         }
         if (dist - radius < 1.51 + Math.max(0, bullets / 50f - 2) && rc.canFirePentadShot()) {

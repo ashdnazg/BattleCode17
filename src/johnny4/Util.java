@@ -217,12 +217,11 @@ public class Util {
                 ti = trees[i];
                 if (ti.radius > 0.9 && cnt < maxCnt) {
                     temp[cnt++] = ti;
+                } else if (ti.containedBullets > 0 && cnt2 < maxCnt) {
+                    temp[cnt2++] = ti;
                 }
                 if (ti.containedRobot != null) {
                     Radio.requestTreeCut(ti);
-                }
-                if (ti.containedBullets > 0 && cnt2 < maxCnt) {
-                    temp[cnt2++] = ti;
                 }
             }
             cache = new TreeInfo[cnt];
@@ -246,10 +245,12 @@ public class Util {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
+            int length = trees.length;
+            int maxCnt = temp2.length;
             TreeInfo ti;
-            for (int i = 0; i < trees.length; i++) {
+            for (int i = 0; i < length; i++) {
                 ti = trees[i];
-                if (cnt < temp2.length) {
+                if (cnt < maxCnt) {
                     temp2[cnt++] = ti;
                 }
                 if (ti.containedRobot != null) {
@@ -267,6 +268,40 @@ public class Util {
             }
         }
         return cache2;
+    }
+
+
+
+    static RobotInfo[] temp3 = new RobotInfo[8];
+    static RobotInfo[] cache3 = new RobotInfo[0];
+
+    static RobotInfo[] senseClosestEnemies() throws GameActionException {
+        int time = Clock.getBytecodeNum();
+        int cnt = 0;
+        RobotInfo robots[] = rc.senseNearbyRobots();
+        RobotInfo ri;
+
+        int len = robots.length;
+        int maxCnt = temp3.length;
+        int cnt2 = 0;
+        for (int i = 0; i < len; i++) {
+            ri = robots[i];
+            if (cnt < maxCnt) {
+                temp3[cnt++] = ri;
+            } else if (ri.type == RobotType.GARDENER && cnt2 < maxCnt / 2) {
+                temp3[cnt2++] = ri;
+            }
+        }
+        cache3 = new RobotInfo[cnt];
+        System.arraycopy(temp3, 0, cache3, 0, cnt);
+        time = Clock.getBytecodeNum() - time;
+        if (time > 300) {
+            if (Util.DEBUG) System.out.println("Sensing robots took " + time);
+        }
+        if (cache3.length >= temp3.length) {
+            if (Util.DEBUG) System.out.println("Reached maximum robots count");
+        }
+        return cache3;
     }
 
     /**
