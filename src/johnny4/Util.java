@@ -201,17 +201,26 @@ public class Util {
     static TreeInfo[] cache = new TreeInfo[0];
 
     static TreeInfo[] senseBiggestTrees() {
-        if (rc.getRoundNum() % 3 == 0) {
+        if (rc.getRoundNum() % 3 == 0 || cache.length == 0) {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
             if (trees.length > 50) {
                 trees = rc.senseNearbyTrees(4);
             }
-            for (int i = 0; i < trees.length; i++) {
-                if (cnt >= temp.length) break;
-                if (trees[i].radius > 0.9)
-                    temp[cnt++] = trees[i];
+            TreeInfo ti;
+            int len = trees.length;
+            int maxCnt = temp.length;
+            int cnt2 = 0;
+
+            for (int i = 0; i < len; i++) {
+                ti = trees[i];
+                if (ti.radius > 0.9 && cnt < maxCnt)
+                    temp[cnt++] = ti;
+
+                if (ti.containedBullets > 0 || ti.containedRobot != null && cnt2 < maxCnt) {
+                    temp[cnt2++] = ti;
+                }
             }
             cache = new TreeInfo[cnt];
             System.arraycopy(temp, 0, cache, 0, cnt);

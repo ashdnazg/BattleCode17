@@ -67,7 +67,7 @@ public class Scout {
             preTick();
             if (!initialized) {
                 isAggro = radio.countAllies(RobotType.SCOUT) >= 2 && rand() > 0.8f;
-                isShaker = radio.countAllies(RobotType.SCOUT) <= 2 && rand() > 0.0f || rand() < 0.2f;
+                isShaker = radio.countAllies(RobotType.SCOUT) <= 2;
                 initialized = true;
                 if (isAggro) {
                     Movement.MIN_ENEMY_DIST = 4.5f;
@@ -174,7 +174,16 @@ public class Scout {
 
 
             //Movement
-            if (Util.DEBUG) System.out.println("Starting movement " + Clock.getBytecodeNum());
+            if (Util.DEBUG)
+                System.out.println("Starting movement " + Clock.getBytecodeNum());
+            if (toShake == null && isShaker) {
+                for (TreeInfo t : trees) {
+                    if (t.getContainedBullets() > 1.5 * t.location.distanceTo(myLocation)) {
+                        toShake = t;
+                        break;
+                    }
+                }
+            }
             if (toShake != null) {
                 //if (Util.DEBUG) System.out.println("Shaking " + toShake.getLocation());
                 if (!hasMoved && !movement.findPath(toShake.getLocation(), null)) {
@@ -273,7 +282,7 @@ public class Scout {
                     return;
                 }
                 if (!hasFired && nextEnemy != null && !longRangeEnemy && nextEnemy.distanceTo(myLocation) < 3.5) {
-                    if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
+                    if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
                         hasFired = true;
                         rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                         Movement.lastLOS = frame;
@@ -293,14 +302,6 @@ public class Scout {
                         //if (Util.DEBUG) System.out.println("Requesting christmas tree to be cut!");
                     }
                     if (Clock.getBytecodesLeft() < 100) return;
-                }
-                if (toShake == null && isShaker) {
-                    for (TreeInfo t : trees) {
-                        if (t.getContainedBullets() > 1.5 * t.location.distanceTo(myLocation)) {
-                            toShake = t;
-                            break;
-                        }
-                    }
                 }
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
                     if (Util.DEBUG)

@@ -15,13 +15,13 @@ public class Lumberjack {
     Direction lastDirection = randomDirection();
     final float MIN_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
     RobotInfo guardener = null;
-    int guardenerID;
+    int guardenerID = -1;
     RobotInfo[] nearbyRobots = new RobotInfo[0];
     MapLocation lastRandomLocation;
     TreeInfo[] trees;
     boolean fakeTask = true;
     MapLocation myLocation;
-    final static float MIN_GUARDENER_DIST = RobotType.LUMBERJACK.sensorRadius - 5;
+    final static float MIN_GUARDENER_DIST = RobotType.LUMBERJACK.sensorRadius;
 
     public Lumberjack(RobotController rc) {
         this.rc = rc;
@@ -37,7 +37,7 @@ public class Lumberjack {
                     guardener = ri;
                     guardenerID = ri.ID;
                 }
-                if (ri.type == RobotType.LUMBERJACK) {
+                if (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER) {
                     hasGuardener = true;
                 }
             }
@@ -54,9 +54,9 @@ public class Lumberjack {
             }
         }
 
-        if (hasGuardener || dist < 20f) {
+        if (hasGuardener || dist < 45f) {
             guardener = null;
-            guardenerID = 0;
+            guardenerID = -1;
         }
     }
 
@@ -104,17 +104,29 @@ public class Lumberjack {
             float enemyRadius = 1;
             boolean longrange = false;
             guardener = null;
+            boolean hasGuardener = false;
             for (RobotInfo ri : nearbyRobots) {
-                if (guardenerID == ri.ID) {
-                    guardener = ri;
+                if (ri.getTeam().equals(rc.getTeam())) {
+                    if (guardenerID == ri.ID) {
+                        guardener = ri;
+                    } else
+
+                    if (ri.type == RobotType.GARDENER) {
+                        guardener = ri;
+                        guardenerID = ri.ID;
+                    }
+                    if (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER) {
+                        hasGuardener = true;
+                    }
                 }
                 if (ri.getTeam().equals(rc.getTeam().opponent()) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
                     nextEnemy = ri.location;
                     enemyRadius = ri.type.bodyRadius;
                 }
             }
-            if (guardener == null) {
-                guardenerID = 0;
+            if (guardener == null || hasGuardener) {
+                guardenerID = -1;
+                guardener = null;
             }
             if (nextEnemy != null && fakeTask) {
                 currentTreeTarget = null;
@@ -158,7 +170,7 @@ public class Lumberjack {
                     hasMoved = true;
                     if (Util.DEBUG) System.out.println("Returning to guardener");
                 }
-                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
+                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > RobotType.LUMBERJACK.sensorRadius) {
                     nextEnemy = null;
                 }
             }

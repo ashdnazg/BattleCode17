@@ -30,6 +30,7 @@ public class BuildPlanner {
     static float myTrees;
     static float closestDanger;
     static int graceRounds;
+    static float startArchonDist;
 
     public static void init() {
         frame = rc.getRoundNum();
@@ -39,15 +40,15 @@ public class BuildPlanner {
         }
 
         MapLocation myLocation = rc.getLocation();
-        closestDanger = 1e10f;
+        startArchonDist = 1e10f;
         float curDist;
         for (MapLocation archonPos: Map.enemyArchonPos) {
             curDist = archonPos.distanceTo(myLocation);
-            if (curDist < closestDanger) {
-                closestDanger = curDist;
+            if (curDist < startArchonDist) {
+                startArchonDist = curDist;
             }
         }
-        graceRounds = (int) (closestDanger / RobotType.SCOUT.strideRadius) + 11;
+        graceRounds = (int) (startArchonDist / RobotType.SCOUT.strideRadius) + 11;
         System.out.println("grace rounds:" + graceRounds);
     }
 
@@ -168,8 +169,9 @@ public class BuildPlanner {
         boolean canScout = money > RobotType.SCOUT.bulletCost;
         boolean rich = money > 160 && rc.getRoundNum() > 80;
         boolean enemyWasScouted = totalEnemies > 2;
+        boolean allOrNothing = frame < 200 && startArchonDist < 40;
 
-        if (nearbyProtectors > 4) return null; //dont overcrowd
+        //if (nearbyProtectors > 4) return null; //dont overcrowd
 
         if (Util.DEBUG) System.out.println("own scouts: " + ownScouts);
         if (Util.DEBUG) System.out.println("own soldiers: " + ownSoldiers);
@@ -192,7 +194,17 @@ public class BuildPlanner {
             return RobotType.SCOUT;
         }
 
-        if (nearbyProtectors < 1) { //in danger
+        if (allOrNothing) {
+            if (ownSoldiers == 0) {
+                return RobotType.SOLDIER;
+            }
+            if (ownLumberjacks == 0) {
+                return RobotType.LUMBERJACK;
+            }
+        }
+
+
+        if (allOrNothing || nearbyProtectors < 1) { //in danger
             if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
             } else if (needSoldiers && canSoldier) {
