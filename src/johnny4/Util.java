@@ -10,7 +10,7 @@ public class Util {
 
     static RobotController rc;
     static Random rnd;
-    static final boolean DEBUG = false;
+    static final boolean DEBUG = true;
 
     /**
      * Returns a random Direction

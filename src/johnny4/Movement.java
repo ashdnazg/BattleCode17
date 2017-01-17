@@ -254,6 +254,7 @@ public class Movement {
             moveDir = fireDir.rotateLeftDegrees((bugdir ? 1.001f : -1.001f) * MIN_MOVE_TO_FIRE_ANGLE);
 
         }
+        if (Util.DEBUG) rc.setIndicatorLine(myLocation, target, 0, 0, 255);
         if (robotType != RobotType.SCOUT && olddist > 0.9 * strideDistance) {
             float t, bestval = 10000f;
             TreeInfo best = null;
@@ -266,7 +267,6 @@ public class Movement {
                     }
                 }
             }
-            if (Util.DEBUG) rc.setIndicatorLine(myLocation, target, 0, 0, 255);
             if (best != null) {
                 Direction toTree = myLocation.directionTo(best.location);
                 float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));

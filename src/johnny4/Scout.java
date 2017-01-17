@@ -259,7 +259,7 @@ public class Scout {
                             myLocation = rc.getLocation();
                         }
                     }
-                    if (nextCivilianInfo.getID() < myID) {
+                    if (!longRangeCiv && nextCivilianInfo.getID() < myID) {
                         dist = Math.min(nextCivilian.distanceTo(myLocation), nextCivilianInfo.location.distanceTo(myLocation)) - civSize;
                     }
                     if (!longRangeCiv && dist < attackDistance) {
