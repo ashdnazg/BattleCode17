@@ -17,6 +17,8 @@ public class Soldier {
     int guardenerID = -1;
     int lastContactWithGuardener = -1000;
     final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 5;
+    final static float MIN_SCOUT_SHOOT_RANGE = 5.0f;
+
 
     public Soldier(RobotController rc) {
         this.rc = rc;
@@ -121,7 +123,7 @@ public class Soldier {
                     enemyType = ri.type;
                 }
             }
-            if ((frame - lastContactWithGuardener) > 40 || hasGuardener) {
+            if ((frame - lastContactWithGuardener) > 40 || (frame == lastContactWithGuardener && hasGuardener)) {
                 guardenerID = -1;
                 guardener = null;
             }
@@ -175,7 +177,7 @@ public class Soldier {
                     hasMoved = true;
                     if (Util.DEBUG) System.out.println("Returning to guardener");
                 }
-                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
+                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST && nextEnemy.distanceTo(myLocation) > MIN_SCOUT_SHOOT_RANGE) {
                     nextEnemy = null;
                 }
             }
