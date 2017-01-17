@@ -301,7 +301,6 @@ public class Movement {
             max = 0.9f;
         }
         nloc = myLocation.add(dir, rc.getType().strideRadius);
-        nloc2 = myLocation.add(dir, rc.getType().strideRadius / 2);
         for (int i = 0; i < threatsLen; i++) {
 
             threat = threats[i];
@@ -321,11 +320,6 @@ public class Movement {
                 if ((b1.x - nloc.x) * (b1.x - nloc.x) + (b1.y - nloc.y) * (b1.y - nloc.y) < br ||
                         (b2.x - nloc.x) * (b2.x - nloc.x) + (b2.y - nloc.y) * (b2.y - nloc.y) < br ||
                         (b3.x - nloc.x) * (b3.x - nloc.x) + (b3.y - nloc.y) * (b3.y - nloc.y) < br) {
-                    return 1;
-                }
-                if ((b1.x - nloc2.x) * (b1.x - nloc2.x) + (b1.y - nloc2.y) * (b1.y - nloc2.y) < br ||
-                        (b2.x - nloc2.x) * (b2.x - nloc2.x) + (b2.y - nloc2.y) * (b2.y - nloc2.y) < br ||
-                        (b3.x - nloc2.x) * (b3.x - nloc2.x) + (b3.y - nloc2.y) * (b3.y - nloc2.y) < br) {
                     return 1;
                 }
             }
