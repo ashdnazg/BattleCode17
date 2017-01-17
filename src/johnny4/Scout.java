@@ -80,7 +80,7 @@ public class Scout {
             Movement.MIN_ENEMY_LUMBERJACK_DIST = 4.5f;
         }
         if (!isAggro) {
-            Movement.MIN_ENEMY_DIST = 3.5f;
+            Movement.MIN_ENEMY_DIST = 4.5f;
             Movement.MIN_ENEMY_SCOUT_DIST = 3.5f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius;
         }
@@ -121,7 +121,7 @@ public class Scout {
             movement.init(nearbyRobots, trees, bullets);
 
             //Target selection
-            if (lastCivilianInfo != null && lastCivilianInfo.type == RobotType.SCOUT && lastCivilian.distanceTo(myLocation) < 5 && lastHP > rc.getHealth()){
+            if (lastCivilianInfo != null && lastCivilianInfo.type == RobotType.SCOUT && lastCivilian.distanceTo(myLocation) < 5 && lastHP > rc.getHealth() && lastHP < 0.7 * RobotType.SCOUT.maxHealth){
                 chaseAllScouts = false; //this aint working out
                 stoppedScoutAttack = frame;
                 if (DEBUG) System.out.println("Stopping scout attack");
