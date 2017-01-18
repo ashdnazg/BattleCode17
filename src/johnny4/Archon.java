@@ -118,6 +118,25 @@ public class Archon {
                 }else{
                     if (Util.DEBUG) System.out.println("Cant build Gardener here");
                 }
+
+            }
+            Direction dir;
+            boolean b = false;
+            for (TreeInfo t : trees) {
+                if (t.containedBullets > 0) {
+                    dir = myLocation.directionTo(t.location);
+                    if (rc.canMove(dir)) {
+                        rc.move(dir);
+                        b = true;
+                    }
+                    if (rc.canShake(t.location)) {
+                        rc.shake(t.location);
+                        b = true;
+                    }
+                    if (b) {
+                        break;
+                    }
+                }
             }
 
 
