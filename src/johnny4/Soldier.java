@@ -77,6 +77,8 @@ public class Soldier {
     float circleDir = 0f;
     MapLocation stuckLocation;
     int stuckSince;
+    MapLocation enemyStuckLocation = new MapLocation(0,0);
+    int enemyStuckSince;
     BulletInfo bullets[];
     MapLocation nextLumberjack;
     boolean evasionMode = true;
@@ -106,6 +108,7 @@ public class Soldier {
             RobotInfo nextEnemyInfo = null;
             TreeInfo trees[] = senseClosestTrees();
             boolean hasGuardener = false;
+            TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
                 if (ri.getTeam().equals(rc.getTeam())) {
                     if (guardenerID == ri.ID) {
@@ -125,6 +128,9 @@ public class Soldier {
                     nextEnemy = ri.location;
                     nextEnemyInfo = ri;
                     enemyType = ri.type;
+                    if (enemyType == RobotType.SCOUT){
+                        hideTree = rc.canSenseLocation(ri.location) ? rc.senseTreeAtLocation(ri.location) : null;
+                    }
                 }
             }
             if ((frame - lastContactWithGuardener) > 40 || (frame == lastContactWithGuardener && hasGuardener)) {
@@ -139,6 +145,10 @@ public class Soldier {
             if (myLocation.distanceTo(stuckLocation) > 7) {
                 stuckSince = frame;
                 stuckLocation = myLocation;
+            }
+            if (nextEnemyInfo == null || nextEnemyInfo.location.distanceTo(enemyStuckLocation) > 4.2) {
+                enemyStuckSince = frame;
+                enemyStuckLocation = myLocation;
             }
             if (rc.getRoundNum() - stuckSince > 69) {
                 if (Util.DEBUG) System.out.println("Stuck soldier reporting trees");
@@ -226,7 +236,11 @@ public class Soldier {
                 } else {
                     if (!hasMoved) {
                         cnt5 = Clock.getBytecodeNum();
-                        if (movement.findPath(longrange ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), nextEnemyInfo.getRadius() + 1.001f), fireDir)) {
+                        MapLocation gotopos = longrange ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), nextEnemyInfo.getRadius() + 1.001f);
+                        if (hideTree != null && nextEnemyInfo != null && frame - enemyStuckSince > 7 && hideTree.location.distanceTo(myLocation) - hideTree.radius < nextEnemyInfo.location.distanceTo(myLocation) - nextEnemyInfo.type.bodyRadius){
+                            gotopos = hideTree.location.add(hideTree.location.directionTo(nextEnemyInfo.location), hideTree.radius + 1.001f);
+                        }
+                        if (movement.findPath(gotopos, fireDir)) {
                             myLocation = rc.getLocation();
                         }
                         hasMoved = true;
