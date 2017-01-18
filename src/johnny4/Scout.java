@@ -87,12 +87,12 @@ public class Scout {
         isAggro = value;
         if (isAggro) {
             Movement.MIN_ENEMY_DIST = 5.5f;
-            Movement.MIN_ENEMY_SCOUT_DIST = 4.5f;
+            Movement.MIN_ENEMY_SCOUT_DIST = 0f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = 4.5f;
         }
         if (!isAggro) {
             Movement.MIN_ENEMY_DIST = 5.5f;
-            Movement.MIN_ENEMY_SCOUT_DIST = 3.5f;
+            Movement.MIN_ENEMY_SCOUT_DIST = 0f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius;
         }
     }
