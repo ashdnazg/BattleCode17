@@ -83,13 +83,23 @@ public class Tank {
             }
             float dist = 10000f;
             if (nextEnemy != null) {
+                dist = nextEnemy.distanceTo(myLocation);
                 movement.findPath(nextEnemy, null);
                 if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
                 if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius) && !myLocation.equals(nextEnemy)) {
                     if (best != null && best.type != RobotType.SCOUT) {
                         Radio.reportContact();
                     }
-                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                    if (dist < 4.51 + Math.max(0, rc.getTeamBullets() / 50f - 2) && rc.canFirePentadShot()) {
+                        if (Util.DEBUG) System.out.println("Firing pentad");
+                        rc.firePentadShot(myLocation.directionTo(nextEnemy));
+                    } else if (dist < 5.61 + Math.max(0,  rc.getTeamBullets() / 50f - 2) && rc.canFireTriadShot()) {
+                        if (Util.DEBUG) System.out.println("Firing triad");
+                        rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+                    } else {
+                        if (Util.DEBUG) System.out.println("Firing single bullet");
+                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                    }
                     if (Util.DEBUG) System.out.println("Fire!");
                 }
             } else {

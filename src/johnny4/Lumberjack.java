@@ -21,7 +21,8 @@ public class Lumberjack {
     TreeInfo[] trees;
     boolean fakeTask = true;
     MapLocation myLocation;
-    final static float MIN_GUARDENER_DIST = RobotType.LUMBERJACK.sensorRadius;
+    final static float MIN_GUARDENER_DIST = RobotType.LUMBERJACK.sensorRadius + 5;
+    final static float MIN_SCOUT_SHOOT_RANGE = 5.0f;
 
     public Lumberjack(RobotController rc) {
         this.rc = rc;
@@ -46,7 +47,7 @@ public class Lumberjack {
         myLocation = rc.getLocation();
         float dist = 1e10f;
         float curDist;
-        for (MapLocation archonPos: map.enemyArchonPos) {
+        for (MapLocation archonPos : map.enemyArchonPos) {
             curDist = archonPos.distanceTo(myLocation);
             if (curDist < dist) {
                 lastRandomLocation = archonPos;
@@ -109,9 +110,7 @@ public class Lumberjack {
                 if (ri.getTeam().equals(rc.getTeam())) {
                     if (guardenerID == ri.ID) {
                         guardener = ri;
-                    } else
-
-                    if (ri.type == RobotType.GARDENER) {
+                    } else if (ri.type == RobotType.GARDENER) {
                         guardener = ri;
                         guardenerID = ri.ID;
                     }
@@ -159,10 +158,11 @@ public class Lumberjack {
             boolean hasStriked = tryStrike();
             boolean hasChopped = false;
             boolean hasMoved = false;
-            if (Util.DEBUG) System.out.println("STATUS enemy: " + nextEnemy + " tree: " + currentTreeTarget + " alarm: " + alarm);
+            if (Util.DEBUG)
+                System.out.println("STATUS enemy: " + nextEnemy + " tree: " + currentTreeTarget + " alarm: " + alarm);
 
 
-            if (longrange && !hasChopped) hasChopped = tryChop();
+            if ((longrange || nextEnemy == null || nextEnemy.distanceTo(myLocation) > 5) && !hasChopped) hasChopped = tryChop();
 
             if (guardener != null) {
                 if (myLocation.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
@@ -170,7 +170,7 @@ public class Lumberjack {
                     hasMoved = true;
                     if (Util.DEBUG) System.out.println("Returning to guardener");
                 }
-                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > RobotType.LUMBERJACK.sensorRadius) {
+                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST && nextEnemy.distanceTo(myLocation) > MIN_SCOUT_SHOOT_RANGE) {
                     nextEnemy = null;
                 }
             }
@@ -261,6 +261,11 @@ public class Lumberjack {
                 }
                 hasMoved = true;
             }
+            if (!hasMoved && guardener != null) {
+                movement.findPath(guardener.location, null); //protect your padawan
+                hasMoved = true;
+                if (Util.DEBUG) System.out.println("Idle, Returning to guardener");
+            }
             //try to strike again
             if (!hasStriked && !longrange) hasStriked = tryStrike();
             if (!hasChopped) hasChopped = tryChop();
@@ -270,7 +275,8 @@ public class Lumberjack {
             }
 
             if (rc.getRoundNum() - frame > 0 && !longrange) {
-                if (Util.DEBUG) System.out.println("Lumberjack took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
+                if (Util.DEBUG)
+                    System.out.println("Lumberjack took " + (rc.getRoundNum() - frame) + " frames at " + frame + " using longrange " + longrange);
             }
 
         } catch (

@@ -137,6 +137,7 @@ public class Gardener {
             if (Util.DEBUG) System.out.println("gardener prepath: " + Clock.getBytecodeNum());
             // Trees
 
+
             movement.init(nearbyRobots, trees, bullets);
             boolean hasMoved = false;
             if (frame % 9 == 0) {
@@ -151,6 +152,10 @@ public class Gardener {
                         if (t.location.distanceTo(myLocation) < 5 || treeloc != null && t.location.distanceTo(treeloc) < 4) {
                             radio.requestTreeCut(t);
                         }
+                    }
+                    if (Clock.getBytecodesLeft() < 5000) {
+                        if (Util.DEBUG) System.out.println("Aborting gardener");
+                        return;
                     }
                     if (treeloc != null) {
                         MapLocation walkloc = grid.getNearestWalkableLocation(treeloc);

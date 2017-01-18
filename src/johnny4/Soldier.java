@@ -17,7 +17,8 @@ public class Soldier {
     int guardenerID = -1;
     int lastContactWithGuardener = -1000;
     final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 5;
-    final static float MIN_SCOUT_SHOOT_RANGE = 5.0f;
+    final static float MIN_SCOUT_SHOOT_RANGE = 6.5f;
+    final static float MIN_ARCHON_BULLETS = 110f;
 
 
     public Soldier(RobotController rc) {
@@ -79,7 +80,9 @@ public class Soldier {
     BulletInfo bullets[];
     MapLocation nextLumberjack;
     boolean evasionMode = true;
-    final float MIN_EVASION_DIST = 5f;
+    final float MIN_EVASION_DIST = 8f;
+
+    float money;
 
     protected void tick() {
         try {
@@ -87,6 +90,7 @@ public class Soldier {
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
+            money = rc.getTeamBullets();
             bullets = rc.senseNearbyBullets();
             RobotInfo nearbyRobots[] = null;
             RobotType enemyType = RobotType.SOLDIER;
@@ -116,7 +120,7 @@ public class Soldier {
                         hasGuardener = true;
                     }
                 }
-                if (!ri.getTeam().equals(rc.getTeam()) &&
+                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) > ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0))) {
                     nextEnemy = ri.location;
                     nextEnemyInfo = ri;
@@ -153,7 +157,11 @@ public class Soldier {
             if (nextEnemy == null) {
                 longrange = true;
                 if (Util.DEBUG) System.out.println("Using long range target");
-                nextEnemy = map.getTarget(0, guardener == null ? myLocation : guardener.location);
+                nextEnemy = map.getTarget(1, guardener == null ? myLocation : guardener.location);
+                if (nextEnemy == null){
+                    if (Util.DEBUG) System.out.println("Using long range target fallback");
+                    nextEnemy = map.getTarget(0, guardener == null ? myLocation : guardener.location);
+                }
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
                 }
@@ -177,7 +185,7 @@ public class Soldier {
                     hasMoved = true;
                     if (Util.DEBUG) System.out.println("Returning to guardener");
                 }
-                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST && nextEnemy.distanceTo(myLocation) > MIN_SCOUT_SHOOT_RANGE) {
+                if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST && (longrange ? nextEnemy.distanceTo(myLocation) : nextEnemyInfo.location.distanceTo(myLocation)) > MIN_SCOUT_SHOOT_RANGE) {
                     nextEnemy = null;
                 }
             }
@@ -186,7 +194,7 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                float minfiredist = 10f / enemyType.strideRadius + 2 + 3 * (int) (rc.getTeamBullets() / 150);
+                float minfiredist = 10f / enemyType.strideRadius + 2 + 3 * (int) (money / 150);
                 if (!hasFired && evasionMode) {
                     if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
@@ -199,12 +207,12 @@ public class Soldier {
                         if (Util.DEBUG) System.out.println("No LOS");
                     }
                 }
-                if (enemyType != RobotType.SOLDIER || (rc.getTeamBullets() > 50 && evasionMode)) {
+                if (enemyType != RobotType.SOLDIER || (money > 50 && evasionMode)) {
                     if (Util.DEBUG) System.out.println("Soldier entering aggression mode");
                     movement.evadeBullets = false;
                     evasionMode = false;
                 }
-                if (enemyType != RobotType.SCOUT && rc.getTeamBullets() < 10 && !evasionMode) {
+                if (enemyType != RobotType.SCOUT && money < 10 && !evasionMode) {
                     if (Util.DEBUG) System.out.println("Soldier entering evasion mode");
                     evasionMode = true;
                     movement.evadeBullets = true;
@@ -218,7 +226,7 @@ public class Soldier {
                 } else {
                     if (!hasMoved) {
                         cnt5 = Clock.getBytecodeNum();
-                        if (movement.findPath(nextEnemy, fireDir)) {
+                        if (movement.findPath(longrange ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), nextEnemyInfo.getRadius() + 1.001f), fireDir)) {
                             myLocation = rc.getLocation();
                         }
                         hasMoved = true;
@@ -263,9 +271,8 @@ public class Soldier {
     boolean tryFire(MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
-        float bullets = rc.getTeamBullets();
         if (enemyType == RobotType.SCOUT) {
-            if (bullets < 110 && dist > 5.0f) {
+            if (money < 110 && dist > 5.0f) {
                 return false;
             } else {
                 if (rc.canFirePentadShot()) {
@@ -284,14 +291,14 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if (enemyType == RobotType.ARCHON && bullets < 110) {
+        if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS) {
             return false;
         }
-        if (dist - radius < 1.51 + Math.max(0, bullets / 50f - 2) && rc.canFirePentadShot()) {
+        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (dist - radius < 2.11 + Math.max(0, bullets / 50f - 2) && rc.canFireTriadShot()) {
+        } else if (dist - radius < 2.41 + Math.max(0, money / 50f - 2) && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;

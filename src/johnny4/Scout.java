@@ -64,12 +64,14 @@ public class Scout {
     int rollingBroadcastIndex = 0;
     int lastCivContact = 0;
     int stoppedScoutAttack = 0;
+    int attackStartTime = 100000;
+    double initialHP = 100000;
     final int myID;
 
 
     float circleDir = 0f;
 
-    void setAggro(boolean value){
+    void setAggro(boolean value) {
         if (isAggro == value) return;
 
         if (DEBUG) System.out.println("Converting to aggro " + value);
@@ -95,7 +97,9 @@ public class Scout {
                 initialized = true;
             }
             if (Util.DEBUG)
-                System.out.println("This scout is shaker: " + isShaker + ", roamer: " + isRoamer + " and aggro: " + isAggro);
+                System.out.println("This scout is shaker: " + isShaker + ", roamer: " + isRoamer + " and aggro: " + isAggro + " scouttacker: " + chaseAllScouts);
+            if (Util.DEBUG)
+                System.out.println("mindist: " + Movement.MIN_ENEMY_DIST);
             int frame = rc.getRoundNum();
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
@@ -109,6 +113,8 @@ public class Scout {
             boolean longRangeCiv = false;
             boolean longRangeEnemy = false;
             int nearbyAllies = 0;
+            int nearbyAlliedGardeners = 0;
+            int nearbyAlliedFighters = 0;
             if (frame - lastCivContact > 90 && !isAggro) {
                 setAggro(true);
             }
@@ -121,12 +127,28 @@ public class Scout {
             movement.init(nearbyRobots, trees, bullets);
 
             //Target selection
-            if (lastCivilianInfo != null && lastCivilianInfo.type == RobotType.SCOUT && lastCivilian.distanceTo(myLocation) < 5 && lastHP > rc.getHealth() && lastHP < 0.7 * RobotType.SCOUT.maxHealth){
+            for (RobotInfo r : nearbyRobots) {
+
+                RobotType ut = r.getType();
+                if (r.getTeam().equals(rc.getTeam())) {
+                    nearbyAllies++;
+                    if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK) && r.moveCount + r.attackCount > 0 && r.location.distanceTo(myLocation) < 16) {
+                        nearbyAlliedFighters++;
+                    }
+                    if ((ut == RobotType.GARDENER)) {
+                        nearbyAlliedGardeners++;
+                    }
+                }
+            }
+            boolean mustProtectGardener = nearbyAlliedGardeners > 0 && nearbyAlliedFighters <= 0;
+            if (DEBUG) System.out.println("nearbyAlliedGardeners: " + nearbyAlliedGardeners);
+            if (DEBUG) System.out.println("nearbyAlliedFighters: " + nearbyAlliedFighters);
+            if (lastCivilianInfo != null && lastCivilianInfo.type == RobotType.SCOUT && lastCivilian.distanceTo(myLocation) < 5 && lastHP > rc.getHealth() && lastHP < 0.7 * RobotType.SCOUT.maxHealth) {
                 chaseAllScouts = false; //this aint working out
                 stoppedScoutAttack = frame;
                 if (DEBUG) System.out.println("Stopping scout attack");
             }
-            if (!chaseAllScouts && frame - stoppedScoutAttack > 100 && lastHP > 0.5 * RobotType.SCOUT.maxHealth){
+            if (!chaseAllScouts && (frame - stoppedScoutAttack > 100 && lastHP > 0.5 * RobotType.SCOUT.maxHealth || mustProtectGardener)) {
                 chaseAllScouts = true;
                 if (DEBUG) System.out.println("Restarting scout attack");
             }
@@ -134,7 +156,7 @@ public class Scout {
 
                 RobotType ut = r.getType();
                 if (!r.getTeam().equals(rc.getTeam())) {
-                    if ((ut == RobotType.GARDENER || isAggro && ut != RobotType.ARCHON || ut == RobotType.SCOUT && (r.ID < myID || chaseAllScouts)) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
+                    if ((ut == RobotType.GARDENER || isAggro && ut != RobotType.ARCHON || r.getHealth() < 10 && ut != RobotType.SCOUT || ut == RobotType.SCOUT && (chaseAllScouts) && nearbyAlliedFighters <= 0) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
                         nextCivilian = r.location;
                         nextCivilianInfo = r;
                         civMinDist = (lastCivilian != null && r.location.distanceTo(lastCivilian) < 3) ? 0f : (r.location.distanceTo(myLocation));
@@ -144,16 +166,25 @@ public class Scout {
                         nextEnemy = r.location;
                         nextEnemyInfo = r;
                     }
-                } else {
-                    nearbyAllies++;
                 }
             }
-            if (lastCivilianInfo != null && (nextCivilian == null || lastCivilianInfo.ID != nextCivilianInfo.ID)){
+            if (lastCivilianInfo != null && (nextCivilian == null || lastCivilianInfo.ID != nextCivilianInfo.ID)) {
                 setAggro(!isAggro); //revert pathfinding constants
                 setAggro(!isAggro);
             }
-            if (nextCivilianInfo != null && nextCivilianInfo.type == RobotType.SCOUT){
+            if (nextCivilianInfo != null && (lastCivilianInfo == null || lastCivilianInfo.ID != nextCivilianInfo.ID)) {
+                if (nextCivilianInfo != null) {
+                    attackStartTime = frame;
+                    initialHP = nextCivilianInfo.health;
+                }
+            }
+            if (nextCivilianInfo != null && nextCivilianInfo.type == RobotType.SCOUT) {
                 Movement.MIN_ENEMY_SCOUT_DIST = 0;
+                if (frame - attackStartTime > 20 && (initialHP - nextCivilianInfo.health) < 0.5 * (frame - attackStartTime)) {
+                    if (Util.DEBUG) System.out.println("Attack ineffective ");
+                    chaseAllScouts = false;
+                    stoppedScoutAttack = frame;
+                }
             }
             if (nextCivilian == null) {
                 longRangeCiv = true;
@@ -168,7 +199,7 @@ public class Scout {
                 //if (nextCivilian == null) nextCivilian = map.getTarget(3, myLocation);
             } else {
                 lastCivContact = frame;
-                if (rand() < 0.05 && isAggro) {
+                if (rand() < 0.01 && isAggro) {
                     setAggro(false);
                 }
             }
@@ -213,15 +244,17 @@ public class Scout {
             if (toShake == null && isShaker) {
                 for (TreeInfo t : trees) {
                     if (t.getContainedBullets() > 1.5 * t.location.distanceTo(myLocation)) {
+                        if (DEBUG) System.out.println("Added tree at " + t.location + " which contains " + t.containedBullets + " bullets");
                         toShake = t;
                         break;
                     }
                 }
             }
             if (toShake != null) {
-                //if (Util.DEBUG) System.out.println("Shaking " + toShake.getLocation());
+                if (Util.DEBUG) System.out.println("Shaking " + toShake.getLocation());
+                boolean clearShake = false;
                 if (!hasMoved && !movement.findPath(toShake.getLocation(), null)) {
-                    toShake = null;
+                    clearShake = true;
                 } else {
                     hasMoved = true;
                     myLocation = rc.getLocation();
@@ -229,7 +262,12 @@ public class Scout {
                 if (toShake != null && rc.canShake(toShake.getID())) {
                     rc.shake(toShake.getID());
                     if (Util.DEBUG) System.out.println("Shaken " + toShake.getLocation());
+                    clearShake = true;
+                }
+                if (clearShake) {
                     toShake = null;
+                    cache = new TreeInfo[0];
+                    cache2 = new TreeInfo[0];
                 }
             }
             boolean hasFired = longRangeCiv || cantfire; //Don't shoot at units outside vision
@@ -244,8 +282,11 @@ public class Scout {
                     float attackDistance = 3.3f; //Distance from which to start firing at enemies
                     float dist = nextCivilian.distanceTo(myLocation) - civSize;
                     if (!longRangeCiv) {
+                        if (Util.DEBUG) System.out.println("Enemy at " + nextCivilianInfo.location);
                         if (nextCivilianInfo.type == RobotType.SCOUT) {
                             attackDistance = 1.05f;
+                        }else{
+                            attackDistance = 5f;
                         }
                         if (nextCivilianInfo.moveCount <= 0) {
                             attackDistance += 4;
@@ -255,11 +296,11 @@ public class Scout {
                     if (dist > attackDistance || longRangeCiv) {
                         if (!hasMoved && !movement.findPath(longRangeCiv ? nextCivilian : nextCivilianInfo.location.add(nextCivilianInfo.location.directionTo(myLocation), 2.005f), null)) {
                         } else {
-                            hasMoved = true;
                             myLocation = rc.getLocation();
                         }
+                        hasMoved = true;
                     }
-                    if (!longRangeCiv && nextCivilianInfo.getID() < myID) {
+                    if (!longRangeCiv/* && nextCivilianInfo.getID() < myID*/) {
                         dist = Math.min(nextCivilian.distanceTo(myLocation), nextCivilianInfo.location.distanceTo(myLocation)) - civSize;
                     }
                     if (!longRangeCiv && dist < attackDistance) {
@@ -274,7 +315,7 @@ public class Scout {
                                 if (Util.DEBUG) System.out.println("No LOS");
                             }
                         }
-                        if (!hasMoved && !longRangeCiv) { //Try to hide behind tree
+                        if (!hasMoved && !longRangeCiv && nextCivilianInfo.type != RobotType.SCOUT) { //Try to hide behind tree
                             TreeInfo best = null;
                             float mindist = 100000;
                             for (TreeInfo ti : trees) {
@@ -286,6 +327,7 @@ public class Scout {
                             if (mindist < attackDistance - nextCivilianInfo.moveCount * nextCivilianInfo.type.strideRadius) {
                                 MapLocation nextDanger = nextEnemy == null ? nextCivilian : nextEnemy;
                                 MapLocation pos = best.location.add(best.location.directionTo(nextDanger), best.radius - RobotType.SCOUT.bodyRadius - GameConstants.BULLET_SPAWN_OFFSET / 2);
+                                if (DEBUG) System.out.println("Going into tree");
                                 if (myLocation.equals(pos)) {
                                     hasMoved = true;
                                 } else if (movement.findPath(pos, fireDir)) {
@@ -339,6 +381,11 @@ public class Scout {
                 for (TreeInfo t : trees) {
                     if (t.getContainedBullets() > 0 && rc.canShake(t.location)) {
                         rc.shake(t.location);
+                        if (toShake != null && t.ID == toShake.ID){
+                            toShake = null;
+                            cache = new TreeInfo[0];
+                            cache2 = new TreeInfo[0];
+                        }
                         if (Util.DEBUG)
                             System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
                     }
