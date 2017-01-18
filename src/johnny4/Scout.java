@@ -338,7 +338,7 @@ public class Scout {
                         if (Util.DEBUG) System.out.println("Civilian in range " + dist + " size " + civSize);
                         Direction fireDir = null;
                         if (!hasFired && false) {//don't fire before moving
-                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
+                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
@@ -374,7 +374,7 @@ public class Scout {
                             }
                         }
                         if (!hasFired) {
-                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
+                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
@@ -400,7 +400,7 @@ public class Scout {
                     return;
                 }
                 if (!hasFired && nextEnemy != null && !longRangeEnemy && nextEnemy.distanceTo(myLocation) < 3.5) {
-                    if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && rc.canFireSingleShot()) {
+                    if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
                         hasFired = true;
                         rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                         Movement.lastLOS = frame;

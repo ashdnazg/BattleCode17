@@ -88,14 +88,14 @@ public class Tank {
                 dist = nextEnemy.distanceTo(myLocation);
                 movement.findPath(nextEnemyInfo == null ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), RobotType.TANK.bodyRadius + 1 + 0.001f), null);
                 if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
-                if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius) && !myLocation.equals(nextEnemy)) {
+                if (Util.fireAllowed && rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius) && !myLocation.equals(nextEnemy)) {
                     if (best != null && best.type != RobotType.SCOUT) {
                         Radio.reportContact();
                     }
-                    if (dist < 4.51 + Math.max(0, rc.getTeamBullets() / 50f - 2) && rc.canFirePentadShot()) {
+                    if (dist < 4.51 + Math.max(0, rc.getTeamBullets() / 50f - 2) && Util.fireAllowed && rc.canFirePentadShot()) {
                         if (Util.DEBUG) System.out.println("Firing pentad");
                         rc.firePentadShot(myLocation.directionTo(nextEnemy));
-                    } else if (dist < 5.61 + Math.max(0,  rc.getTeamBullets() / 50f - 2) && rc.canFireTriadShot()) {
+                    } else if (dist < 5.61 + Math.max(0,  rc.getTeamBullets() / 50f - 2) && Util.fireAllowed && rc.canFireTriadShot()) {
                         if (Util.DEBUG) System.out.println("Firing triad");
                         rc.fireTriadShot(myLocation.directionTo(nextEnemy));
                     } else {

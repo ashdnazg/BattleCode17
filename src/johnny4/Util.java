@@ -341,6 +341,8 @@ public class Util {
         return (perpendicularDist <= rc.getType().bodyRadius);
     }
 
+    static boolean fireAllowed = true;
+
     static void preTick() throws GameActionException {
 
         // Find out if we're the first unit to run this round
@@ -350,8 +352,10 @@ public class Util {
         if (rc.getTeamBullets() >= 10000f) {
             rc.donate(10000f);
         }
-        if (rc.getRoundNum() > GameConstants.GAME_DEFAULT_ROUNDS - 20) {
-            rc.donate(rc.getTeamBullets());
+        int totalUnits = 3 * Radio.allyCounts[0] +  Radio.allyCounts[1]+ Radio.allyCounts[2]+ Radio.allyCounts[3]+ 2* Radio.allyCounts[4]+ Radio.allyCounts[5];
+        if ((float)rc.getRoundNum() / GameConstants.GAME_DEFAULT_ROUNDS > 1f - 0.005f * totalUnits) {
+            rc.donate(((int)rc.getTeamBullets()) / 10 * 10);
+            fireAllowed = false;
         }
     }
 }

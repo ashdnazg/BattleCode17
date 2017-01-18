@@ -55,6 +55,7 @@ public class Gardener {
         BuildPlanner.rc = rc;
         if (Util.DEBUG) System.out.println("Finished Constructing gardener: " + Clock.getBytecodeNum());
         BuildPlanner.init();
+        mustFindSpaceSince = rc.getRoundNum();
     }
 
     public void run() {
@@ -80,6 +81,8 @@ public class Gardener {
         return false;
     }
 
+    int mustFindSpaceSince;
+
     protected void tick() {
         try {
             preTick();
@@ -98,7 +101,7 @@ public class Gardener {
             if (Util.DEBUG) System.out.println("Own trees: " + TreeStorage.ownTrees);
 
             BuildPlanner.update(nearbyRobots, trees);
-            if (BuildPlanner.myTrees < BuildPlanner.MAX_TREES_PER_GARDENER) {
+            if (BuildPlanner.myTrees < BuildPlanner.MAX_TREES_PER_GARDENER && frame - mustFindSpaceSince < 10) {
                 Radio.reportActiveGardener();
             }
 
@@ -162,14 +165,18 @@ public class Gardener {
                     }
                     if (treeloc != null) {
                         MapLocation walkloc = grid.getNearestWalkableLocation(treeloc);
-                        hasMoved = true;
-                        movement.findPath(walkloc, null);
-                        myLocation = rc.getLocation();
-                        if (Util.DEBUG) rc.setIndicatorDot(walkloc, 0, 0, 255);
-                        if (Util.DEBUG) rc.setIndicatorDot(treeloc, 0, 255, 0);
-                        if ((myLocation.distanceTo(walkloc) < 0.01) && rc.canPlantTree(myLocation.directionTo(treeloc))) {
-                            rc.plantTree(myLocation.directionTo(treeloc));
-                            TreeStorage.plantedTree(rc.senseTreeAtLocation(treeloc));
+                        if (walkloc != null) {
+                            hasMoved = true;
+                            movement.findPath(walkloc, null);
+                            myLocation = rc.getLocation();
+                            if (Util.DEBUG) rc.setIndicatorDot(walkloc, 0, 0, 255);
+                            if (Util.DEBUG) rc.setIndicatorDot(treeloc, 0, 255, 0);
+                            if ((myLocation.distanceTo(walkloc) < 0.01) && rc.canPlantTree(myLocation.directionTo(treeloc))) {
+                                rc.plantTree(myLocation.directionTo(treeloc));
+                                TreeStorage.plantedTree(rc.senseTreeAtLocation(treeloc));
+                            }
+                        }else{
+                            mustFindSpaceForTree = true;
                         }
                     } else {
                         if (Util.DEBUG) System.out.println("No space for tree found");
@@ -187,6 +194,9 @@ public class Gardener {
                         hasMoved = true;
                     }
                 }
+            }
+            if (!mustFindSpaceForTree){
+                mustFindSpaceSince = frame;
             }
             if (Clock.getBytecodesLeft() < 800) {
                 if (Util.DEBUG) System.out.println("Aborting gardener");

@@ -118,7 +118,7 @@ public class BuildPlanner {
     }
 
     public static boolean buildTree() throws GameActionException {
-        if (myTrees >= MAX_TREES_PER_GARDENER || money < GameConstants.BULLET_TREE_COST) {
+        if (myTrees >= MAX_TREES_PER_GARDENER + frame / 500 || money < GameConstants.BULLET_TREE_COST) {
             return false;
         }
         if (graceRounds > 40) {
@@ -171,7 +171,7 @@ public class BuildPlanner {
         boolean canScout = money > RobotType.SCOUT.bulletCost;
         boolean rich = money > 160 && rc.getRoundNum() > 80;
         boolean enemyWasScouted = totalEnemies > 2;
-        boolean allOrNothing = frame < 200 && startArchonDist < 40;
+        boolean allOrNothing = frame < 200 && startArchonDist < 40 && false;
 
         //if (nearbyProtectors > 4) return null; //dont overcrowd
 
@@ -188,13 +188,13 @@ public class BuildPlanner {
 
 
         boolean needSoldiers = (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks)) || rich;
-        if (!Radio.getLandContact() && ownSoldiers >= 2){
+        if (!Radio.getLandContact() && ownSoldiers >= 1){
             needSoldiers = false;
         }
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));
-        boolean needScouts = (ownScouts < 2 + ((ownLumberjacks + ownSoldiers) /  (Radio.countTreeCutRequests()  > 16 ? 1 : 2))) || ownScouts < enemyScouts;
+        boolean needScouts = (ownScouts < (Radio.countTreeCutRequests()  > 16 ? 4 : 3) + ((ownLumberjacks + ownSoldiers) /  (Radio.countTreeCutRequests()  > 16 ? 1 : 2))) || ownScouts < enemyScouts;
 
         if (Util.DEBUG) System.out.println("needSoldiers: " + needSoldiers);
         if (Util.DEBUG) System.out.println("noScouts: " + noScouts);

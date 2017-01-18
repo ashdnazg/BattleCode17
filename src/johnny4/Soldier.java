@@ -292,15 +292,15 @@ public class Soldier {
             if (money < 110 && dist > 5.0f) {
                 return false;
             } else {
-                if (rc.canFirePentadShot()) {
+                if (Util.fireAllowed && rc.canFirePentadShot()) {
                     rc.firePentadShot(myLocation.directionTo(nextEnemy));
                     return true;
                 }
-                if (rc.canFireTriadShot() && dist < 4.0f) {
+                if (Util.fireAllowed && rc.canFireTriadShot() && dist < 4.0f) {
                     rc.fireTriadShot(myLocation.directionTo(nextEnemy));
                     return true;
                 }
-                if (rc.canFireSingleShot() && dist < 3.0f) {
+                if (Util.fireAllowed && rc.canFireSingleShot() && dist < 3.0f) {
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     return true;
                 }
@@ -311,15 +311,15 @@ public class Soldier {
         if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS) {
             return false;
         }
-        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && rc.canFirePentadShot()) {
+        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && Util.fireAllowed && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (dist - radius < 2.41 + Math.max(0, money / 50f - 2) && rc.canFireTriadShot()) {
+        } else if (dist - radius < 2.41 + Math.max(0, money / 50f - 2) && Util.fireAllowed && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (rc.canFireSingleShot()) {
+        } else if (Util.fireAllowed && rc.canFireSingleShot()) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;
