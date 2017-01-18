@@ -227,7 +227,7 @@ public class BuildPlanner {
             }
         }
 
-        if (alarm && !rich && nextEnemy == null) return null;
+        //if (alarm && !rich && nextEnemy == null) return null;
 
 
         if (enemyWasScouted && needScouts && canScout) {
