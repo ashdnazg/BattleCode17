@@ -319,7 +319,7 @@ public class Scout {
                             TreeInfo best = null;
                             float mindist = 100000;
                             for (TreeInfo ti : trees) {
-                                if (ti.location.distanceTo(nextCivilian) - ti.radius - ((ti.getID() % 17) / 170f) < mindist) {
+                                if (ti.location.distanceTo(nextCivilian) - ti.radius - ((ti.getID() % 17) / 170f) < mindist && ti.radius > 0.8) {
                                     mindist = ti.location.distanceTo(nextCivilian) - ti.radius - ((ti.getID() % 17) / 170f);
                                     best = ti;
                                 }

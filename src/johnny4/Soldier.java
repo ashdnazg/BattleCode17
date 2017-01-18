@@ -16,7 +16,7 @@ public class Soldier {
     RobotInfo guardener = null;
     int guardenerID = -1;
     int lastContactWithGuardener = -1000;
-    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 5;
+    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 0;
     final static float MIN_SCOUT_SHOOT_RANGE = 6.5f;
     final static float MIN_ARCHON_BULLETS = 110f;
 

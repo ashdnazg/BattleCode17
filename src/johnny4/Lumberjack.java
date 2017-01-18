@@ -21,7 +21,7 @@ public class Lumberjack {
     TreeInfo[] trees;
     boolean fakeTask = true;
     MapLocation myLocation;
-    final static float MIN_GUARDENER_DIST = RobotType.LUMBERJACK.sensorRadius + 5;
+    final static float MIN_GUARDENER_DIST = RobotType.LUMBERJACK.sensorRadius + 0;
     final static float MIN_SCOUT_SHOOT_RANGE = 5.0f;
 
     public Lumberjack(RobotController rc) {
