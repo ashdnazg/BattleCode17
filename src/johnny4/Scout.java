@@ -184,7 +184,7 @@ public class Scout {
                         civMinDist = (lastCivilian != null && r.location.distanceTo(lastCivilian) < 3) ? 0f : (r.location.distanceTo(myLocation));
                         civSize = ut.bodyRadius;
                     }
-                    if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation)) && r.moveCount + r.attackCount > 0) {
+                    if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER|| ut == RobotType.SCOUT || ut == RobotType.TANK) && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > r.location.distanceTo(myLocation)) && r.moveCount + r.attackCount > 0) {
                         nextEnemy = r.location;
                         nextEnemyInfo = r;
                     }
@@ -399,7 +399,7 @@ public class Scout {
                     if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
                     return;
                 }
-                if (!hasFired && nextEnemy != null && !longRangeEnemy && nextEnemy.distanceTo(myLocation) < 3.5) {
+                if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 5)) {
                     if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
                         hasFired = true;
                         rc.fireSingleShot(myLocation.directionTo(nextEnemy));
