@@ -194,7 +194,7 @@ public class BuildPlanner {
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));
-        boolean needScouts = (ownScouts < (Radio.countTreeCutRequests()  > 16 ? 4 : 3) + ((ownLumberjacks + ownSoldiers) /  (Radio.countTreeCutRequests()  > 16 ? 1 : 2))) || ownScouts < enemyScouts;
+        boolean needScouts = (ownScouts < (Radio.countTreeCutRequests()  > 16 ? 4 : 3) + ((ownLumberjacks + ownSoldiers) /  (Radio.countTreeCutRequests()  > 16 ? 1 : 2)));
 
         if (Util.DEBUG) System.out.println("needSoldiers: " + needSoldiers);
         if (Util.DEBUG) System.out.println("noScouts: " + noScouts);
