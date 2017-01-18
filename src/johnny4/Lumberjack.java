@@ -250,7 +250,7 @@ public class Lumberjack {
             if (!hasMoved) {
                 if (nextEnemy != null) {
                     if (Util.DEBUG) System.out.println("Moving to next enemy at " + nextEnemy);
-                    if (movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), RobotType.LUMBERJACK.bodyRadius + enemyRadius + 0.0001f), null)) {
+                    if (movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), RobotType.LUMBERJACK.bodyRadius + enemyRadius + GameConstants.BULLET_SPAWN_OFFSET - 0.001f), null)) {
                         myLocation = rc.getLocation();
                     }
                     hasMoved = true;

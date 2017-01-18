@@ -131,6 +131,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_LUMBERJACK_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_LUMBERJACK_DIST * MIN_FRIENDLY_LUMBERJACK_DIST;
                         //currentThreat.description = "friendly lumberjack";
+                        currentThreat.severity = 0.5f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -150,6 +151,7 @@ public class Movement {
                     currentThreat.y = ri.location.y;
                     currentThreat.radius = MIN_ENEMY_LUMBERJACK_DIST;
                     currentThreat.radiusSquared = MIN_ENEMY_LUMBERJACK_DIST * MIN_ENEMY_LUMBERJACK_DIST;
+                    currentThreat.severity = 2;
                     //currentThreat.description = "enemy lumberjack";
                     currentThreat = threats[++threatsLen];
                     if (currentThreat == null) {
@@ -167,6 +169,7 @@ public class Movement {
                     currentThreat.y = ri.location.y;
                     currentThreat.radius = MIN_ENEMY_SCOUT_DIST;
                     currentThreat.radiusSquared = MIN_ENEMY_SCOUT_DIST * MIN_ENEMY_SCOUT_DIST;
+                    currentThreat.severity = 0.8f;
                     //currentThreat.description = "enemy lumberjack";
                     currentThreat = threats[++threatsLen];
                     if (currentThreat == null) {
@@ -185,6 +188,7 @@ public class Movement {
                     currentThreat.y = ri.location.y;
                     currentThreat.radius = MIN_ENEMY_DIST;
                     currentThreat.radiusSquared = MIN_ENEMY_DIST * MIN_ENEMY_DIST;
+                    currentThreat.severity = 1f;
                     //currentThreat.description = "armed enemy";
                     currentThreat = threats[++threatsLen];
                     if (currentThreat == null) {
@@ -330,7 +334,7 @@ public class Movement {
             threat = threats[i];
             if ((threat.x - nloc.x) * (threat.x - nloc.x) + (threat.y - nloc.y) * (threat.y - nloc.y) < threat.radiusSquared) {
                 //if (Util.DEBUG) System.out.println(nloc + " would be too close to " + threat.description + " at " + threat.loc);
-                max = Math.max(max, threat.radius - nloc.distanceTo(threat.loc) + 1);
+                max = Math.max(max, (threat.radius - nloc.distanceTo(threat.loc)) * threat.severity + 1);
             }
         }
         if (max > 0.0001) return max;
@@ -452,7 +456,7 @@ public class Movement {
         float radiusSquared;
         MapLocation loc;
         float radius;
-        String description;
+        float severity;
     }
 
 }

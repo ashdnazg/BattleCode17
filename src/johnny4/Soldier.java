@@ -16,9 +16,9 @@ public class Soldier {
     RobotInfo guardener = null;
     int guardenerID = -1;
     int lastContactWithGuardener = -1000;
-    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 0;
+    final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 10;
     final static float MIN_SCOUT_SHOOT_RANGE = 6.5f;
-    final static float MIN_ARCHON_BULLETS = 110f;
+    final static float MIN_ARCHON_BULLETS = 80f;
 
 
     public Soldier(RobotController rc) {
@@ -207,7 +207,7 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                float minfiredist = 10f / enemyType.strideRadius + 2 + 3 * (int) (money / 150);
+                float minfiredist = 100f / enemyType.strideRadius + 2 + 3 * (int) (money / 150);
                 if (!hasFired && evasionMode) {
                     if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
@@ -217,7 +217,7 @@ public class Soldier {
                         }
                         Movement.lastLOS = frame;
                     } else {
-                        if (Util.DEBUG) System.out.println("No LOS");
+                        if (Util.DEBUG) System.out.println("No LOS / " + (dist < minfiredist));
                     }
                 }
                 if (enemyType != RobotType.SOLDIER || (money > 50 && evasionMode)) {

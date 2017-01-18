@@ -188,6 +188,9 @@ public class BuildPlanner {
 
 
         boolean needSoldiers = (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks)) || rich;
+        if (!Radio.getLandContact() && ownSoldiers >= 2){
+            needSoldiers = false;
+        }
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0)));

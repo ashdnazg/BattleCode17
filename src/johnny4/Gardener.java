@@ -110,6 +110,9 @@ public class Gardener {
                         (r.type == RobotType.SCOUT || r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
                     nextEnemy = r.location;
                 }
+                if (!r.getTeam().equals(rc.getTeam())&&(r.type != RobotType.SCOUT) ) {
+                    Radio.reportContact();
+                }
                 if (r.getTeam().equals(rc.getTeam()) && (r.type == RobotType.LUMBERJACK || r.type == RobotType.SOLDIER || r.type == RobotType.TANK) && (r.attackCount + r.moveCount > 0 || r.health >= 0.95 * r.type.maxHealth)) {
                     if (nearestProtector == null || nearestProtector.location.distanceTo(myLocation) < r.location.distanceTo(myLocation)) {
                         nearestProtector = r;

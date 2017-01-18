@@ -14,8 +14,10 @@ public class Scout {
     final boolean isRoamer;
     boolean isAggro;
     boolean initialized = false;
-    boolean chaseAllScouts = true; //otherwise only chase lower ID scouts
+    boolean chaseAllScouts = true;
     float lastHP;
+    MapLocation[] archonPositions;
+    int[] lastArchonCheck;
 
     public Scout(RobotController rc) {
         this.rc = rc;
@@ -27,10 +29,16 @@ public class Scout {
             visitedBroadcasts[i] = new MapLocation(0, 0);
         }
 
+        stoppedScoutAttack = rc.getRoundNum();
         MapLocation myLocation = rc.getLocation();
         lastHP = rc.getHealth();
         float dist = 1e10f;
         float curDist;
+        archonPositions = map.enemyArchonPos;
+        lastArchonCheck = new int[archonPositions.length];
+        for (int i = 0; i < archonPositions.length; i++){
+            lastArchonCheck[i] = -1000;
+        }
         for (MapLocation archonPos : map.enemyArchonPos) {
             curDist = archonPos.distanceTo(myLocation);
             if (curDist < dist) {
@@ -41,6 +49,7 @@ public class Scout {
         lastCivContact = rc.getRoundNum();
         myID = rc.getID();
         setAggro(true);
+        chaseAllScouts = rand() > 10.7f;
     }
 
     public void run() {
@@ -77,12 +86,12 @@ public class Scout {
         if (DEBUG) System.out.println("Converting to aggro " + value);
         isAggro = value;
         if (isAggro) {
-            Movement.MIN_ENEMY_DIST = 4.5f;
+            Movement.MIN_ENEMY_DIST = 5.5f;
             Movement.MIN_ENEMY_SCOUT_DIST = 4.5f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = 4.5f;
         }
         if (!isAggro) {
-            Movement.MIN_ENEMY_DIST = 4.5f;
+            Movement.MIN_ENEMY_DIST = 5.5f;
             Movement.MIN_ENEMY_SCOUT_DIST = 3.5f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius;
         }
@@ -105,6 +114,7 @@ public class Scout {
             MapLocation myLocation = rc.getLocation();
 
             MapLocation nextEnemy = null;
+            MapLocation nextArchon = null;
             MapLocation nextCivilian = null;
             RobotInfo nextCivilianInfo = null;
             RobotInfo nextEnemyInfo = null;
@@ -115,6 +125,7 @@ public class Scout {
             int nearbyAllies = 0;
             int nearbyAlliedGardeners = 0;
             int nearbyAlliedFighters = 0;
+            int nearbyEnemyFighters = 0;
             if (frame - lastCivContact > 90 && !isAggro) {
                 setAggro(true);
             }
@@ -138,13 +149,18 @@ public class Scout {
                     if ((ut == RobotType.GARDENER)) {
                         nearbyAlliedGardeners++;
                     }
+                }else if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT)){
+                    nearbyEnemyFighters++;
+                }else if (ut == RobotType.ARCHON && (nextArchon == null || nextArchon.distanceTo(myLocation) > r.location.distanceTo(myLocation))){
+                    nextArchon = r.location;
                 }
             }
-            boolean mustProtectGardener = nearbyAlliedGardeners > 0 && nearbyAlliedFighters <= 0;
+            boolean mustProtectGardener = nearbyAlliedGardeners > 0 && nearbyAlliedFighters <= 0 && nearbyEnemyFighters > 0;
             if (DEBUG) System.out.println("nearbyAlliedGardeners: " + nearbyAlliedGardeners);
             if (DEBUG) System.out.println("nearbyAlliedFighters: " + nearbyAlliedFighters);
             if (lastCivilianInfo != null && lastCivilianInfo.type == RobotType.SCOUT && lastCivilian.distanceTo(myLocation) < 5 && lastHP > rc.getHealth() && lastHP < 0.7 * RobotType.SCOUT.maxHealth) {
                 chaseAllScouts = false; //this aint working out
+                setAggro(false);
                 stoppedScoutAttack = frame;
                 if (DEBUG) System.out.println("Stopping scout attack");
             }
@@ -152,11 +168,17 @@ public class Scout {
                 chaseAllScouts = true;
                 if (DEBUG) System.out.println("Restarting scout attack");
             }
+            for (int i = 0; i < archonPositions.length; i++){
+                if (archonPositions[i].distanceTo(myLocation) < 0.5 * RobotType.SCOUT.sensorRadius){
+                    lastArchonCheck[i] = frame;
+                    if (nextArchon != null) archonPositions[i] = nextArchon;
+                }
+            }
             for (RobotInfo r : nearbyRobots) {
 
                 RobotType ut = r.getType();
                 if (!r.getTeam().equals(rc.getTeam())) {
-                    if ((ut == RobotType.GARDENER || isAggro && ut != RobotType.ARCHON || r.getHealth() < 10 && ut != RobotType.SCOUT || ut == RobotType.SCOUT && (chaseAllScouts) && nearbyAlliedFighters <= 0) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
+                    if ((ut == RobotType.GARDENER || isAggro && ut != RobotType.ARCHON || r.getHealth() < 10 * (frame + 1500f) / 1500 && ut != RobotType.SCOUT || ut == RobotType.SCOUT && (chaseAllScouts) /*&& nearbyAlliedFighters <= 0*/) && (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
                         nextCivilian = r.location;
                         nextCivilianInfo = r;
                         civMinDist = (lastCivilian != null && r.location.distanceTo(lastCivilian) < 3) ? 0f : (r.location.distanceTo(myLocation));
@@ -184,6 +206,7 @@ public class Scout {
                     if (Util.DEBUG) System.out.println("Attack ineffective ");
                     chaseAllScouts = false;
                     stoppedScoutAttack = frame;
+                    setAggro(false);
                 }
             }
             if (nextCivilian == null) {
@@ -196,7 +219,15 @@ public class Scout {
                 if (nextCivilian != null && nextCivilian.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius) {
                     Radio.deleteEnemyReport(nextCivilian);
                 }
-                //if (nextCivilian == null) nextCivilian = map.getTarget(3, myLocation);
+                if (nextCivilian == null) {
+                    for (int i = 0; i < archonPositions.length; i++){
+                        if (frame - lastArchonCheck[i] > 100){
+                            if (Util.DEBUG) System.out.println("Gonig for archon " + Clock.getBytecodeNum());
+                            nextCivilian = archonPositions[i];
+                            break;
+                        }
+                    }
+                }
             } else {
                 lastCivContact = frame;
                 if (rand() < 0.01 && isAggro) {

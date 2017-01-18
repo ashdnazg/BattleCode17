@@ -104,7 +104,8 @@ public class Util {
     static private float[] pr = new float[25];
     static private boolean[] pg = new boolean[25];
 
-    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) {
+
+    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException{
         float cx = 0.5f * (start.x + target.x);
         float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
         double rs = 0.5 * (start.distanceTo(target) - shooterRadius);
@@ -150,6 +151,7 @@ public class Util {
         double dx, dy, distParallel, distPerpendicular, perpx, perpy;
         double mindist = 100000d;
         boolean outcome = true;
+        if (DEBUG) rc.setIndicatorLine(start, target, 0, 255, 255);
         for (i = 0; i < cnt; i++) {
             dx = px[i] - start.x;
             dy = py[i] - start.y;
@@ -158,6 +160,8 @@ public class Util {
             perpy = dy - distParallel * toTrgY;
             distPerpendicular = (perpx * perpx + perpy * perpy);
             if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i] && distParallel < mindist) {
+                if (DEBUG) rc.setIndicatorDot(new MapLocation(px[i], py[i]), 0, 255, 255);
+                if (DEBUG) System.out.println("Blocked at " + new MapLocation(px[i], py[i]) + " " + pg[i]);
                 mindist = distParallel;
                 outcome = pg[i];
             }
@@ -174,7 +178,7 @@ public class Util {
         clock = Clock.getBytecodeNum() - clock;
         if (clock > 300) {
             if (Util.DEBUG)
-                System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length));
+                System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length) + " outcome " + outcome);
         }
         return outcome;
     }

@@ -54,6 +54,7 @@ public class Tank {
             TreeInfo trees[] = rc.senseNearbyTrees();
 
             MapLocation nextEnemy = null;
+            RobotInfo nextEnemyInfo = null;
             RobotInfo best = null;
             movement.init(nearbyRobots, trees, rc.senseNearbyBullets());
 
@@ -61,6 +62,7 @@ public class Tank {
                 if (e.getTeam().equals(rc.getTeam().opponent())) {
                     if (nextEnemy == null || nextEnemy.distanceTo(myLocation) > e.location.distanceTo(myLocation)) {
                         nextEnemy = e.location;
+                        nextEnemyInfo = e;
                         best = e;
                     }
                 }
@@ -84,7 +86,7 @@ public class Tank {
             float dist = 10000f;
             if (nextEnemy != null) {
                 dist = nextEnemy.distanceTo(myLocation);
-                movement.findPath(nextEnemy, null);
+                movement.findPath(nextEnemyInfo == null ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), RobotType.TANK.bodyRadius + 1 + 0.001f), null);
                 if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
                 if (rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius) && !myLocation.equals(nextEnemy)) {
                     if (best != null && best.type != RobotType.SCOUT) {
