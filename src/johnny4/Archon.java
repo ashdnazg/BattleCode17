@@ -16,6 +16,7 @@ public class Archon {
     Team enemyTeam;
     MapLocation stuckLocation;
     int stuckSince;
+    int lastGardener = -1000;
     static int gardenersSpawned = 0;
 
     public Archon(RobotController rc) {
@@ -36,6 +37,7 @@ public class Archon {
         this.enemyTeam = rc.getTeam().opponent();
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
+        BuildPlanner.init();
     }
 
     public void run() {
@@ -69,7 +71,7 @@ public class Archon {
                 stuckSince = 100000;
                 for (TreeInfo t : trees) {
                     if (t.getTeam().equals(rc.getTeam())) continue;
-                    if (t.location.distanceTo(myLocation) < 6) {
+                    if (t.location.distanceTo(myLocation) - t.radius < 6) {
                         if (Util.DEBUG) System.out.println("Reported tree at " + t.location);
                         radio.requestTreeCut(t);
                     }
@@ -83,25 +85,29 @@ public class Archon {
 
             gardenersSpawned = Math.min(gardenersSpawned, Radio.countAllies(RobotType.ARCHON));
 
-            if (hireGardener) {
-                int alternateBuildDir = -1;
-                for (int i = 0; i < directions.length; i++) {
-                    gardenersDir[i] = 0;
+            int alternateBuildDir = -1;
+            for (int i = 0; i < directions.length; i++) {
+                gardenersDir[i] = 0;
+            }
+            RobotInfo robot;
+            int ii;
+            Direction tog;
+            for (int i = 0; i < nearbyRobots.length; i++) {
+                robot = nearbyRobots[i];
+                if (!robot.getTeam().equals(rc.getTeam()) && (robot.type != RobotType.SCOUT)) {
+                    Radio.reportContact();
                 }
-                RobotInfo robot;
-                int ii;
-                Direction tog;
-                for (int i = 0; i < nearbyRobots.length; i++) {
-                    robot = nearbyRobots[i];
-                    if (robot.getTeam().equals(myTeam) && robot.getType() == RobotType.GARDENER) {
-                        tog = myLocation.directionTo(robot.location);
-                        for (ii = 0; ii < directions.length; ii++) {
-                            if (Math.abs(directions[ii].degreesBetween(tog)) < 90) {
-                                gardenersDir[ii]++;
-                            }
+                if (robot.getTeam().equals(myTeam) && robot.getType() == RobotType.GARDENER) {
+                    tog = myLocation.directionTo(robot.location);
+                    for (ii = 0; ii < directions.length; ii++) {
+                        if (Math.abs(directions[ii].degreesBetween(tog)) < 90) {
+                            gardenersDir[ii]++;
                         }
                     }
                 }
+            }
+
+            if (hireGardener && frame - lastGardener > 35) {
                 for (int i = 0; i < directions.length; i++) {
                     if (rc.canHireGardener(directions[i]) && rc.onTheMap(myLocation.add(directions[i], 6)) && (alternateBuildDir < 0 || gardenersDir[alternateBuildDir] > gardenersDir[i])) {
                         alternateBuildDir = i;
@@ -109,13 +115,15 @@ public class Archon {
                 }
                 if (alternateBuildDir >= 0) {
 
-                    if (Util.DEBUG) System.out.println("Only " + gardenersDir[alternateBuildDir] + " gardeners in direction " + directions[alternateBuildDir]);
+                    if (Util.DEBUG)
+                        System.out.println("Only " + gardenersDir[alternateBuildDir] + " gardeners in direction " + directions[alternateBuildDir]);
                     rc.hireGardener(directions[alternateBuildDir]);
                     Radio.reportBuild(RobotType.GARDENER);
                     gardenersSpawned++;
+                    lastGardener = frame;
                     Radio.reportActiveGardener();
                     if (Util.DEBUG) System.out.println("Gardeners spawned: " + gardenersSpawned);
-                }else{
+                } else {
                     if (Util.DEBUG) System.out.println("Cant build Gardener here");
                 }
 
@@ -141,12 +149,14 @@ public class Archon {
 
 
             // Move randomly
-            // while (!rc.canMove(lastDirection) && rand() > 0.01) {
-            // lastDirection = lastDirection.rotateRightDegrees(rand() * 60);
-            // }
-            // if (rc.canMove(lastDirection)) {
-            // rc.move(lastDirection);
-            // }
+            if (!b) {
+                while (!rc.canMove(lastDirection) && rand() > 0.02) {
+                    lastDirection = lastDirection.rotateRightDegrees(rand() * 60);
+                }
+                if (rc.canMove(lastDirection)) {
+                    rc.move(lastDirection);
+                }
+            }
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Archon Exception");
             e.printStackTrace();

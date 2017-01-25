@@ -11,6 +11,7 @@ public class Util {
     static RobotController rc;
     static Random rnd;
     static final boolean DEBUG = false;
+    static boolean tooManyTrees = false;
 
     /**
      * Returns a random Direction
@@ -105,7 +106,7 @@ public class Util {
     static private boolean[] pg = new boolean[25];
 
 
-    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException{
+    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException {
         float cx = 0.5f * (start.x + target.x);
         float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
         double rs = 0.5 * (start.distanceTo(target) - shooterRadius);
@@ -115,9 +116,9 @@ public class Util {
         Team enemy = rc.getTeam().opponent();
         int i;
         RobotInfo robot;
-        TreeInfo tree;
+        TreeInfo tree;/*
         for (i = 0; i < trees.length; i++) {
-            if (cnt >= px.length) break;
+            if (cnt >= px.length || i > 5) break;
             tree = trees[i];
             x = tree.location.x;
             y = tree.location.y;
@@ -128,9 +129,9 @@ public class Util {
                 pr[cnt] = r + 0.0001f;
                 pg[cnt++] = false;
             }
-        }
+        }*/
         for (i = 0; i < robots.length; i++) {
-            if (cnt >= px.length) break;
+            if (cnt >= px.length || i > 3) break;
             robot = robots[i];
             x = robot.location.x;
             y = robot.location.y;
@@ -209,18 +210,16 @@ public class Util {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
-            if (trees.length > 50) {
-                trees = rc.senseNearbyTrees(4);
-            }
             TreeInfo ti;
-            int len = trees.length;
+            int len = Math.min(15, trees.length);
             int maxCnt = temp.length;
             int cnt2 = 0;
 
-            for (int i = 0; i < len; i++) {
+            for (int i = 0; i < len && Clock.getBytecodeNum() - time < 1000; i++) {
                 ti = trees[i];
-                if (ti.radius > 0.9 && cnt < maxCnt) {
+                if (ti.radius > 0.1 && cnt < maxCnt) {
                     temp[cnt++] = ti;
+                    if (ti.containedBullets > 0) cnt2++;
                 } else if (ti.containedBullets > 0 && cnt2 < maxCnt) {
                     temp[cnt2++] = ti;
                 }
@@ -228,15 +227,22 @@ public class Util {
                     Radio.requestTreeCut(ti);
                 }
             }
+            if (DEBUG) {
+                for (int i = 0; i < cnt; i++) {
+                    rc.setIndicatorDot(temp[i].location, 80, 200, 80);
+                }
+            }
             cache = new TreeInfo[cnt];
             System.arraycopy(temp, 0, cache, 0, cnt);
             time = Clock.getBytecodeNum() - time;
+            Radio.cleanupClosestTreeToCut(rc.getLocation());
             if (time > 300) {
                 if (Util.DEBUG) System.out.println("Sensing trees took " + time);
+
             }
-            if (cache.length >= temp.length) {
-                if (Util.DEBUG) System.out.println("Reached maximum tree count");
-            }
+            tooManyTrees = cache.length >= temp.length || time > 1000;
+
+            if (Util.DEBUG) System.out.println("Reached maximum tree count: " + tooManyTrees);
         }
         return cache;
     }
@@ -249,10 +255,10 @@ public class Util {
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
-            int length = trees.length;
+            int length = Math.min(15, trees.length);
             int maxCnt = temp2.length;
             TreeInfo ti;
-            for (int i = 0; i < length; i++) {
+            for (int i = 0; i < length && Clock.getBytecodeNum() - time < 1300; i++) {
                 ti = trees[i];
                 if (cnt < maxCnt) {
                     temp2[cnt++] = ti;
@@ -264,22 +270,22 @@ public class Util {
             cache2 = new TreeInfo[cnt];
             System.arraycopy(temp2, 0, cache2, 0, cnt);
             time = Clock.getBytecodeNum() - time;
+            Radio.cleanupClosestTreeToCut(rc.getLocation());
+            tooManyTrees = cache2.length >= temp2.length || time > 1300;
             if (time > 300) {
                 if (Util.DEBUG) System.out.println("Sensing trees took " + time);
             }
-            if (cache2.length >= temp2.length) {
-                if (Util.DEBUG) System.out.println("Reached maximum tree count");
-            }
+            if (Util.DEBUG) System.out.println("Reached maximum tree count: " + tooManyTrees);
+
         }
         return cache2;
     }
 
 
-
     static RobotInfo[] temp3 = new RobotInfo[8];
     static RobotInfo[] cache3 = new RobotInfo[0];
 
-    static RobotInfo[] senseClosestEnemies() throws GameActionException {
+    static RobotInfo[] senseClosestRobots() throws GameActionException {
         int time = Clock.getBytecodeNum();
         int cnt = 0;
         RobotInfo robots[] = rc.senseNearbyRobots();
@@ -288,7 +294,7 @@ public class Util {
         int len = robots.length;
         int maxCnt = temp3.length;
         int cnt2 = 0;
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < len && Clock.getBytecodeNum() - time < 800; i++) {
             ri = robots[i];
             if (cnt < maxCnt) {
                 temp3[cnt++] = ri;
@@ -352,9 +358,9 @@ public class Util {
         if (rc.getTeamBullets() >= 10000f) {
             rc.donate(10000f);
         }
-        int totalUnits = 3 * Radio.allyCounts[0] +  Radio.allyCounts[1]+ Radio.allyCounts[2]+ Radio.allyCounts[3]+ 2* Radio.allyCounts[4]+ Radio.allyCounts[5];
-        if ((float)rc.getRoundNum() / GameConstants.GAME_DEFAULT_ROUNDS > 1f - 0.005f * totalUnits) {
-            rc.donate(((int)rc.getTeamBullets()) / 10 * 10);
+        int totalUnits = 3 * Radio.allyCounts[0] + Radio.allyCounts[1] + Radio.allyCounts[2] + Radio.allyCounts[3] + 2 * Radio.allyCounts[4] + Radio.allyCounts[5];
+        if ((float) rc.getRoundNum() / GameConstants.GAME_DEFAULT_ROUNDS > 1f - 0.005f * totalUnits) {
+            rc.donate(((int) rc.getTeamBullets()) / 10 * 10);
             fireAllowed = false;
         }
     }

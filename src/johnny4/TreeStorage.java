@@ -132,7 +132,7 @@ public class TreeStorage {
                 }
                 dist = /*knownTrees[i].distanceTo(myLocation) **/ (treeHealth[i]);
                 for (int g = 0; g < gcnt; g++) {
-                    if (gardeners[g].location.distanceTo(knownTrees[i]) + 0.1 < dist) {
+                    if (gardeners[g].location.distanceTo(knownTrees[i]) - 1 < dist) {
                         dist = 10000;
                     }
                 }

@@ -2,10 +2,7 @@ package johnny4;
 
 import battlecode.common.*;
 
-import java.awt.*;
-
 import static johnny4.Util.checkLineOfFire;
-import static johnny4.Util.randomDirection;
 import static johnny4.Util.tryMove;
 import static johnny4.Util.preTick;
 import static johnny4.Util.*;
@@ -77,8 +74,8 @@ public class Tank {
                 lastTarget = best;
             } else {
                 lastTarget = null;
-                map.generateFarTargets(myLocation, 9, 0);
-                nextEnemy = map.getTarget(0, myLocation);
+                Map.generateFarTargets(map.rc, myLocation, 9, 0);
+                nextEnemy = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, 0, myLocation);
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.TANK.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
                 }

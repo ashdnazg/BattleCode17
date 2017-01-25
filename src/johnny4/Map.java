@@ -2,8 +2,6 @@ package johnny4;
 
 import battlecode.common.*;
 
-import java.util.*;
-
 public class Map {
 
     RobotController rc;
@@ -30,7 +28,7 @@ public class Map {
         int frame = rc.getRoundNum();
         if (frame != lastSenseFrame) {
             lastSenseFrame = frame;
-            nearbyRobots = rc.senseNearbyRobots();
+            nearbyRobots = Util.senseClosestRobots();
             Radio.reportEnemies(nearbyRobots);
             //if (Util.DEBUG) System.out.println("Used " + (Clock.getBytecodeNum() - clocks) + " bytes for sensing");
             return nearbyRobots;
@@ -40,15 +38,15 @@ public class Map {
     }
 
 
-    final int LUMBERJACK = Radio.typeToInt(RobotType.LUMBERJACK);
-    final int SOLDIER = Radio.typeToInt(RobotType.SOLDIER);
-    final int TANK = Radio.typeToInt(RobotType.TANK);
-    final int SCOUT = Radio.typeToInt(RobotType.SCOUT);
-    final int ARCHON = Radio.typeToInt(RobotType.ARCHON);
-    final int GARDENER = Radio.typeToInt(RobotType.GARDENER);
+    final static int LUMBERJACK = Radio.typeToInt(RobotType.LUMBERJACK);
+    final static int SOLDIER = Radio.typeToInt(RobotType.SOLDIER);
+    final static  int TANK = Radio.typeToInt(RobotType.TANK);
+    final static int SCOUT = Radio.typeToInt(RobotType.SCOUT);
+    final static int ARCHON = Radio.typeToInt(RobotType.ARCHON);
+    final static int GARDENER = Radio.typeToInt(RobotType.GARDENER);
 
     //type: 0=any, 1=military, 2=civilian, 3=archon
-    public MapLocation getTarget(int type, MapLocation myLocation) {
+    public static MapLocation getTarget(int ARCHON, int GARDENER, int LUMBERJACK, int SCOUT, int SOLDIER, int TANK, int type, MapLocation myLocation) {
         try {
             MapLocation best = null;
             for (int t = 0; t < farTargets.length; t++) {
@@ -72,7 +70,7 @@ public class Map {
     }
 
 
-    public void generateFarTargets(MapLocation myLoc, int maxAge, float minDist) throws GameActionException {
+    public static void generateFarTargets(RobotController rc, MapLocation myLoc, int maxAge, float minDist) throws GameActionException {
         minDist *= minDist; //square distances
         tempDist[0] = 1e10f;
         tempDist[1] = 1e10f;
@@ -95,11 +93,11 @@ public class Map {
             //if (Util.DEBUG) System.out.println("1.2: " + Clock.getBytecodeNum());
             if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge)
                 continue;
-            ut = (unitData & 0b00000000000000000000111000000000) >> 9;
+            ut = (unitData & 0b00000000000000000000111000000000) >>> 9;
             //if (Util.DEBUG) System.out.println("2: " + Clock.getBytecodeNum());
 
-            x = (unitData & 0b11111111110000000000000000000000) >> 22;
-            y = (unitData & 0b00000000001111111111000000000000) >> 12;
+            x = (unitData & 0b11111111110000000000000000000000) >>> 22;
+            y = (unitData & 0b00000000001111111111000000000000) >>> 12;
             dx = (mx - x);
             dy = (my - y);
             dist = dx * dx + dy * dy;

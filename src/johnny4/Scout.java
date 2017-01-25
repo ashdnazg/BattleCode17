@@ -213,9 +213,9 @@ public class Scout {
                 longRangeCiv = true;
                 if (Util.DEBUG) System.out.println("Using long range civilian " + Clock.getBytecodeNum());
                 if (frame % 3 == 0) {
-                    map.generateFarTargets(myLocation, 1000, 0);
+                    Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                 }
-                nextCivilian = map.getTarget(isAggro ? 1 : (chaseAllScouts ? 5 : 2), myLocation);
+                nextCivilian = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, isAggro ? 1 : (chaseAllScouts ? 5 : 2), myLocation);
                 if (nextCivilian != null && nextCivilian.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius) {
                     Radio.deleteEnemyReport(nextCivilian);
                 }
@@ -274,7 +274,7 @@ public class Scout {
                 System.out.println("Starting movement " + Clock.getBytecodeNum());
             if (toShake == null && isShaker) {
                 for (TreeInfo t : trees) {
-                    if (t.getContainedBullets() > 1.5 * t.location.distanceTo(myLocation)) {
+                    if (t.getContainedBullets() > 1.0 * Math.max(0, t.location.distanceTo(myLocation) - t.radius)) {
                         if (DEBUG) System.out.println("Added tree at " + t.location + " which contains " + t.containedBullets + " bullets");
                         toShake = t;
                         break;
@@ -395,6 +395,7 @@ public class Scout {
                     }
                 }
 
+                if (Util.DEBUG) System.out.println("Scout late " + Clock.getBytecodeNum());
                 if (Clock.getBytecodesLeft() < 1000) {
                     if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
                     return;
@@ -409,6 +410,7 @@ public class Scout {
                         if (Util.DEBUG) System.out.println("No LOS on enemy");
                     }
                 }
+                if (Util.DEBUG) System.out.println("Scout late2 " + Clock.getBytecodeNum() + " trees: " + trees.length);
                 for (TreeInfo t : trees) {
                     if (t.getContainedBullets() > 0 && rc.canShake(t.location)) {
                         rc.shake(t.location);
@@ -422,6 +424,7 @@ public class Scout {
                     }
                     if (Clock.getBytecodesLeft() < 100) return;
                 }
+                if (Util.DEBUG) System.out.println("Scout late3 " + Clock.getBytecodeNum());
                 lastHP = rc.getHealth();
                 if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
                     if (Util.DEBUG)

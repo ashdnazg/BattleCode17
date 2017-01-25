@@ -90,7 +90,10 @@ public class Lumberjack {
             movement.init(nearbyRobots, trees, bullets);
 
             // acquire tree cutting requests
-            if (currentTreeTarget == null || fakeTask) {
+            if (currentTreeTarget != null && fakeTask && myLocation.distanceTo(currentTreeTarget) > RobotType.LUMBERJACK.sensorRadius){
+                currentTreeTarget = null;
+            }
+            if (true) {
                 MapLocation mp = radio.findClosestTreeToCut(myLocation);
                 if (mp != null) {
                     currentTreeTarget = mp;
@@ -149,11 +152,11 @@ public class Lumberjack {
             }
             if ((alarm || currentTreeTarget == null) && nextEnemy == null) {
                 if (frame % 9 == 0) {
-                    map.generateFarTargets(myLocation, 50, RobotType.LUMBERJACK.sensorRadius);
+                    Map.generateFarTargets(map.rc, myLocation, 50, RobotType.LUMBERJACK.sensorRadius);
                 }
                 if (Util.DEBUG) System.out.println("Using long range target");
                 longrange = true;
-                nextEnemy = map.getTarget(0, myLocation);
+                nextEnemy = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, 0, myLocation);
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.LUMBERJACK.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
                 }

@@ -143,7 +143,7 @@ public class Radio {
         reportBloom[5] = 0;
 
         int pos = 101;
-        int last = getEnemyCounter() + 101;
+        int last = Math.min(98, getEnemyCounter()) + 101;
 
         int report = rc.readBroadcast(pos);
         boolean writeNeeded = false;
@@ -156,7 +156,7 @@ public class Radio {
             ID_b = ID / 180;
             age = enemyIDToAge[ID_a][ID_b];
 
-            info = report >> 12;
+            info = report >>> 12;
             h1 = (info * 41 + 23) % 96;
             n1 = h1 / 32;
             b1 = 1 << (h1 % 32);
@@ -177,7 +177,7 @@ public class Radio {
 
                 continue;
             }
-            type = (report & 0b00000000000000000000111000000000) >> 9;
+            type = (report & 0b00000000000000000000111000000000) >>> 9;
             enemyCounts[type]++;
             if (writeNeeded) {
                 rc.broadcast(pos, report);
@@ -198,7 +198,7 @@ public class Radio {
             report = rc.readBroadcast(pos);
             //if (Util.DEBUG) System.out.println("reading new report from pos: " + pos + " info: " + report);
             ID = rc.readBroadcast(pos + 1);
-            //if (Util.DEBUG) System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000111000000000) >> 9));
+            //if (Util.DEBUG) System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000111000000000) >>> 9));
             ID_a = ID % 180;
             ID_b = ID / 180;
             if (enemyIDToAge[ID_a] == null) {
@@ -250,7 +250,7 @@ public class Radio {
             enemyIDToPos[ID_a][ID_b] = last;
             enemyPosToID[last - 101] = ID;
             rc.broadcast(last++, report);
-            type = (report & 0b00000000000000000000111000000000) >> 9;
+            type = (report & 0b00000000000000000000111000000000) >>> 9;
             enemyCounts[type]++;
         }
 
@@ -338,12 +338,12 @@ public class Radio {
         // Only gardeners have buildees
         if (myType == 1) {
             if (frame <= (buildees[0] & 0xFFFF)) {
-                int robotType = buildees[0] >> 16;
+                int robotType = buildees[0] >>> 16;
                 Counter.increment(406 + robotType);
             }
 
             if (frame <= (buildees[1] & 0xFFFF)) {
-                int robotType = buildees[1] >> 16;
+                int robotType = buildees[1] >>> 16;
                 Counter.increment(406 + robotType);
             }
         }
@@ -370,9 +370,10 @@ public class Radio {
         int ID, h1, n1, b1, h2, n2, b2, h3, n3, b3, info;
         for (int i = 0; i < length; ++i) {
             RobotInfo ri = ris[i];
-            if (ri.team == myTeam) {
+            if (ri.team.equals(myTeam)) {
                 continue;
             }
+            if (Util.DEBUG) System.out.println("Reporting enemy at " + ri.location);
             ID = ri.ID;
 
             h1 = ID % 192;
@@ -484,11 +485,11 @@ public class Radio {
     }
 
     public static float getUnitX(int info) {
-        return (info & 0b11111111110000000000000000000000) >> 22;
+        return (info & 0b11111111110000000000000000000000) >>> 22;
     }
 
     public static float getUnitY(int info) {
-        return (info & 0b00000000001111111111000000000000) >> 12;
+        return (info & 0b00000000001111111111000000000000) >>> 12;
     }
 
     public static int getUnitAge(int info) {
@@ -497,7 +498,7 @@ public class Radio {
 
 
     public static RobotType getUnitType(int info) {
-        return intToType((info & 0b00000000000000000000111000000000) >> 9);
+        return intToType((info & 0b00000000000000000000111000000000) >>> 9);
     }
 
 
@@ -555,6 +556,26 @@ public class Radio {
             }
         }
         return closest;
+    }
+
+    public static void cleanupClosestTreeToCut(MapLocation myLocation) throws GameActionException {
+        MapLocation tree = null;
+        int data;
+        int time = Clock.getBytecodeNum();
+        for (int index = 302; index <= 320; ++index) {
+            data = rc.readBroadcast(index);
+            if (data != 0) {
+                tree = new MapLocation(getUnitX(data), getUnitY(data));
+                if (rc.canSenseLocation(tree) && rc.senseTreeAtLocation(tree) == null) {
+                    if (Util.DEBUG) System.out.println("Cleaning up tree at " + tree);
+                    reportTreeCut(tree);
+                }
+            }
+        }
+        time = Clock.getBytecodeNum() - time;
+        if (time > 300) {
+            if (Util.DEBUG) System.out.println("cleaning up trees took " + time);
+        }
     }
 
     public static void reportTreeCut(MapLocation location) throws GameActionException {

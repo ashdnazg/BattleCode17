@@ -28,6 +28,7 @@ public class Movement {
     static float MIN_ENEMY_DIST;
     static float MIN_MOVE_TO_FIRE_ANGLE;
     static float GO_STRAIGHT_DISTANCE;
+    static float MIN_FRIENDLY_GARDENER_DIST;
     static boolean evadeBullets = true;
 
     public Movement(RobotController rc) {
@@ -48,6 +49,7 @@ public class Movement {
                 MIN_ENEMY_DIST = 3.5f;
                 MIN_ENEMY_SCOUT_DIST = 3.5f;
                 GO_STRAIGHT_DISTANCE = 4;
+                MIN_FRIENDLY_GARDENER_DIST = 0;
                 attemptDist[1] = 1.1f;
                 break;
             case LUMBERJACK:
@@ -56,13 +58,15 @@ public class Movement {
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 100;
+                MIN_FRIENDLY_GARDENER_DIST = 0;
                 break;
             case SOLDIER:
-                MIN_ENEMY_LUMBERJACK_DIST = 0;
+                MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 4;
+                MIN_FRIENDLY_GARDENER_DIST = 0;
                 break;
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -70,10 +74,12 @@ public class Movement {
                 MIN_ENEMY_DIST = 5f;
                 MIN_ENEMY_SCOUT_DIST = 5f;
                 GO_STRAIGHT_DISTANCE = 0;
+                MIN_FRIENDLY_GARDENER_DIST = 4;
                 break;
             case ARCHON:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
+                MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_ENEMY_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_ENEMY_SCOUT_DIST = 0f;
@@ -85,6 +91,7 @@ public class Movement {
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
+                MIN_FRIENDLY_GARDENER_DIST = 0;
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
@@ -109,8 +116,9 @@ public class Movement {
             threats[threatsLen] = new Threat();
             currentThreat = threats[threatsLen];
         }
-        for (int i = 0; i < bullets_.length; i++){
-            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > strideDistance + bullets_[i].speed + robotType.bodyRadius) break;
+        for (int i = 0; i < bullets_.length; i++) {
+            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > strideDistance + bullets_[i].speed + robotType.bodyRadius)
+                break;
             bullets[bulletLen++] = bullets_[i];
         }
 
@@ -132,6 +140,23 @@ public class Movement {
                         currentThreat.radiusSquared = MIN_FRIENDLY_LUMBERJACK_DIST * MIN_FRIENDLY_LUMBERJACK_DIST;
                         //currentThreat.description = "friendly lumberjack";
                         currentThreat.severity = 0.5f;
+                        currentThreat = threats[++threatsLen];
+                        if (currentThreat == null) {
+                            threats[threatsLen] = new Threat();
+                            currentThreat = threats[threatsLen];
+                        }
+                    }
+                }
+                if (MIN_FRIENDLY_GARDENER_DIST > 0.01 && ri.type == RobotType.GARDENER) {
+                    dist = ri.location.distanceTo(myLocation) - strideDistance;
+                    if (dist < MIN_FRIENDLY_GARDENER_DIST) {
+                        currentThreat.loc = ri.location;
+                        currentThreat.x = ri.location.x;
+                        currentThreat.y = ri.location.y;
+                        currentThreat.radius = MIN_FRIENDLY_GARDENER_DIST;
+                        currentThreat.radiusSquared = MIN_FRIENDLY_GARDENER_DIST * MIN_FRIENDLY_GARDENER_DIST;
+                        //currentThreat.description = "friendly lumberjack";
+                        currentThreat.severity = 0.9f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -198,7 +223,7 @@ public class Movement {
                 }
             }
         }
-        if (noEnemies) { // only keep distance to lumberjacks in combat
+        if (noEnemies && robotType != RobotType.GARDENER) { // only keep distance to lumberjacks in combat
             threatsLen = 0;
             if (Util.DEBUG) System.out.println("No threats, hugging friendly lumberjacks");
         }
@@ -226,7 +251,8 @@ public class Movement {
             new RuntimeException("Movement wasn't initialized since: " + lastInit).printStackTrace();
         }
         if (DEBUG) {
-            if (Util.DEBUG) System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
+            if (Util.DEBUG)
+                System.out.println("Pathfinding to " + target + "(dist: " + target.distanceTo(myLocation) + ", dir: " + myLocation.directionTo(target) + ") avoiding bullet in dir " + fireDir);
         }
         this.fireDir = fireDir;
 
@@ -235,8 +261,8 @@ public class Movement {
         boolean gonnaBeHit = false;
         Direction bulletDir = randomDirection();
         if (evadeBullets) {
-            for (int i = 0; i < bulletLen; i++){
-                if (willCollideWithMe(myLocation, bullets[i])){
+            for (int i = 0; i < bulletLen; i++) {
+                if (willCollideWithMe(myLocation, bullets[i])) {
                     gonnaBeHit = true;
                     bulletDir = bullets[i].dir;
                     break;
@@ -244,11 +270,11 @@ public class Movement {
             }
         }
         float olddist = myLocation.distanceTo(target);
-        if (olddist < 0.0001f){
+        if (olddist < 0.0001f) {
             if (valueMove(Direction.getNorth(), 0) < 0.0001 && !gonnaBeHit) {
                 if (Util.DEBUG) System.out.println("I'm already at target");
                 return false;
-            }else{
+            } else {
                 if (Util.DEBUG) System.out.println("I'm already at target but it sucks being around here");
                 target = target.add(bulletDir.rotateLeftDegrees(90 * (bugdir ? 1.001f : -1.001f)), strideDistance);
             }
@@ -282,7 +308,8 @@ public class Movement {
                     //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
                     moveDir = toTree.rotateLeftRads((bugdir ? 1 : -1) * correctionAngle);
 
-                    if (Util.DEBUG) rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+                    if (Util.DEBUG)
+                        rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
                 }
             }
         }
@@ -417,7 +444,8 @@ public class Movement {
                         int clock2 = Clock.getBytecodeNum();
                         t = valueMove(d, dist);
                         int clock3 = Clock.getBytecodeNum();
-                        if (Util.DEBUG) rc.setIndicatorDot(myLocation.add(d, dist), 255 - (int) (t * 25), 255 - (int) (t * 25), 255 - (int) (t * 25));
+                        if (Util.DEBUG)
+                            rc.setIndicatorDot(myLocation.add(d, dist), 255 - (int) (t * 25), 255 - (int) (t * 25), 255 - (int) (t * 25));
                         if (t < 0.01) {
                             rc.move(d, dist);
                             myLocation = rc.getLocation();

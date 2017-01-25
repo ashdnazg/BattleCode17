@@ -40,9 +40,9 @@ public class Gardener {
         if (Util.DEBUG) System.out.println("d: " + Clock.getBytecodeNum());
         TreeStorage.rc = rc;
         if (Util.DEBUG) System.out.println("e: " + Clock.getBytecodeNum());
-        this.buildDirs = new Direction[6];
-        float angle = (float) Math.PI / 3.0f;
-        for (int i = 0; i < 6; i++) {
+        this.buildDirs = new Direction[12];
+        float angle = (float) Math.PI / 6.0f;
+        for (int i = 0; i < 12; i++) {
             this.buildDirs[i] = new Direction(angle * i);
         }
         this.myTeam = rc.getTeam();
@@ -78,6 +78,7 @@ public class Gardener {
                 return true;
             }
         }
+        if (DEBUG) System.out.println("Failed to build " + robotType);
         return false;
     }
 
@@ -155,7 +156,7 @@ public class Gardener {
                     //request to cut annoying trees
                     for (TreeInfo t : trees) {
                         if (t.getTeam().equals(myTeam)) continue;
-                        if (t.location.distanceTo(myLocation) < 5 || treeloc != null && t.location.distanceTo(treeloc) < 4) {
+                        if (t.location.distanceTo(myLocation) - t.radius < 5 || treeloc != null && t.location.distanceTo(treeloc) < 4) {
                             radio.requestTreeCut(t);
                         }
                     }
