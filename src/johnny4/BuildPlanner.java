@@ -19,6 +19,7 @@ public class BuildPlanner {
     static int ownScouts;
     static int ownLumberjacks;
     static int ownSoldiers;
+    static int lastOwnGardeners;
     static int ownGardeners;
     static int enemyScouts;
     static int enemyLumberjacks;
@@ -107,7 +108,8 @@ public class BuildPlanner {
         ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];
         ownLumberjacks = ownCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)];
-        ownGardeners = ownCounts[Radio.typeToInt(RobotType.GARDENER)];
+        ownGardeners = Math.max(ownCounts[Radio.typeToInt(RobotType.GARDENER)], lastOwnGardeners);
+        lastOwnGardeners = ownCounts[Radio.typeToInt(RobotType.GARDENER)];
         int enemyCounts[] = Radio.countEnemies();
         totalEnemies = enemyCounts[0] + enemyCounts[1] + enemyCounts[2] + enemyCounts[3] + enemyCounts[4] + enemyCounts[5];
         enemyScouts = enemyCounts[Radio.typeToInt(RobotType.SCOUT)];
@@ -136,27 +138,7 @@ public class BuildPlanner {
             return false;
         }
 
-        if (Util.DEBUG) System.out.println("numGardeners: " + ownGardeners);
-        if (Util.DEBUG) System.out.println("nearby Gardeners: " + nearbyGardeners);
-        if (Util.DEBUG) System.out.println("nearby Trees: " + nearbyBulletTrees);
-        if (ownGardeners == 0 || nearbyBulletTrees > 1 && nearbyGardeners == 0) {
-            return true;
-        }
-
-        if (frame % ((Radio.countAllies(RobotType.ARCHON) - 1) * Math.log(nearbyGardeners * 2 + 1) * 5 + 1) > 0) {
-            if (Util.DEBUG) System.out.println("Waiting for other Archon, Chance: " + (Math.log(Archon.gardenersSpawned * 2 + 1) * 10 + 1));
-            return false;
-        }
-
-        int activeGardeners = Radio.countActiveGardeners();
-        if (Util.DEBUG) System.out.println("activeGardeners: " + activeGardeners);
-        if (activeGardeners == 0 && ownSoldiers + ownLumberjacks >= ownGardeners) {
-            return true;
-        }
-
-        boolean rich = money > 120;
-        if (Util.DEBUG) System.out.println("rich: " + rich);
-        if (rich && ownGardeners <= (ownSoldiers + ownLumberjacks) / 2 + rc.getRoundNum() / 150 || money > 300 && nearbyGardeners < 4) {
+        if (ownGardeners == 0 || rc.getTreeCount() / ownGardeners > 3) {
             return true;
         }
 
@@ -169,9 +151,9 @@ public class BuildPlanner {
         boolean canSoldier = money > RobotType.SOLDIER.bulletCost;
         boolean canLumberjack = money > RobotType.LUMBERJACK.bulletCost;
         boolean canScout = money > RobotType.SCOUT.bulletCost;
-        boolean rich = money > 160 && rc.getRoundNum() > 80;
+        boolean rich = money > 160 && frame > 80;
         boolean enemyWasScouted = totalEnemies > 2;
-        boolean allOrNothing = frame < 200 && startArchonDist < 40 && false;
+        boolean allOrNothing = frame < 200 && startArchonDist < 40;
 
         //if (nearbyProtectors > 4) return null; //dont overcrowd
 
@@ -194,14 +176,14 @@ public class BuildPlanner {
         boolean noScouts = ownScouts == 0;
 
         boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0))) || (!Radio.getLandContact() && ownLumberjacks < frame / 200);
-        boolean needScouts = (ownScouts < (Radio.countTreeCutRequests()  > 16 ? 4 : 3) + ((ownLumberjacks + ownSoldiers) /  (Radio.countTreeCutRequests()  > 16 ? 1 : 2))) || ownScouts < enemyScouts;
+        boolean needScouts = ownScouts < ownSoldiers / 3 && ownScouts < 3;
 
         if (Util.DEBUG) System.out.println("needSoldiers: " + needSoldiers);
         if (Util.DEBUG) System.out.println("noScouts: " + noScouts);
         if (Util.DEBUG) System.out.println("needLumberJacks: " + needLumberJacks);
         if (Util.DEBUG) System.out.println("needScouts: " + needScouts);
 
-        if (noScouts && canScout) {
+        if (noScouts && canScout && !allOrNothing) {
             return RobotType.SCOUT;
         }
 
