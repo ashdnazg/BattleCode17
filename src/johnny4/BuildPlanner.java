@@ -169,13 +169,12 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("tree cutting requests: " + Radio.countTreeCutRequests());
 
 
-        boolean needSoldiers = (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks)) || rich;
+        boolean needSoldiers = ownSoldiers < 2 || (ownSoldiers * 1.5f + ownLumberjacks < (enemySoldiers + 0.5 * enemyLumberjacks));
         if (!Radio.getLandContact() && ownSoldiers >= 1){
             needSoldiers = false;
         }
         boolean noScouts = ownScouts == 0;
-
-        boolean needLumberJacks = (Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3)) || (ownLumberjacks < Math.min(Radio.countTreeCutRequests(), ownSoldiers + 1 + (rich ? 10 : 0))) || (!Radio.getLandContact() && ownLumberjacks < frame / 200);
+        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < (ownSoldiers / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests());
         boolean needScouts = ownScouts < ownSoldiers / 3 && ownScouts < 3;
 
         if (Util.DEBUG) System.out.println("needSoldiers: " + needSoldiers);
@@ -183,7 +182,7 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("needLumberJacks: " + needLumberJacks);
         if (Util.DEBUG) System.out.println("needScouts: " + needScouts);
 
-        if (noScouts && canScout && !allOrNothing) {
+        if (noScouts && canScout && !allOrNothing && !needSoldiers) {
             return RobotType.SCOUT;
         }
 
@@ -212,17 +211,18 @@ public class BuildPlanner {
         //if (alarm && !rich && nextEnemy == null) return null;
 
 
-        if (enemyWasScouted && needScouts && canScout) {
-            return RobotType.SCOUT;
-        }
 
-        if (enemyWasScouted && needSoldiers && canSoldier) {
+        if (needSoldiers && canSoldier) {
             return RobotType.SOLDIER;
         }
+
         if (needLumberJacks && canLumberjack) {
             return RobotType.LUMBERJACK;
         }
 
+        if (needScouts && canScout) {
+            return RobotType.SCOUT;
+        }
 
         return null;
     }
