@@ -189,7 +189,7 @@ public class Scout {
                         nextEnemy = r.location;
                         nextEnemyInfo = r;
                     }
-                    if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK) && (nextFighter == null || nextFighter.location.distanceTo(myLocation) > r.location.distanceTo(myLocation)) && r.moveCount + r.attackCount > 0) {
+                    if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK) && (nextFighter == null || nextFighter.location.distanceTo(myLocation) > r.location.distanceTo(myLocation))/* && r.moveCount + r.attackCount > 0*/) {
                         nextFighter = r;
                     }
                 }

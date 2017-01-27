@@ -342,7 +342,7 @@ public class Radio {
         int ID, h1, n1, b1, h2, n2, b2, h3, n3, b3, info;
         for (int i = 0; i < length; ++i) {
             RobotInfo ri = ris[i];
-            if (ri.team.equals(myTeam) || ri.moveCount + ri.attackCount == 0) {
+            if (ri.team.equals(myTeam)) {
                 continue;
             }
             if (Util.DEBUG) System.out.println("Reporting enemy at " + ri.location);
