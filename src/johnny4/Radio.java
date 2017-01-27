@@ -211,21 +211,6 @@ public class Radio {
                 infoPos = enemyIDToPos[ID_a][ID_b];
                 if (infoPos > 0) {
                     rc.broadcast(infoPos, report);
-
-                    h1 = ID % 192;
-                    n1 = h1 / 32;
-                    b1 = 1 << (h1 % 32);
-                    h2 = (ID * 41 + 23) % 192;
-                    n2 = h2 / 32;
-                    b2 = 1 << (h2 % 32);
-                    h3 = (ID * 97 + 67) % 192;
-                    n3 = h3 / 32;
-                    b3 = 1 << (h3 % 32);
-                    reportBloom[n1] |= b1;
-                    reportBloom[n2] |= b2;
-                    reportBloom[n3] |= b3;
-
-
                     enemyIDToAge[ID_a][ID_b] = frame32;
                     continue;
                 }
@@ -233,19 +218,6 @@ public class Radio {
             if (last == 201) {
                 continue;
             }
-            h1 = ID % 192;
-            n1 = h1 / 32;
-            b1 = 1 << (h1 % 32);
-            h2 = (ID * 41 + 23) % 192;
-            n2 = h2 / 32;
-            b2 = 1 << (h2 % 32);
-            h3 = (ID * 97 + 67) % 192;
-            n3 = h3 / 32;
-            b3 = 1 << (h3 % 32);
-            reportBloom[n1] |= b1;
-            reportBloom[n2] |= b2;
-            reportBloom[n3] |= b3;
-
             enemyIDToAge[ID_a][ID_b] = frame32;
             enemyIDToPos[ID_a][ID_b] = last;
             enemyPosToID[last - 101] = ID;
@@ -273,12 +245,12 @@ public class Radio {
         if (Util.DEBUG) System.out.println("Enemy Scouts: " + enemyCounts[5]);
 
 
-        rc.broadcast(420, reportBloom[0]);
-        rc.broadcast(421, reportBloom[1]);
-        rc.broadcast(422, reportBloom[2]);
-        rc.broadcast(423, reportBloom[3]);
-        rc.broadcast(424, reportBloom[4]);
-        rc.broadcast(425, reportBloom[5]);
+        rc.broadcast(420, 0);
+        rc.broadcast(421, 0);
+        rc.broadcast(422, 0);
+        rc.broadcast(423, 0);
+        rc.broadcast(424, 0);
+        rc.broadcast(425, 0);
 
         //if (Util.DEBUG) System.out.println("after updating enemy counts: " + Clock.getBytecodeNum() + "frame: " + rc.getRoundNum());
     }
@@ -379,25 +351,13 @@ public class Radio {
             h1 = ID % 192;
             n1 = h1 / 32;
             b1 = 1 << (h1 % 32);
-            h2 = (ID * 41 + 23) % 192;
-            n2 = h2 / 32;
-            b2 = 1 << (h2 % 32);
-            h3 = (ID * 97 + 67) % 192;
-            n3 = h3 / 32;
-            b3 = 1 << (h3 % 32);
 
 
             if ((reportBloom[n1] & b1) != 0) {
-                if ((reportBloom[n2] & b2) != 0) {
-                    if ((reportBloom[n3] & b3) != 0) {
-                        continue;
-                    }
-                }
+                continue;
             }
 
             tempBloom[n1] |= b1;
-            tempBloom[n2] |= b2;
-            tempBloom[n3] |= b3;
 
             info = ((int) Math.round(ri.location.x) << 22) | ((int) Math.round(ri.location.y) << 12) | (typeToInt(ri.type) << 9) | (frame / 8);
             rc.broadcast(numReports + 202, info);
@@ -441,20 +401,10 @@ public class Radio {
         int h1 = ID % 192;
         int n1 = h1 / 32;
         int b1 = 1 << (h1 % 32);
-        int h2 = (ID * 41 + 23) % 192;
-        int n2 = h2 / 32;
-        int b2 = 1 << (h2 % 32);
-        int h3 = (ID * 97 + 67) % 192;
-        int n3 = h3 / 32;
-        int b3 = 1 << (h3 % 32);
 
 
         if ((reportBloom[n1] & b1) != 0) {
-            if ((reportBloom[n2] & b2) != 0) {
-                if ((reportBloom[n3] & b3) != 0) {
-                    return;
-                }
-            }
+            return;
         }
 
         int numReports = rc.readBroadcast(201);
