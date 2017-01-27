@@ -3,7 +3,6 @@ package johnny4;
 import battlecode.common.*;
 
 import static johnny4.Util.*;
-import static johnny4.Radio.*;
 
 public class Archon {
 
@@ -17,7 +16,7 @@ public class Archon {
     MapLocation stuckLocation;
     int stuckSince;
     int lastGardener = -1000;
-    static int gardenersSpawned = 0;
+    Team myTeam;
 
     public Archon(RobotController rc) {
         BuildPlanner.rc = rc;
@@ -25,15 +24,11 @@ public class Archon {
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
         this.lastDirection = randomDirection();
-        // if (radio.getEnemyCounter() == 0){
-        // for (MapLocation m : rc.getInitialArchonLocations(rc.getTeam().opponent())){
-        // radio.reportEnemy(m, RobotType.ARCHON, 0);
-        // }
-        // }
         float angle = (float) Math.PI * 2 / directions.length;
         for (int i = 0; i < directions.length; i++) {
             this.directions[i] = new Direction(angle * i);
         }
+        this.myTeam = rc.getTeam();
         this.enemyTeam = rc.getTeam().opponent();
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
@@ -77,79 +72,82 @@ public class Archon {
                     }
                 }
             }
+
             boolean hireGardener = false;
+            BuildPlanner.update(nearbyRobots, trees);
             if (rc.getTeamBullets() > RobotType.GARDENER.bulletCost) {
-                BuildPlanner.update(nearbyRobots, trees);
                 hireGardener = BuildPlanner.hireGardener();
             }
 
-            gardenersSpawned = Math.min(gardenersSpawned, Radio.countAllies(RobotType.ARCHON));
-
-            int alternateBuildDir = -1;
-            for (int i = 0; i < directions.length; i++) {
-                gardenersDir[i] = 0;
-            }
-            RobotInfo robot;
-            int ii;
-            Direction tog;
-            for (int i = 0; i < nearbyRobots.length; i++) {
-                robot = nearbyRobots[i];
-                if (!robot.getTeam().equals(rc.getTeam()) && (robot.type != RobotType.SCOUT)) {
-                    Radio.reportContact();
+            Direction oppositeDir = lastDirection.opposite();
+            MapLocation potentialSpot = myLocation.add(oppositeDir, 3.0f);
+            MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
+            boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f)/* freeDirs > 1*/;
+            boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
+            if (eligibleSpot && rc.canHireGardener(oppositeDir) && hireGardener) {
+                rc.hireGardener(oppositeDir);
+            } else if (hireGardener) {
+                boolean[] blockedDir = new boolean[directions.length];
+                for (TreeInfo t : trees){
+                    int nextDir = 0;
+                    float thisAngle = myLocation.directionTo(t.location).getAngleDegrees();
+                    for (int i = 0; i < directions.length; i++){
+                        if (directions[i].getAngleDegrees() < thisAngle) nextDir = i;
+                    }
+                    blockedDir[nextDir] = true;
+                    blockedDir[(nextDir + 1) % directions.length] = true;
                 }
-                if (robot.getTeam().equals(myTeam) && robot.getType() == RobotType.GARDENER) {
-                    tog = myLocation.directionTo(robot.location);
-                    for (ii = 0; ii < directions.length; ii++) {
-                        if (Math.abs(directions[ii].degreesBetween(tog)) < 90) {
-                            gardenersDir[ii]++;
+                Direction buildDir = null;
+                Direction alternateBuildDir = null;
+                int freeDirs = 0;
+                for (int i = 0; i < directions.length; i++){
+/*
+                    if (!blockedDir[i]){
+                        buildDir = directions[i];
+                        freeDirs ++;
+                        //System.out.println("Direction " + directions[i] + " is free");
+                    }else */if (rc.canHireGardener(directions[i])){
+                        alternateBuildDir = directions[i];
+                    }
+                }
+                if (freeDirs == 1 && alternateBuildDir != null){
+                    freeDirs = 2;
+                    buildDir = alternateBuildDir;
+                }
+                if (alternateBuildDir != null) {
+                    rc.hireGardener(alternateBuildDir);
+                }
+            }
+
+            // shake trees before frame 100
+            boolean tryingToShake = false;
+            if (frame < 100) {
+                Direction dir;
+                for (TreeInfo t : trees) {
+                    if (t.containedBullets > 0) {
+                        dir = myLocation.directionTo(t.location);
+                        if (rc.canMove(dir)) {
+                            rc.move(dir);
+                            tryingToShake = true;
+                        }
+                        if (rc.canShake(t.location)) {
+                            rc.shake(t.location);
+                            tryingToShake = true;
+                        }
+                        if (tryingToShake) {
+                            break;
                         }
                     }
                 }
             }
 
-            if (hireGardener && frame - lastGardener > 35) {
-                for (int i = 0; i < directions.length; i++) {
-                    if (rc.canHireGardener(directions[i]) && rc.onTheMap(myLocation.add(directions[i], 6)) && (alternateBuildDir < 0 || gardenersDir[alternateBuildDir] > gardenersDir[i])) {
-                        alternateBuildDir = i;
-                    }
-                }
-                if (alternateBuildDir >= 0) {
-
-                    if (Util.DEBUG)
-                        System.out.println("Only " + gardenersDir[alternateBuildDir] + " gardeners in direction " + directions[alternateBuildDir]);
-                    rc.hireGardener(directions[alternateBuildDir]);
-                    Radio.reportBuild(RobotType.GARDENER);
-                    gardenersSpawned++;
-                    lastGardener = frame;
-                    Radio.reportActiveGardener();
-                    if (Util.DEBUG) System.out.println("Gardeners spawned: " + gardenersSpawned);
-                } else {
-                    if (Util.DEBUG) System.out.println("Cant build Gardener here");
-                }
-
+            // try to stay in good spots
+            if (goodSpot && eligibleSpot) {
+                return;
             }
-            Direction dir;
-            boolean b = false;
-            for (TreeInfo t : trees) {
-                if (t.containedBullets > 0) {
-                    dir = myLocation.directionTo(t.location);
-                    if (rc.canMove(dir)) {
-                        rc.move(dir);
-                        b = true;
-                    }
-                    if (rc.canShake(t.location)) {
-                        rc.shake(t.location);
-                        b = true;
-                    }
-                    if (b) {
-                        break;
-                    }
-                }
-            }
-
 
             // Move randomly
-            if (!b) {
+            if (!tryingToShake) {
                 while (!rc.canMove(lastDirection) && rand() > 0.02) {
                     lastDirection = lastDirection.rotateRightDegrees(rand() * 60);
                 }

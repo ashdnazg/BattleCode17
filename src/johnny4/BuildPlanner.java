@@ -103,10 +103,11 @@ public class BuildPlanner {
 
             }
         }
+        myTrees = 0;
         Team myTeam = rc.getTeam();
         for (TreeInfo t : nearbyTrees) {
-            if (t.getTeam().equals(myTeam)) {
-                nearbyBulletTrees++;
+            if (t.team == myTeam && myLocation.distanceTo(t.location) < 2.0f) {
+                myTrees++;
             }
         }
         nextEnemyFar = nextEnemy != null ? nextEnemy.location : Map.getTarget(Map.ARCHON, Map.GARDENER, Map.LUMBERJACK, Map.SCOUT, Map.SOLDIER, Map.TANK, 4, myLocation);
@@ -126,7 +127,6 @@ public class BuildPlanner {
         enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
         enemyGardeners = enemyCounts[Radio.typeToInt(RobotType.GARDENER)];
-        myTrees = TreeStorage.ownTrees + TreeStorage.otherTrees * (nearbyGardeners == 0 ? 1 : 0.5f);
         allOrNothing = frame < 200 && startArchonDist < 40;
         if (Util.DEBUG) System.out.println("own scouts: " + ownScouts);
         if (Util.DEBUG) System.out.println("own soldiers: " + ownSoldiers);
@@ -142,14 +142,19 @@ public class BuildPlanner {
     }
 
     public static boolean buildTree() throws GameActionException {
-        if (myTrees >= MAX_TREES_PER_GARDENER + frame / 250 || money < GameConstants.BULLET_TREE_COST) {
+        if (money < GameConstants.BULLET_TREE_COST) {
             return false;
         }
-        if (graceRounds > 40) {
-            return true;
+
+        if (ownSoldiers < 2) {
+            return false;
         }
 
-        return ((frame - lastScoutRound) > 40) || (nearbyProtectors > nearbyEnemies);
+        if (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) {
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -160,9 +165,15 @@ public class BuildPlanner {
             return false;
         }
 
-        if (ownGardeners == 0 && (!allOrNothing || money > 110 && frame > 4 || closestArchon) && (allOrNothing || money > 110 && frame > 4 || Map.enemyArchonPos.length == 1 || !closestArchon) ||
-                ownGardeners > 0 && (rc.getTreeCount() / ownGardeners > 3 || ownGardeners <= graceRounds / 30 ||
-                        money > 125 && nearbyGardeners < nearbyBulletTrees / (Util.tooManyTrees ? 2 : 3) && frame > 50)) {
+        if (ownGardeners == 0 && ((money > 110 && frame > 4) || closestArchon)) {
+            return true;
+        }
+
+        if (!allOrNothing && money > 140 && frame > 4) {
+            return true;
+        }
+
+        if (ownGardeners > 0 && rc.getTreeCount() / ownGardeners > 3) {
             return true;
         }
 
