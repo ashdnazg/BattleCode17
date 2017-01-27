@@ -133,7 +133,7 @@ public class Soldier {
                 if (spotted != null) {
                     if (Util.DEBUG) System.out.println("Found spotter target");
                     hasSpotter = true;
-                    if (nextEnemy == null) {
+                    if (nextEnemy == null && spotted.distanceTo(myLocation) > RobotType.SOLDIER.sensorRadius) {
                         if (Util.DEBUG) System.out.println("Using spotter target");
                         spotterTarget = true;
                         nextEnemy = spotted;
