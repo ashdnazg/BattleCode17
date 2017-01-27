@@ -126,29 +126,34 @@ public class Soldier {
                     hasSpotter = true;
                 }
             }
+            boolean spotterTarget = false;
             if (nextEnemy == null || true) {
-                Map.generateFarTargets(map.rc, myLocation, 8, 0);
+                Map.generateFarTargets(map.rc, myLocation, 9, 0);
                 MapLocation spotted = Map.getTarget(1, myLocation);
                 if (spotted != null) {
                     if (Util.DEBUG) System.out.println("Found spotter target");
                     hasSpotter = true;
                     if (nextEnemy == null) {
                         if (Util.DEBUG) System.out.println("Using spotter target");
+                        spotterTarget = true;
                         nextEnemy = spotted;
-                        nextEnemyInfo = new RobotInfo(42, rc.getTeam().opponent(), Radio.getUnitType(Map.targetType), nextEnemy, 42, 1, 1);
+                        nextEnemyInfo = new RobotInfo(Map.targetType, rc.getTeam().opponent(), Radio.intToType(Map.targetType), nextEnemy, 42, 1, 1);
                         enemyType = nextEnemyInfo.type;
                     }
                 }
             }
             if (hasSpotter) {
-                MIN_EVASION_DIST = 12f;
+                MIN_EVASION_DIST = 10f;
             } else {
                 MIN_EVASION_DIST = 10f;
+            }
+            if (enemyType == RobotType.LUMBERJACK){
+                MIN_EVASION_DIST = 5f;
             }
 
             if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy  + " of type " + enemyType);
             if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
-                nextEnemy = predict(nextEnemyInfo, lastEnemyInfo);
+                nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, spotterTarget ? 1 : 0);
             }
             lastEnemyInfo = nextEnemyInfo;
 
@@ -205,13 +210,13 @@ public class Soldier {
             int cnt4, cnt5, cnt6;
             cnt4 = cnt5 = cnt6 = 0;
             if (nextEnemy != null) {
-                dist = myLocation.distanceTo(nextEnemy);
+                dist = longrange ? myLocation.distanceTo(nextEnemy) : myLocation.distanceTo(nextEnemyInfo.location);
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                float minfiredist = 5f / enemyType.strideRadius + 7;
+                float minfiredist = 3f / enemyType.strideRadius + 9;
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
-                if (!hasFired && evasionMode) {
+                if (!hasFired && evasionMode && false) {
                     if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
                         if (DEBUG) System.out.println("Firing early " + nextEnemyInfo.location.distanceTo(myLocation));
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);

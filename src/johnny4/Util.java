@@ -116,7 +116,7 @@ public class Util {
         Team enemy = rc.getTeam().opponent();
         int i;
         RobotInfo robot;
-        TreeInfo tree;/*
+        TreeInfo tree;
         for (i = 0; i < trees.length; i++) {
             if (cnt >= px.length || i > 5) break;
             tree = trees[i];
@@ -129,7 +129,7 @@ public class Util {
                 pr[cnt] = r + 0.0001f;
                 pg[cnt++] = false;
             }
-        }*/
+        }
         for (i = 0; i < robots.length; i++) {
             if (cnt >= px.length || i > 3) break;
             robot = robots[i];
@@ -185,17 +185,28 @@ public class Util {
     }
 
 
-    static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy) throws GameActionException {
+    static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy, float extratime) throws GameActionException {
         MapLocation nextEnemy = enemy.location;
         float bodyblub = enemy.type.bodyRadius * 0 + rc.getType().bodyRadius;
         float bulletspeed = rc.getType().bulletSpeed;
         MapLocation myLocation = rc.getLocation();
         if (lastEnemy != null && lastEnemy.getID() == enemy.getID()) {
+            if (lastEnemy.location.distanceTo(enemy.location) > enemy.type.strideRadius + 0.0001f){
+                if (Util.DEBUG) System.out.println("Invalid data for prediction");
+
+                //return nextEnemy;
+            }
             float dx = enemy.location.x - lastEnemy.location.x;
             float dy = enemy.location.y - lastEnemy.location.y;
+            if (lastEnemy.location.distanceTo(enemy.location) > enemy.type.strideRadius + 0.0001f){
+                if (Util.DEBUG) System.out.println("Invalid data for prediction");
+                float mag = (float)Math.sqrt(dx * dx + dy * dy);
+                dx = dx / mag * enemy.type.strideRadius;
+                dy = dy / mag * enemy.type.strideRadius;
+            }
             float time = -1f;
             for (int i =0 ; i < 5; i++) {
-                time = Math.min(12,(myLocation.distanceTo(nextEnemy) - bodyblub) )/ bulletspeed;
+                time = Math.min(12,(myLocation.distanceTo(nextEnemy) - bodyblub) )/ bulletspeed + extratime;
                 nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
             }
             if (Util.DEBUG) System.out.println("Time: " + time);

@@ -231,11 +231,13 @@ public class Movement {
             stuckLocation = myLocation;
             stuckSince = lastInit;
         }
+        escaping = false;
         if (Util.DEBUG) System.out.println("ending init " + Clock.getBytecodeNum());
     }
 
     static MapLocation oldTarget = null;
     static int lastLOS = 0;
+    static boolean escaping = false;
 
     public boolean findPath(MapLocation target, Direction fireDir) throws GameActionException {
         if (Util.DEBUG) System.out.println("Starting findPath " + Clock.getBytecodeNum());
@@ -328,7 +330,7 @@ public class Movement {
         if (DEBUG) {
             if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
-        if (retval && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 1 && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
+        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 1 && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
             if (DEBUG) {
                 if (Util.DEBUG) System.out.println("Switching bugdir because of distance");
             }
@@ -470,6 +472,7 @@ public class Movement {
             if (bestVal > 9.9) {
                 return -1f;
             } else {
+                escaping = true;
                 rc.move(bestDir, bestDist);
                 return bestDeg;
             }
