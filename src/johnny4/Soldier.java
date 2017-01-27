@@ -129,7 +129,7 @@ public class Soldier {
             boolean spotterTarget = false;
             if (nextEnemy == null || true) {
                 Map.generateFarTargets(map.rc, myLocation, 9, 0);
-                MapLocation spotted = Map.getTarget(1, myLocation);
+                MapLocation spotted = Map.getTarget(6, myLocation);
                 if (spotted != null) {
                     if (Util.DEBUG) System.out.println("Found spotter target");
                     hasSpotter = true;
@@ -149,6 +149,9 @@ public class Soldier {
             }
             if (enemyType == RobotType.LUMBERJACK){
                 MIN_EVASION_DIST = 5f;
+            }
+            if (enemyType == RobotType.GARDENER || enemyType == RobotType.ARCHON){
+                MIN_EVASION_DIST = 0f;
             }
 
             if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy  + " of type " + enemyType);

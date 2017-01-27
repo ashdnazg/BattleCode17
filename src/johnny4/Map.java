@@ -60,9 +60,11 @@ public class Map {
                 if (type == 1 && !(t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT))
                     continue;
                 if (type == 2 && !(t == GARDENER)) continue;
-                if (type == 5 && !(t == GARDENER || t == SCOUT)) continue;
                 if (type == 3 && !(t == ARCHON)) continue;
                 if (type == 4 && !(t == LUMBERJACK || t == SOLDIER || t == TANK)) continue;
+                if (type == 5 && !(t == GARDENER || t == SCOUT)) continue;
+                if (type == 6 && !(t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT || t== GARDENER))
+                    continue;
                 if (best == null || best.distanceTo(myLocation) > farTargets[t].distanceTo(myLocation)) {
                     best = farTargets[t];
                     targetType = t;
