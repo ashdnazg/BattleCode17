@@ -96,6 +96,7 @@ public class Gardener {
                     if (rc.canPlantTree(buildDirs[i])) {
                         if (!freePos) {
                             freePos = true;
+                            i += 1;
                             continue;
                         }
                         rc.plantTree(buildDirs[i]);
