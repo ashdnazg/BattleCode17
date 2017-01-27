@@ -32,23 +32,22 @@ public class Soldier {
 
         // boolean hasGuardener = false;
         // for (RobotInfo ri : rc.senseNearbyRobots()) {
-            // if (ri.getTeam().equals(rc.getTeam())) {
-                // if (ri.type == RobotType.GARDENER) {
-                    // guardener = ri;
-                    // guardenerID = ri.ID;
-                    // lastContactWithGuardener = rc.getRoundNum();
-                // }
-                // if (ri.type == RobotType.SOLDIER) {
-                    // hasGuardener = true;
-                // }
-            // }
+        // if (ri.getTeam().equals(rc.getTeam())) {
+        // if (ri.type == RobotType.GARDENER) {
+        // guardener = ri;
+        // guardenerID = ri.ID;
+        // lastContactWithGuardener = rc.getRoundNum();
         // }
-
+        // if (ri.type == RobotType.SOLDIER) {
+        // hasGuardener = true;
+        // }
+        // }
+        // }
 
 
         float dist = 1e10f;
         float curDist;
-        for (MapLocation archonPos: map.enemyArchonPos) {
+        for (MapLocation archonPos : map.enemyArchonPos) {
             curDist = archonPos.distanceTo(stuckLocation);
             if (curDist < dist) {
                 lastRandomLocation = archonPos;
@@ -58,8 +57,8 @@ public class Soldier {
 
 
         // if (hasGuardener || dist < 45f) {
-            // guardener = null;
-            // guardenerID = -1;
+        // guardener = null;
+        // guardenerID = -1;
         // }
     }
 
@@ -77,12 +76,12 @@ public class Soldier {
     float circleDir = 0f;
     MapLocation stuckLocation;
     int stuckSince;
-    MapLocation enemyStuckLocation = new MapLocation(0,0);
+    MapLocation enemyStuckLocation = new MapLocation(0, 0);
     int enemyStuckSince;
     BulletInfo bullets[];
     MapLocation nextLumberjack;
     boolean evasionMode = true;
-    final float MIN_EVASION_DIST = 8f;
+    float MIN_EVASION_DIST = 8f;
 
     float money;
 
@@ -106,39 +105,48 @@ public class Soldier {
 
             MapLocation nextEnemy = null;
             RobotInfo nextEnemyInfo = null;
+            RobotInfo nextSpotter = null;
+            boolean hasSpotter = false;
             TreeInfo trees[] = senseClosestTrees();
             // boolean hasGuardener = false;
             TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
-                // if (ri.getTeam().equals(rc.getTeam())) {
-                    // if (guardenerID == ri.ID) {
-                        // guardener = ri;
-                        // lastContactWithGuardener = rc.getRoundNum();
-                    // } else if (ri.type == RobotType.GARDENER) {
-                        // guardener = ri;
-                        // guardenerID = ri.ID;
-                        // lastContactWithGuardener = rc.getRoundNum();
-                    // }
-                    // if (ri.type == RobotType.SOLDIER) {
-                        // hasGuardener = true;
-                    // }
-                // }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
-                                ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0)  + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0))) {
+                                ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0))) {
                     nextEnemy = ri.location;
                     nextEnemyInfo = ri;
                     enemyType = ri.type;
-                    if (enemyType == RobotType.SCOUT){
+                    if (enemyType == RobotType.SCOUT) {
                         hideTree = rc.canSenseLocation(ri.location) ? rc.senseTreeAtLocation(ri.location) : null;
                     }
                 }
+                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SCOUT) && (nextSpotter == null || nextSpotter.location.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
+                    nextSpotter = ri;
+                    hasSpotter = true;
+                }
             }
-            // if ((frame - lastContactWithGuardener) > 40 || (frame == lastContactWithGuardener && hasGuardener)) {
-                // guardenerID = -1;
-                // guardener = null;
-            // }
-            if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy);
+            if (nextEnemy == null || true) {
+                Map.generateFarTargets(map.rc, myLocation, 8, 0);
+                MapLocation spotted = Map.getTarget(1, myLocation);
+                if (spotted != null) {
+                    if (Util.DEBUG) System.out.println("Found spotter target");
+                    hasSpotter = true;
+                    if (nextEnemy == null) {
+                        if (Util.DEBUG) System.out.println("Using spotter target");
+                        nextEnemy = spotted;
+                        nextEnemyInfo = new RobotInfo(42, rc.getTeam().opponent(), Radio.getUnitType(Map.targetType), nextEnemy, 42, 1, 1);
+                        enemyType = nextEnemyInfo.type;
+                    }
+                }
+            }
+            if (hasSpotter) {
+                MIN_EVASION_DIST = 12f;
+            } else {
+                MIN_EVASION_DIST = 10f;
+            }
+
+            if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy  + " of type " + enemyType);
             if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
                 nextEnemy = predict(nextEnemyInfo, lastEnemyInfo);
             }
@@ -170,21 +178,22 @@ public class Soldier {
 
             boolean longrange = false;
             if (nextEnemy == null) {
+                Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                 longrange = true;
                 if (Util.DEBUG) System.out.println("Using long range target");
                 nextEnemy = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, 1, myLocation);
-                if (nextEnemy == null){
+                if (nextEnemy == null) {
                     if (Util.DEBUG) System.out.println("Using long range target fallback");
                     nextEnemy = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, 0, myLocation);
                 }
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
-                }
+                }/*
                 if (frame % 9 == 0) {
                     Map.generateFarTargets(map.rc, myLocation, 1000, 0);
-                }
+                }*/
                 if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy);
-            }else{
+            } else {
 
                 if (Util.DEBUG) System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
             }
@@ -195,22 +204,13 @@ public class Soldier {
             int cnt3 = Clock.getBytecodeNum();
             int cnt4, cnt5, cnt6;
             cnt4 = cnt5 = cnt6 = 0;
-            // if (guardener != null) {
-                // if (myLocation.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
-                    // movement.findPath(guardener.location, null); //protect your padawan
-                    // hasMoved = true;
-                    // if (Util.DEBUG) System.out.println("Returning to guardener");
-                // }
-                // if (nextEnemy != null && nextEnemy.distanceTo(guardener.location) > MIN_GUARDENER_DIST && (longrange ? nextEnemy.distanceTo(myLocation) : nextEnemyInfo.location.distanceTo(myLocation)) > MIN_SCOUT_SHOOT_RANGE) {
-                    // nextEnemy = null;
-                // }
-            // }
             if (nextEnemy != null) {
                 dist = myLocation.distanceTo(nextEnemy);
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                float minfiredist = 100f / enemyType.strideRadius + 2 + 3 * (int) (money / 150);
+                float minfiredist = 5f / enemyType.strideRadius + 7;
+                if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
                 if (!hasFired && evasionMode) {
                     if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
                         if (DEBUG) System.out.println("Firing early " + nextEnemyInfo.location.distanceTo(myLocation));
@@ -224,20 +224,23 @@ public class Soldier {
                         if (Util.DEBUG) System.out.println("No LOS / " + (dist < minfiredist));
                     }
                 }
-                if ((enemyType != RobotType.SOLDIER || (money > 50 && evasionMode)) && enemyType != RobotType.LUMBERJACK) {
+
+                if (enemyType == RobotType.SCOUT) {
                     if (Util.DEBUG) System.out.println("Soldier entering aggression mode");
                     movement.evadeBullets = false;
                     evasionMode = false;
-                }
-                if (enemyType != RobotType.SCOUT && money < 10 && !evasionMode) {
+                } else
+                /*if (enemyType != RobotType.SCOUT && money < 10 && !evasionMode) {*/
+                {
                     if (Util.DEBUG) System.out.println("Soldier entering evasion mode");
                     evasionMode = true;
                     movement.evadeBullets = true;
-                }
+                }/*
                 if (!evasionMode && !longrange){
                     movement.evadeBullets = nextEnemyInfo.location.distanceTo(myLocation) < 3.5f;
-                }
+                }*/
                 cnt4 = Clock.getBytecodeNum();
+                //movement.MIN_ENEMY_DIST = MIN_EVASION_DIST;
                 if (evasionMode && !longrange && (dist < MIN_EVASION_DIST)) {
                     if (!hasMoved && movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1), fireDir)) {
                         myLocation = rc.getLocation();
@@ -247,10 +250,10 @@ public class Soldier {
                     if (!hasMoved) {
                         cnt5 = Clock.getBytecodeNum();
                         MapLocation gotopos = longrange ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), nextEnemyInfo.getRadius() + 1.001f);
-                        if (hideTree != null && nextEnemyInfo != null && frame - enemyStuckSince > 7 && hideTree.location.distanceTo(myLocation) - hideTree.radius < nextEnemyInfo.location.distanceTo(myLocation) - nextEnemyInfo.type.bodyRadius){
+                        if (hideTree != null && nextEnemyInfo != null && frame - enemyStuckSince > 7 && hideTree.location.distanceTo(myLocation) - hideTree.radius < nextEnemyInfo.location.distanceTo(myLocation) - nextEnemyInfo.type.bodyRadius) {
                             gotopos = hideTree.location.add(hideTree.location.directionTo(nextEnemyInfo.location), hideTree.radius + 1.001f);
                             if (DEBUG) System.out.println("Moving to hide tree");
-                        }else{
+                        } else {
 
                             if (DEBUG) System.out.println("Moving close up");
                         }

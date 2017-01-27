@@ -10,7 +10,7 @@ public class Util {
 
     static RobotController rc;
     static Random rnd;
-    static final boolean DEBUG = false;
+    static final boolean DEBUG = true;
     static boolean tooManyTrees = false;
 
     /**
@@ -187,13 +187,18 @@ public class Util {
 
     static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy) throws GameActionException {
         MapLocation nextEnemy = enemy.location;
+        float bodyblub = enemy.type.bodyRadius * 0 + rc.getType().bodyRadius;
+        float bulletspeed = rc.getType().bulletSpeed;
+        MapLocation myLocation = rc.getLocation();
         if (lastEnemy != null && lastEnemy.getID() == enemy.getID()) {
             float dx = enemy.location.x - lastEnemy.location.x;
             float dy = enemy.location.y - lastEnemy.location.y;
-            float time = (rc.getLocation().distanceTo(enemy.location) - enemy.type.bodyRadius - rc.getType().bodyRadius) / rc.getType().bulletSpeed;
-            if (Util.DEBUG) System.out.println(time + ": " + dx + "|" + dy);
-            if (Util.DEBUG) System.out.println("From " + lastEnemy.location + " to " + enemy.location);
-            nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
+            float time = -1f;
+            for (int i =0 ; i < 5; i++) {
+                time = Math.min(12,(myLocation.distanceTo(nextEnemy) - bodyblub) )/ bulletspeed;
+                nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
+            }
+            if (Util.DEBUG) System.out.println("Time: " + time);
             if (Util.DEBUG) rc.setIndicatorLine(lastEnemy.location, enemy.location, 255, 255, 0);
             if (Util.DEBUG) rc.setIndicatorLine(enemy.location, nextEnemy, 255, 100, 0);
         }

@@ -40,10 +40,16 @@ public class Map {
 
     final static int LUMBERJACK = Radio.typeToInt(RobotType.LUMBERJACK);
     final static int SOLDIER = Radio.typeToInt(RobotType.SOLDIER);
-    final static  int TANK = Radio.typeToInt(RobotType.TANK);
+    final static int TANK = Radio.typeToInt(RobotType.TANK);
     final static int SCOUT = Radio.typeToInt(RobotType.SCOUT);
     final static int ARCHON = Radio.typeToInt(RobotType.ARCHON);
     final static int GARDENER = Radio.typeToInt(RobotType.GARDENER);
+
+    public static MapLocation getTarget(int type, MapLocation myLocation) {
+        return getTarget(ARCHON, GARDENER, LUMBERJACK, SCOUT, SOLDIER, TANK, type, myLocation);
+    }
+
+    static int targetType;
 
     //type: 0=any, 1=military, 2=civilian, 3=archon
     public static MapLocation getTarget(int ARCHON, int GARDENER, int LUMBERJACK, int SCOUT, int SOLDIER, int TANK, int type, MapLocation myLocation) {
@@ -59,6 +65,7 @@ public class Map {
                 if (type == 4 && !(t == LUMBERJACK || t == SOLDIER || t == TANK)) continue;
                 if (best == null || best.distanceTo(myLocation) > farTargets[t].distanceTo(myLocation)) {
                     best = farTargets[t];
+                    targetType = t;
                 }
             }
             return best;
@@ -148,52 +155,4 @@ public class Map {
         targetsFrame = frame;
     }
 
-    /*
-    private static List<Intel> toremove = new ArrayList();
-
-    public class Intel{
-
-        final int creationTime;
-        final int robotId;
-        final MapLocation location;
-        final RobotType robotType;
-        final Intel previousIntel;
-
-
-        public Intel(int creationTime, int robotId, MapLocation location, RobotType robotType){
-
-            this.creationTime = creationTime;
-            this.robotId = robotId;
-            this.location = location;
-            this.robotType = robotType;
-
-            toremove.clear();;
-            Intel bestprev = null;
-            for (Intel i : intel) {
-                if (i.equalRobot(this)){
-                    toremove.add(i);
-                    if (bestprev == null || bestprev.creationTime < i.creationTime){
-                        bestprev = i;
-                    }
-                }
-            }
-            previousIntel = bestprev;
-            //register
-            if (previousIntel == null || previousIntel.creationTime < creationTime){
-                intel.removeAll(toremove);
-                intel.add(this);
-                //if (Util.DEBUG) System.out.println("Sensed enemy at " + location);
-                //if (Util.DEBUG) System.out.println("Enemy coords: " + intel.stream().map(i -> i.location.toString()).reduce((u, i) -> u + ", " + i).get());
-            }
-        }
-
-        public Intel(RobotInfo r) {
-            this(rc.getRoundNum(), r.ID, r.getLocation(), r.getType());
-        }
-
-        public boolean equalRobot(Intel other){
-            return other.robotId == this.robotId ||
-                    (other.robotId | robotId) < 0 && location.distanceTo(other.location) < Math.abs(creationTime - other.creationTime) * RobotType.SCOUT.strideRadius;
-        }
-    }*/
 }
