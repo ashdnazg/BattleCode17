@@ -11,8 +11,7 @@ public class Archon {
     Radio radio;
     Movement movement;
     Direction lastDirection;
-    Direction[] directions = new Direction[12];
-    int[] gardenersDir = new int[12];
+    Direction[] directions = new Direction[23];
     Team enemyTeam;
     MapLocation stuckLocation;
     int stuckSince;

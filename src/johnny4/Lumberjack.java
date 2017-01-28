@@ -176,7 +176,7 @@ public class Lumberjack {
 
             if ((longrange || nextEnemy == null || nextEnemy.distanceTo(myLocation) > 5) && !hasChopped)
                 hasChopped = tryChop();
-            boolean hasMoved = hasChopped;
+            boolean hasMoved = false;
 
             // if (guardener != null) {
             // if (myLocation.distanceTo(guardener.location) > MIN_GUARDENER_DIST) {
@@ -190,6 +190,7 @@ public class Lumberjack {
             // }
 
             if (!alarm && currentTreeTarget != null) {
+                hasMoved = hasChopped;
                 if (myLocation.distanceTo(currentTreeTarget) < minDistToTask) {
                     minDistToTask = myLocation.distanceTo(currentTreeTarget);
                     minDistSince = frame;

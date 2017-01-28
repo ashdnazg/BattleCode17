@@ -311,7 +311,7 @@ public class Scout {
                     cache2 = new TreeInfo[0];
                 }
             }
-            boolean hasFired = longRangeCiv || cantfire; //Don't shoot at units outside vision
+            boolean hasFired = false; //Don't shoot at units outside vision
             if (!hasMoved) {
                 toShake = null;
                 if (nearbyAllies > 5 + rc.getID() % 5) { // Don't stay in clusterfucks, go somewhere else
@@ -383,7 +383,7 @@ public class Scout {
                                 myLocation = rc.getLocation();
                             }
                         }
-                        if (!hasFired) {
+                        if (!hasFired && !longRangeCiv && !cantfire) {
                             if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
@@ -416,47 +416,50 @@ public class Scout {
                         }
                     }
                 }
+            }
 
-                if (Util.DEBUG) System.out.println("Scout late " + Clock.getBytecodeNum());
-                if (Clock.getBytecodesLeft() < 1000) {
-                    if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
+            if (Util.DEBUG) System.out.println("Scout late " + Clock.getBytecodeNum());
+            if (Clock.getBytecodesLeft() < 1000) {
+                if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
+                BYTECODE2();
+                return;
+            }
+            if (Util.DEBUG)
+                System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && " + (nextEnemy.distanceTo(myLocation) + " < 12"));
+            if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12)) {
+                if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
+                    hasFired = true;
+                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                    Movement.lastLOS = frame;
+                    if (Util.DEBUG) System.out.println("Returning fire");
+                } else {
+                    if (Util.DEBUG) System.out.println("No LOS on enemy");
+                }
+            }
+            if (Util.DEBUG) System.out.println("Scout late2 " + Clock.getBytecodeNum() + " trees: " + trees.length);
+            for (TreeInfo t : trees) {
+                if (t.getContainedBullets() > 0 && rc.canShake(t.location)) {
+                    rc.shake(t.location);
+                    if (toShake != null && t.ID == toShake.ID) {
+                        toShake = null;
+                        cache = new TreeInfo[0];
+                        cache2 = new TreeInfo[0];
+                    }
+                    if (Util.DEBUG)
+                        System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
+                }
+                if (Clock.getBytecodesLeft() < 100) {
                     BYTECODE2();
                     return;
                 }
-                if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12)) {
-                    if (checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
-                        hasFired = true;
-                        rc.fireSingleShot(myLocation.directionTo(nextEnemy));
-                        Movement.lastLOS = frame;
-                        if (Util.DEBUG) System.out.println("Returning fire");
-                    } else {
-                        if (Util.DEBUG) System.out.println("No LOS on enemy");
-                    }
-                }
-                if (Util.DEBUG) System.out.println("Scout late2 " + Clock.getBytecodeNum() + " trees: " + trees.length);
-                for (TreeInfo t : trees) {
-                    if (t.getContainedBullets() > 0 && rc.canShake(t.location)) {
-                        rc.shake(t.location);
-                        if (toShake != null && t.ID == toShake.ID) {
-                            toShake = null;
-                            cache = new TreeInfo[0];
-                            cache2 = new TreeInfo[0];
-                        }
-                        if (Util.DEBUG)
-                            System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
-                    }
-                    if (Clock.getBytecodesLeft() < 100) {
-                        BYTECODE2();
-                        return;
-                    }
-                }
-                if (Util.DEBUG) System.out.println("Scout late3 " + Clock.getBytecodeNum());
-                lastHP = rc.getHealth();
-                if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
-                    if (Util.DEBUG)
-                        System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy);
-                }
             }
+            if (Util.DEBUG) System.out.println("Scout late3 " + Clock.getBytecodeNum());
+            lastHP = rc.getHealth();
+            if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {
+                if (Util.DEBUG)
+                    System.out.println("Scout took " + (rc.getRoundNum() - frame) + " frames at " + frame + " : " + longRangeCiv + " " + longRangeEnemy);
+            }
+
 
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Scout Exception");

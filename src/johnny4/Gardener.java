@@ -63,7 +63,7 @@ public class Gardener {
     public boolean tryBuild(RobotType robotType) throws GameActionException {
         if (robotType == null) return false;
         for (int i = 0; i < buildDirs.length; i++) {
-            if (buildDirValid[i] && rc.canBuildRobot(robotType, buildDirs[i])) {
+            if ((buildDirValid[i] || robotType == RobotType.LUMBERJACK || robotType == RobotType.SCOUT) && rc.canBuildRobot(robotType, buildDirs[i])) {
                 rc.buildRobot(robotType, buildDirs[i]);
                 Radio.reportBuild(robotType);
                 lastBuild = rc.getRoundNum();
@@ -96,6 +96,9 @@ public class Gardener {
             for (RobotInfo r : nearbyRobots) {
                 if (r.getTeam().equals(rc.getTeam().opponent())) nearbyEnemies++;
                 else if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK || r.type == RobotType.LUMBERJACK) nearbyAllies ++;
+            }
+            if (nearbyEnemies > 0){
+                Radio.setAlarm();
             }
 
             // Check build dirs

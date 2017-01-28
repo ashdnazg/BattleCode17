@@ -29,6 +29,7 @@ public class Movement {
     static float MIN_MOVE_TO_FIRE_ANGLE;
     static float GO_STRAIGHT_DISTANCE;
     static float MIN_FRIENDLY_GARDENER_DIST;
+    static float MIN_FRIENDLY_ARCHON_DIST;
     static boolean evadeBullets = true;
 
     public Movement(RobotController rc) {
@@ -50,6 +51,7 @@ public class Movement {
                 MIN_ENEMY_SCOUT_DIST = 3.5f;
                 GO_STRAIGHT_DISTANCE = 4;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
+                MIN_FRIENDLY_ARCHON_DIST = 0;
                 attemptDist[1] = 1.1f;
                 break;
             case LUMBERJACK:
@@ -59,6 +61,7 @@ public class Movement {
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 100;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
+                MIN_FRIENDLY_ARCHON_DIST = 0;
                 break;
             case SOLDIER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
@@ -67,6 +70,7 @@ public class Movement {
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 1.5f;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
+                MIN_FRIENDLY_ARCHON_DIST = 0;
                 break;
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -75,6 +79,7 @@ public class Movement {
                 MIN_ENEMY_SCOUT_DIST = 5f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_FRIENDLY_GARDENER_DIST = 6;
+                MIN_FRIENDLY_ARCHON_DIST = 10;
                 break;
             case ARCHON:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -83,6 +88,7 @@ public class Movement {
                 MIN_ENEMY_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_ENEMY_SCOUT_DIST = 0f;
+                MIN_FRIENDLY_ARCHON_DIST = 10;
                 //evadeBullets = false;
                 break;
             default:
@@ -92,6 +98,7 @@ public class Movement {
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
+                MIN_FRIENDLY_ARCHON_DIST = 0;
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
@@ -155,6 +162,23 @@ public class Movement {
                         currentThreat.y = ri.location.y;
                         currentThreat.radius = MIN_FRIENDLY_GARDENER_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_GARDENER_DIST * MIN_FRIENDLY_GARDENER_DIST;
+                        //currentThreat.description = "friendly lumberjack";
+                        currentThreat.severity = 0.9f;
+                        currentThreat = threats[++threatsLen];
+                        if (currentThreat == null) {
+                            threats[threatsLen] = new Threat();
+                            currentThreat = threats[threatsLen];
+                        }
+                    }
+                }
+                if (MIN_FRIENDLY_ARCHON_DIST > 0.01 && ri.type == RobotType.ARCHON) {
+                    dist = ri.location.distanceTo(myLocation) - strideDistance;
+                    if (dist < MIN_FRIENDLY_ARCHON_DIST) {
+                        currentThreat.loc = ri.location;
+                        currentThreat.x = ri.location.x;
+                        currentThreat.y = ri.location.y;
+                        currentThreat.radius = MIN_FRIENDLY_ARCHON_DIST;
+                        currentThreat.radiusSquared = MIN_FRIENDLY_ARCHON_DIST * MIN_FRIENDLY_ARCHON_DIST;
                         //currentThreat.description = "friendly lumberjack";
                         currentThreat.severity = 0.9f;
                         currentThreat = threats[++threatsLen];
