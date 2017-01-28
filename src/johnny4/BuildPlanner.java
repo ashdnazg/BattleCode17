@@ -202,7 +202,7 @@ public class BuildPlanner {
             //needSoldiers = false;
         }
         boolean noScouts = ownScouts == 0;
-        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers+1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && ownLumberjacks < 2);
+        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers+1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && ownLumberjacks < 2) || Util.tooManyTrees;
         boolean needScouts = ownScouts <= ownSoldiers / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
         if (!Radio.getLandContact() && ownLumberjacks >= 2) {
             needLumberJacks = false;
