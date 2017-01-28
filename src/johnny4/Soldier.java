@@ -221,7 +221,7 @@ public class Soldier {
                 Direction fireDir = null;
                 float minfiredist = 3f / enemyType.strideRadius + 9;
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
-                boolean hasLosOnEnemy = checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius);
+                boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius);
                 if (!hasFired && evasionMode && false) {
                     if (hasLosOnEnemy && dist < minfiredist) {
                         if (DEBUG) System.out.println("Firing early " + nextEnemyInfo.location.distanceTo(myLocation));

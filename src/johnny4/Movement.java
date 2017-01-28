@@ -65,7 +65,7 @@ public class Movement {
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
-                GO_STRAIGHT_DISTANCE = 4;
+                GO_STRAIGHT_DISTANCE = 1.5f;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 break;
             case GARDENER:
@@ -330,9 +330,9 @@ public class Movement {
         if (DEBUG) {
             if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
-        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 1 && olddist < GO_STRAIGHT_DISTANCE * 2.5)) {
+        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 1 && olddist < GO_STRAIGHT_DISTANCE * 2.0)) {
             if (DEBUG) {
-                if (Util.DEBUG) System.out.println("Switching bugdir because of distance");
+                if (Util.DEBUG) System.out.println("Switching bugdir because of distance and los " + (lastLOS >= rc.getRoundNum() - 1));
             }
             bugdir = !bugdir;
         }

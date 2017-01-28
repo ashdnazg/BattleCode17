@@ -174,7 +174,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (!allOrNothing && money > 140 && frame > 4) {
+        if (!allOrNothing && money > 140 && frame > 4 && nearbyGardeners * 2.5 < nearbyBulletTrees) {
             return true;
         }
 
