@@ -146,7 +146,11 @@ public class BuildPlanner {
             return false;
         }
 
-        if (ownSoldiers < 2) {
+        if (ownSoldiers < 1) {
+            return false;
+        }
+
+        if (ownScouts == 0 && !Radio.getLandContact() && totalEnemies == 0) {
             return false;
         }
 
@@ -222,11 +226,11 @@ public class BuildPlanner {
         }
 
 
-        if (allOrNothing || (nearbyProtectors < 1) && (frame - lastScoutRound) < 100) { //in danger
-            if (needLumberJacks && canLumberjack) {
-                return RobotType.LUMBERJACK;
-            } else if (needSoldiers && canSoldier) {
+        if (allOrNothing || nearbyEnemies > 0) {
+            if (needSoldiers && canSoldier) {
                 return RobotType.SOLDIER;
+            } else if (needLumberJacks && canLumberjack) {
+                return RobotType.LUMBERJACK;
             } else if (nextEnemy != null && nextEnemy.type == RobotType.SCOUT && canLumberjack) {
                 return /*(nearbyTrees.length < 7) ? RobotType.LUMBERJACK : */RobotType.SCOUT;
             } else if (canSoldier) {
