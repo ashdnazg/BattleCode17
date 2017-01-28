@@ -203,7 +203,7 @@ public class BuildPlanner {
         }
         boolean noScouts = ownScouts == 0;
         boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers+1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && ownLumberjacks < 2);
-        boolean needScouts = ownScouts <= ownSoldiers / 3 && ownScouts < 3 || !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3);
+        boolean needScouts = ownScouts <= ownSoldiers / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
         if (!Radio.getLandContact() && ownLumberjacks >= 2) {
             needLumberJacks = false;
         }
@@ -232,10 +232,8 @@ public class BuildPlanner {
                 return RobotType.SOLDIER;
             } else if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
-            } else if (nextEnemy != null && nextEnemy.type == RobotType.SCOUT && canLumberjack) {
-                return /*(nearbyTrees.length < 7) ? RobotType.LUMBERJACK : */RobotType.SCOUT;
             } else if (canSoldier) {
-                return RobotType.SOLDIER;
+                return (!Util.tooManyTrees) ? RobotType.SOLDIER : RobotType.LUMBERJACK ;
             }
         }
 
