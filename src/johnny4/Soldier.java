@@ -221,8 +221,9 @@ public class Soldier {
                 Direction fireDir = null;
                 float minfiredist = 3f / enemyType.strideRadius + 9;
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
+                boolean hasLosOnEnemy = checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius);
                 if (!hasFired && evasionMode && false) {
-                    if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, RobotType.SOLDIER.bodyRadius) && dist < minfiredist) {
+                    if (hasLosOnEnemy && dist < minfiredist) {
                         if (DEBUG) System.out.println("Firing early " + nextEnemyInfo.location.distanceTo(myLocation));
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
@@ -250,7 +251,7 @@ public class Soldier {
                 }*/
                 cnt4 = Clock.getBytecodeNum();
                 //movement.MIN_ENEMY_DIST = MIN_EVASION_DIST;
-                if (evasionMode && !longrange && (dist < MIN_EVASION_DIST)) {
+                if (evasionMode && !longrange && (dist < MIN_EVASION_DIST) && hasLosOnEnemy) {
                     if (!hasMoved && movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1), fireDir)) {
                         myLocation = rc.getLocation();
                     }
