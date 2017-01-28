@@ -425,7 +425,7 @@ public class Scout {
                 return;
             }
             if (Util.DEBUG)
-                System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && " + (nextEnemy.distanceTo(myLocation) + " < 12"));
+                System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && "  + " < 12");
             if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12)) {
                 if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
                     hasFired = true;

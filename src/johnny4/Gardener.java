@@ -140,20 +140,13 @@ public class Gardener {
             if (DEBUG && buildDirValid[freeDir]) rc.setIndicatorDot(myLocation.add(buildDirs[freeDir], 2f), 190, 255, 190);
             if (freePos) {
                 if (noBuildPosSince > frame) noBuildPosSince = frame;
-                if (frame - noBuildPosSince > 40) {
+                if (frame - noBuildPosSince > 69) {
                     if (DEBUG && freePos) System.out.println("No build pos, going full eco");
                 } else {
                     freePos = false;
                 }
             } else {
                 noBuildPosSince = 10000;
-            }
-
-            // Positioning
-            if (treesPlanted == 0) {
-                Movement.init(nearbyRobots, trees, bullets);
-                inPosition = !movement.findPath(myLocation, null);
-                if (DEBUG) System.out.println("Gardener positioning");
             }
 
             // Trees
@@ -199,6 +192,15 @@ public class Gardener {
                 System.out.println("I want to build " + toBuild);
                 tryBuild(toBuild);
             }
+
+
+            // Positioning
+            if (treesPlanted == 0) {
+                Movement.init(nearbyRobots, trees, bullets);
+                inPosition = !movement.findPath(myLocation, null);
+                if (DEBUG) System.out.println("Gardener positioning");
+            }
+
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Gardener Exception");
             e.printStackTrace();

@@ -13,6 +13,8 @@ public class Archon {
     Direction lastDirection;
     Direction[] directions = new Direction[23];
     Team enemyTeam;
+
+    MapLocation lastRandomLocation;
     MapLocation stuckLocation;
     int stuckSince;
     int lastGardener = -1000;
@@ -34,6 +36,16 @@ public class Archon {
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
         BuildPlanner.init();
+        lastRandomLocation = rc.getLocation();
+        float dist = 1e10f;
+        float curDist;
+        for (MapLocation archonPos : map.enemyArchonPos) {
+            curDist = archonPos.distanceTo(stuckLocation);
+            if (curDist < dist) {
+                lastRandomLocation = archonPos;
+                dist = curDist;
+            }
+        }
     }
 
     public void run() {
@@ -144,20 +156,18 @@ public class Archon {
             }
 
             // try to stay in good spots
-            if (goodSpot && eligibleSpot) {
+            /*if (goodSpot && eligibleSpot) {
                 return;
-            }
+            }*/
 
             // Move randomly
             if (!tryingToShake) {
-                movement.findPath(myLocation, null);
-                /*
-                while (!rc.canMove(lastDirection) && rand() > 0.02) {
-                    lastDirection = lastDirection.rotateRightDegrees(rand() * 60);
+                if (!movement.findPath(myLocation, null)){
+                    while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
+                        lastRandomLocation = myLocation.add(randomDirection(), 100);
+                    }
                 }
-                if (rc.canMove(lastDirection)) {
-                    rc.move(lastDirection);
-                }*/
+
             }
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Archon Exception");

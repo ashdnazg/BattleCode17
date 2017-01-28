@@ -18,7 +18,7 @@ public class Soldier {
     //int lastContactWithGuardener = -1000;
     //final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 10;
     final static float MIN_SCOUT_SHOOT_RANGE = 6.5f;
-    final static float MIN_ARCHON_BULLETS = 80f;
+    static float MIN_ARCHON_BULLETS = 80f;
 
 
     public Soldier(RobotController rc) {
@@ -104,6 +104,7 @@ public class Soldier {
             if (nearbyRobots == null) {
                 nearbyRobots = map.sense();//rc.senseNearbyRobots();
             }
+            MIN_ARCHON_BULLETS = 125f - Radio.countAllies(RobotType.GARDENER) * 20;
 
             MapLocation nextEnemy = null;
             RobotInfo nextEnemyInfo = null;
@@ -191,10 +192,10 @@ public class Soldier {
                 Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                 longrange = true;
                 if (Util.DEBUG) System.out.println("Using long range target");
-                nextEnemy = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, 1, myLocation);
+                nextEnemy = Map.getTarget( 6, myLocation);
                 if (nextEnemy == null) {
                     if (Util.DEBUG) System.out.println("Using long range target fallback");
-                    nextEnemy = Map.getTarget(map.ARCHON, map.GARDENER, map.LUMBERJACK, map.SCOUT, map.SOLDIER, map.TANK, 0, myLocation);
+                    nextEnemy = Map.getTarget(6, myLocation);
                 }
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
@@ -289,7 +290,7 @@ public class Soldier {
                     }
                 }
             } else if (!hasMoved) {
-                while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
+                while (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
                     lastRandomLocation = myLocation.add(randomDirection(), 100);
                 }
                 myLocation = rc.getLocation();
