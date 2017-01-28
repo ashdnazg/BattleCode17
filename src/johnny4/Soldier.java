@@ -80,6 +80,8 @@ public class Soldier {
     int enemyStuckSince;
     BulletInfo bullets[];
     MapLocation nextLumberjack;
+    RobotInfo[] nearbyRobots;
+    TreeInfo trees[];
     boolean evasionMode = true;
     float MIN_EVASION_DIST = 8f;
 
@@ -93,7 +95,7 @@ public class Soldier {
             MapLocation myLocation = rc.getLocation();
             money = rc.getTeamBullets();
             bullets = rc.senseNearbyBullets();
-            RobotInfo nearbyRobots[] = null;
+            nearbyRobots = null;
             RobotType enemyType = RobotType.SOLDIER;
             int cnt1 = Clock.getBytecodeNum();
             if (frame % 8 == 0) {
@@ -107,7 +109,7 @@ public class Soldier {
             RobotInfo nextEnemyInfo = null;
             RobotInfo nextSpotter = null;
             boolean hasSpotter = false;
-            TreeInfo trees[] = senseClosestTrees();
+            trees = senseClosestTrees();
             // boolean hasGuardener = false;
             TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
@@ -147,14 +149,14 @@ public class Soldier {
             } else {
                 MIN_EVASION_DIST = 10f;
             }
-            if (enemyType == RobotType.LUMBERJACK){
+            if (enemyType == RobotType.LUMBERJACK) {
                 MIN_EVASION_DIST = 5f;
             }
-            if (enemyType == RobotType.GARDENER || enemyType == RobotType.ARCHON){
+            if (enemyType == RobotType.GARDENER || enemyType == RobotType.ARCHON) {
                 MIN_EVASION_DIST = 0f;
             }
 
-            if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy  + " of type " + enemyType);
+            if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy + " of type " + enemyType);
             if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
                 nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, spotterTarget ? 1 : 0);
             }
@@ -238,8 +240,7 @@ public class Soldier {
                     movement.evadeBullets = false;
                     evasionMode = false;
                 } else
-                /*if (enemyType != RobotType.SCOUT && money < 10 && !evasionMode) {*/
-                {
+                /*if (enemyType != RobotType.SCOUT && money < 10 && !evasionMode) {*/ {
                     if (Util.DEBUG) System.out.println("Soldier entering evasion mode");
                     evasionMode = true;
                     movement.evadeBullets = true;
@@ -287,8 +288,8 @@ public class Soldier {
                     }
                 }
             } else if (!hasMoved) {
-                while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !movement.findPath(lastRandomLocation, null)) {
-                    lastRandomLocation = myLocation.add(randomDirection(), 20);
+                while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.SCOUT.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
+                    lastRandomLocation = myLocation.add(randomDirection(), 100);
                 }
                 myLocation = rc.getLocation();
             }
@@ -309,21 +310,24 @@ public class Soldier {
     }
 
     boolean tryFire(MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
+        if (!Util.fireAllowed) return false;
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
+        float maxArc = getMaximumArcOfFire(myLocation, myLocation.directionTo(nextEnemy), nearbyRobots, trees);
+        if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
         if (enemyType == RobotType.SCOUT) {
             if (money < 110 && dist > 5.0f) {
                 return false;
             } else {
-                if (Util.fireAllowed && rc.canFirePentadShot()) {
+                if (rc.canFirePentadShot() && maxArc > PENTAD_ARC_PLUSMINUS) {
                     rc.firePentadShot(myLocation.directionTo(nextEnemy));
                     return true;
                 }
-                if (Util.fireAllowed && rc.canFireTriadShot() && dist < 4.0f) {
+                if (rc.canFireTriadShot() && maxArc > TRIAD_ARC_PLUSMINUS && dist < 4.0f) {
                     rc.fireTriadShot(myLocation.directionTo(nextEnemy));
                     return true;
                 }
-                if (Util.fireAllowed && rc.canFireSingleShot() && dist < 3.0f) {
+                if (rc.canFireSingleShot() && dist < 3.0f) {
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     return true;
                 }
@@ -334,15 +338,15 @@ public class Soldier {
         if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS) {
             return false;
         }
-        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && Util.fireAllowed && rc.canFirePentadShot()) {
+        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && maxArc > PENTAD_ARC_PLUSMINUS && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (dist - radius < 2.21 + Math.max(0, money / 20f - 2) && Util.fireAllowed && rc.canFireTriadShot()) {
+        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */maxArc > TRIAD_ARC_PLUSMINUS && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (Util.fireAllowed && rc.canFireSingleShot()) {
+        } else if (rc.canFireSingleShot()) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;

@@ -11,7 +11,11 @@ public class Util {
     static RobotController rc;
     static Random rnd;
     static final boolean DEBUG = true;
+    static final float PENTAD_ARC_PLUSMINUS = GameConstants.PENTAD_SPREAD_DEGREES * 2 / 180f * 3.14159265358979323f;
+    static final float TRIAD_ARC_PLUSMINUS = GameConstants.TRIAD_SPREAD_DEGREES / 180f * 3.14159265358979323f;
+
     static boolean tooManyTrees = false;
+
 
     /**
      * Returns a random Direction
@@ -50,6 +54,14 @@ public class Util {
             System.out.println("BYTECODE OVERFLOW");
             rc.setIndicatorLine(rc.getLocation().add(Direction.getNorth(), 30), rc.getLocation().add(Direction.getSouth(), 30), 255, 0, 0);
             rc.setIndicatorLine(rc.getLocation().add(Direction.getEast(), 30), rc.getLocation().add(Direction.getWest(), 30), 255, 0, 0);
+        } catch (Exception ex) {
+        }
+    }
+    static void BYTECODE2() {
+        try {
+            System.out.println("BYTECODE OVERFLOW");
+            rc.setIndicatorLine(rc.getLocation().add(Direction.getNorth(), 30), rc.getLocation().add(Direction.getSouth(), 30), 255, 255, 0);
+            rc.setIndicatorLine(rc.getLocation().add(Direction.getEast(), 30), rc.getLocation().add(Direction.getWest(), 30), 255, 255, 0);
         } catch (Exception ex) {
         }
     }
@@ -105,6 +117,21 @@ public class Util {
     static private float[] pr = new float[25];
     static private boolean[] pg = new boolean[25];
 
+
+    static float getMaximumArcOfFire(MapLocation start, Direction toTarget, RobotInfo robots[], TreeInfo trees[]) throws GameActionException {
+        Team myTeam = rc.getTeam();
+        Team enemyTeam = myTeam.opponent();
+        float maxPlusMinus = 3.14159265358979323f;
+        for (int i = 0; i < robots.length; i++) {
+            if (robots[i].team.equals(enemyTeam)) continue;
+            maxPlusMinus = Math.min(maxPlusMinus, Math.abs(start.directionTo(robots[i].location).radiansBetween(toTarget)));
+        }
+        for (int i = 0; i < trees.length; i++) {
+            if (!trees[i].team.equals(myTeam)) continue;
+            maxPlusMinus = Math.min(maxPlusMinus, Math.abs(start.directionTo(trees[i].location).radiansBetween(toTarget)));
+        }
+        return maxPlusMinus;
+    }
 
     static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException {
         float cx = 0.5f * (start.x + target.x);

@@ -420,6 +420,7 @@ public class Scout {
                 if (Util.DEBUG) System.out.println("Scout late " + Clock.getBytecodeNum());
                 if (Clock.getBytecodesLeft() < 1000) {
                     if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
+                    BYTECODE2();
                     return;
                 }
                 if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12)) {
@@ -444,7 +445,10 @@ public class Scout {
                         if (Util.DEBUG)
                             System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
                     }
-                    if (Clock.getBytecodesLeft() < 100) return;
+                    if (Clock.getBytecodesLeft() < 100) {
+                        BYTECODE2();
+                        return;
+                    }
                 }
                 if (Util.DEBUG) System.out.println("Scout late3 " + Clock.getBytecodeNum());
                 lastHP = rc.getHealth();
