@@ -438,8 +438,17 @@ public class Radio {
         return ((info & 0b11111111111100000000000000000000) >>> 20) / 4.0f;
     }
 
+
     public static float getUnitY(int info) {
         return ((info & 0b00000000000011111111111100000000) >>> 8) / 4.0f;
+    }
+
+    public static float getTreeX(int info) {
+        return (info & 0b11111111110000000000000000000000) >>> 22;
+    }
+
+    public static float getTreeY(int info) {
+        return (info & 0b00000000001111111111000000000000) >>> 12;
     }
 
     public static int getUnitAge(int info) {
@@ -487,7 +496,7 @@ public class Radio {
         for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
             if (data != 0) {
-                return new MapLocation(getUnitX(data), getUnitY(data));
+                return new MapLocation(getTreeX(data), getTreeY(data));
             }
         }
         return null;
@@ -499,7 +508,7 @@ public class Radio {
         for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
             if (data != 0) {
-                tree = new MapLocation(getUnitX(data), getUnitY(data));
+                tree = new MapLocation(getTreeX(data), getTreeY(data));
                 if (closest == null || closest.distanceTo(myLocation) > tree.distanceTo(myLocation)) {
                     closest = tree;
                 }
@@ -515,7 +524,7 @@ public class Radio {
         for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
             if (data != 0) {
-                tree = new MapLocation(getUnitX(data), getUnitY(data));
+                tree = new MapLocation(getTreeX(data), getTreeY(data));
                 if (rc.canSenseLocation(tree) && rc.senseTreeAtLocation(tree) == null) {
                     if (Util.DEBUG) System.out.println("Cleaning up tree at " + tree);
                     reportTreeCut(tree);
