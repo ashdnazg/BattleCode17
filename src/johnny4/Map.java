@@ -96,17 +96,18 @@ public class Map {
         int ecnt = rc.readBroadcast(1);
         float x, y, dx, dy, dist;
         int unitData, ut;
+        int frame32 = frame % 32 + 32;
         for (int i = ecnt + 100; i >= 101; i--) {
             //if (Util.DEBUG) System.out.println("1: " + Clock.getBytecodeNum());
             unitData = rc.readBroadcast(i);
             //if (Util.DEBUG) System.out.println("1.2: " + Clock.getBytecodeNum());
-            if (frame - ((unitData & 0b00000000000000000000000111111111)) * 8 >= maxAge)
+            if ((frame32 - (unitData & 0b00000000000000000000000000011111)) % 32 >= maxAge)
                 continue;
-            ut = (unitData & 0b00000000000000000000111000000000) >>> 9;
+            ut = (unitData & 0b00000000000000000000000011100000) >>> 5;
             //if (Util.DEBUG) System.out.println("2: " + Clock.getBytecodeNum());
 
-            x = (unitData & 0b11111111110000000000000000000000) >>> 22;
-            y = (unitData & 0b00000000001111111111000000000000) >>> 12;
+            x = ((unitData & 0b11111111111100000000000000000000) >>> 20) / 4.0f;
+            y = ((unitData & 0b00000000000011111111111100000000) >>> 8) / 4.0f;
             dx = (mx - x);
             dy = (my - y);
             dist = dx * dx + dy * dy;
