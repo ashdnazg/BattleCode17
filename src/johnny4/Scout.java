@@ -399,7 +399,7 @@ public class Scout {
                     }
                 } else { //No civilian, search the map
                     if (!hasMoved) {
-                        if (isSpotter && nextFighter != null) {
+                        if (isSpotter && nextFighter != null && false) {
                             if (nextFriendlyFighter != null) {
                                 if (Util.DEBUG)
                                     System.out.println("blubbing " + nextFighter.type + " at " + nextFighter.location);

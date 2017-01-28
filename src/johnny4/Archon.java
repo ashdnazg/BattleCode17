@@ -9,6 +9,7 @@ public class Archon {
     RobotController rc;
     Map map;
     Radio radio;
+    Movement movement;
     Direction lastDirection;
     Direction[] directions = new Direction[12];
     int[] gardenersDir = new int[12];
@@ -23,6 +24,7 @@ public class Archon {
         this.rc = rc;
         this.radio = new Radio(rc);
         this.map = new Map(rc, radio);
+        this.movement = new Movement(rc);
         this.lastDirection = randomDirection();
         float angle = (float) Math.PI * 2 / directions.length;
         for (int i = 0; i < directions.length; i++) {
@@ -54,6 +56,7 @@ public class Archon {
             radio.frame = frame;
             MapLocation myLocation = rc.getLocation();
             RobotInfo[] nearbyRobots = map.sense();
+            BulletInfo bullets[] = rc.senseNearbyBullets();
 
             TreeInfo[] trees = senseClosestTrees();
 
@@ -118,6 +121,7 @@ public class Archon {
                     rc.hireGardener(alternateBuildDir);
                 }
             }
+            Movement.init(nearbyRobots, trees, bullets);
 
             // shake trees before frame 100
             boolean tryingToShake = false;
@@ -126,8 +130,7 @@ public class Archon {
                 for (TreeInfo t : trees) {
                     if (t.containedBullets > 0) {
                         dir = myLocation.directionTo(t.location);
-                        if (rc.canMove(dir)) {
-                            rc.move(dir);
+                        if (movement.findPath(t.location.add(dir, -t.radius - RobotType.ARCHON.bodyRadius), null)) {
                             tryingToShake = true;
                         }
                         if (rc.canShake(t.location)) {
@@ -148,12 +151,14 @@ public class Archon {
 
             // Move randomly
             if (!tryingToShake) {
+                movement.findPath(myLocation, null);
+                /*
                 while (!rc.canMove(lastDirection) && rand() > 0.02) {
                     lastDirection = lastDirection.rotateRightDegrees(rand() * 60);
                 }
                 if (rc.canMove(lastDirection)) {
                     rc.move(lastDirection);
-                }
+                }*/
             }
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Archon Exception");

@@ -74,16 +74,16 @@ public class Movement {
                 MIN_ENEMY_DIST = 5f;
                 MIN_ENEMY_SCOUT_DIST = 5f;
                 GO_STRAIGHT_DISTANCE = 0;
-                MIN_FRIENDLY_GARDENER_DIST = 4;
+                MIN_FRIENDLY_GARDENER_DIST = 6;
                 break;
             case ARCHON:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
-                MIN_FRIENDLY_GARDENER_DIST = 0;
+                MIN_FRIENDLY_GARDENER_DIST = 10f;
                 MIN_ENEMY_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_ENEMY_SCOUT_DIST = 0f;
-                evadeBullets = false;
+                //evadeBullets = false;
                 break;
             default:
             case TANK:
@@ -95,7 +95,7 @@ public class Movement {
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
-        if (Util.DEBUG) System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE);
+        if (Util.DEBUG) System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE + " mingard: " + MIN_FRIENDLY_GARDENER_DIST);
     }
 
     // Call this every frame before using
@@ -223,7 +223,7 @@ public class Movement {
                 }
             }
         }
-        if (noEnemies && robotType != RobotType.GARDENER) { // only keep distance to lumberjacks in combat
+        if (noEnemies && MIN_FRIENDLY_GARDENER_DIST <= 0.001) { // only keep distance to lumberjacks in combat
             threatsLen = 0;
             if (Util.DEBUG) System.out.println("No threats, hugging friendly lumberjacks");
         }

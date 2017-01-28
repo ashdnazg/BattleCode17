@@ -137,6 +137,7 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("enemy gardeners: " + enemyGardeners);
         if (Util.DEBUG) System.out.println("enemy lumberjacks: " + enemyLumberjacks);
         if (Util.DEBUG) System.out.println("nearby trees: " + nearbyTrees.length);
+        if (Util.DEBUG) System.out.println("nearby gardeners: " + nearbyGardeners);
         if (Util.DEBUG) System.out.println("tree cutting requests: " + Radio.countTreeCutRequests());
         if (Util.DEBUG) System.out.println("grace rounds: " + graceRounds);
     }
@@ -165,7 +166,7 @@ public class BuildPlanner {
     public static boolean hireGardener() throws GameActionException {
         money = rc.getTeamBullets();
         boolean haveMoney = money > ((nextEnemy == null) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
-        if (!haveMoney) {
+        if (!haveMoney || nearbyGardeners > 4) {
             return false;
         }
 
