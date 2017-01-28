@@ -344,7 +344,7 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */maxArc > TRIAD_ARC_PLUSMINUS && rc.canFireTriadShot()) {
+        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2  && maxArc > TRIAD_ARC_PLUSMINUS && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;

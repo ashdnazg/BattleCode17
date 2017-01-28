@@ -46,6 +46,7 @@ public class Archon {
                 dist = curDist;
             }
         }
+        lastRandomLocation = rc.getLocation();
     }
 
     public void run() {
@@ -85,6 +86,9 @@ public class Archon {
                         radio.requestTreeCut(t);
                     }
                 }
+            }
+            for (RobotInfo r: nearbyRobots){
+                if (r.getTeam().equals(myTeam) && r.type == RobotType.GARDENER) lastGardener = frame;
             }
 
             boolean hireGardener = false;
@@ -161,10 +165,10 @@ public class Archon {
             }*/
 
             // Move randomly
-            if (!tryingToShake) {
+            if (!tryingToShake && frame - lastGardener < 10) {
                 if (!movement.findPath(myLocation, null)){
                     while (lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
-                        lastRandomLocation = myLocation.add(randomDirection(), 100);
+                        lastRandomLocation = myLocation.add(randomDirection(), 10);
                     }
                 }
 

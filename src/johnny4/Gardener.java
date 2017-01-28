@@ -93,11 +93,17 @@ public class Gardener {
 
             int nearbyEnemies = 0;
             int nearbyAllies = 0;
+            int nearbyAllyFighters = 0;
             for (RobotInfo r : nearbyRobots) {
                 if (r.getTeam().equals(rc.getTeam().opponent())) nearbyEnemies++;
-                else if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK || r.type == RobotType.LUMBERJACK) nearbyAllies ++;
+                else if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK || r.type == RobotType.LUMBERJACK) {
+                    nearbyAllies ++;
+                    if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK){
+                        nearbyAllyFighters ++;
+                    }
+                }
             }
-            if (nearbyEnemies > 0){
+            if (nearbyEnemies > nearbyAllyFighters){
                 Radio.setAlarm();
             }
 
@@ -140,7 +146,7 @@ public class Gardener {
             if (DEBUG && buildDirValid[freeDir]) rc.setIndicatorDot(myLocation.add(buildDirs[freeDir], 2f), 190, 255, 190);
             if (freePos) {
                 if (noBuildPosSince > frame) noBuildPosSince = frame;
-                if (frame - noBuildPosSince > 69) {
+                if (frame - noBuildPosSince > 69 && Radio.countAllies(RobotType.GARDENER) > 4) {
                     if (DEBUG && freePos) System.out.println("No build pos, going full eco");
                 } else {
                     freePos = false;
