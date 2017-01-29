@@ -33,7 +33,7 @@ public class Soldier {
         this.movement = new Movement(rc);
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
-        this.ignoreScouts = rand() < 10.7f;
+        this.ignoreScouts = true;
         this.getTargetType = ignoreScouts ? 7 : 6;
         spawnLocation = stuckLocation;
         suicidal = rc.getRoundNum() < 100;
