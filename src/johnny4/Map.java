@@ -125,12 +125,14 @@ public class Map {
         int ecnt = rc.readBroadcast(1);
         float x, y, dx, dy, dist;
         int unitData, ut;
-        int frame32 = frame % 32 + 32;
-        for (int i = ecnt + 100; i >= 101; i--) {
+        int reportFrame;
+        for (int i = ecnt * 2; i >= 2; i -= 2) {
             //if (Util.DEBUG) System.out.println("1: " + Clock.getBytecodeNum());
             unitData = rc.readBroadcast(i);
+            reportFrame = rc.readBroadcast(i + 1);
+            //if (Util.DEBUG) System.out.println("my target was reported in: " + reportFrame);
             //if (Util.DEBUG) System.out.println("1.2: " + Clock.getBytecodeNum());
-            if ((frame32 - (unitData & 0b00000000000000000000000000011111)) % 32 >= maxAge)
+            if ((frame - reportFrame) >= maxAge)
                 continue;
             ut = (unitData & 0b00000000000000000000000011100000) >>> 5;
             //if (Util.DEBUG) System.out.println("2: " + Clock.getBytecodeNum());

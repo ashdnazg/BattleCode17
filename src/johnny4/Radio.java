@@ -6,9 +6,7 @@ public class Radio {
 
     //Integer 0:        Contact boolean
     //Integer 1:        Enemy Counter
-    //Integer 2:        Unit Counter
-    //Integer 4-100:    Unit Info
-    //Integer 101-200:  Enemy Info
+    //Integer 2-199:  Enemy Info
     //Integer 201:  Enemy Reports count
     //Integer 202-300:  Enemy Reports
     //Integer 301:      Tree cutting requests counter
@@ -47,10 +45,10 @@ public class Radio {
 
     // only used by Archon
     static int[][] enemyIDToPos;
-    static int[][] enemyIDToAge;
     static int[] enemyPosToID;
 
     static boolean haveBeenFirst = false;
+    static final int ENEMY_EVICTION_AGE = 64;
 
 
     public Radio(RobotController rc_) {
@@ -123,7 +121,6 @@ public class Radio {
         if (!haveBeenFirst) {
             setEnemyCounter(0);
             haveBeenFirst = true;
-            enemyIDToAge = new int[180][];
             enemyIDToPos = new int[180][];
             enemyPosToID = new int[100];
         }
@@ -142,19 +139,19 @@ public class Radio {
         reportBloom[4] = 0;
         reportBloom[5] = 0;
 
-        int pos = 101;
-        int last = Math.min(98, getEnemyCounter()) + 101;
+        int pos = 2;
+        int last = Math.min(99, getEnemyCounter()) * 2 + 2;
 
         int report = rc.readBroadcast(pos);
+        int reportFrame = rc.readBroadcast(pos + 1);
         boolean writeNeeded = false;
-        int frame32 = frame % 32 + 1;
         int ID, ID_a, ID_b, age, info, h1, n1, b1, h2, n2, b2, h3, n3, b3, type;
         while (pos < last) {
-            ID = enemyPosToID[pos - 101];
+            ID = enemyPosToID[pos - 2];
             //if (Util.DEBUG) System.out.println("checking for eviction ID: " + ID);
             ID_a = ID % 180;
             ID_b = ID / 180;
-            age = enemyIDToAge[ID_a][ID_b];
+            age = frame - reportFrame;
 
             info = report >>> 8;
             h1 = (info * 41 + 23) % 96;
@@ -163,17 +160,15 @@ public class Radio {
             h2 = (info * 97 + 67) % 96;
             n2 = h2 / 32;
             b2 = 1 << (h2 % 32);
-
-
-            // evict units after not seeing them for 32 rounds
-            if ((age == frame32) || (((deleteBloom[n1] & b1) != 0) && ((deleteBloom[n2] & b2) != 0))) {
-                //if (Util.DEBUG) System.out.println("evicting from pos: " + pos);
-                enemyIDToAge[ID_a][ID_b] = 0;
+            // evict units after not seeing them for ENEMY_EVICTION_AGE rounds
+            if ((age > ENEMY_EVICTION_AGE) || (((deleteBloom[n1] & b1) != 0) && ((deleteBloom[n2] & b2) != 0))) {
+                if (Util.DEBUG) System.out.println("evicting from pos: " + pos);
                 enemyIDToPos[ID_a][ID_b] = 0;
                 writeNeeded = true;
-                last--;
-                enemyPosToID[pos - 101] = enemyPosToID[last - 101];
+                last -= 2;
+                enemyPosToID[pos - 2] = enemyPosToID[last - 2];
                 report = rc.readBroadcast(last);
+                reportFrame = rc.readBroadcast(last + 1);
 
                 continue;
             }
@@ -181,14 +176,18 @@ public class Radio {
             enemyCounts[type]++;
             if (writeNeeded) {
                 rc.broadcast(pos, report);
+                rc.broadcast(pos + 1, reportFrame);
                 enemyIDToPos[ID_a][ID_b] = pos;
                 writeNeeded = false;
             }
-            report = rc.readBroadcast(++pos);
+            pos += 2;
+            report = rc.readBroadcast(pos);
+            reportFrame = rc.readBroadcast(pos + 1);
         }
 
         if (writeNeeded) {
             rc.broadcast(pos, report);
+            rc.broadcast(pos + 1, reportFrame);
         }
 
         pos = 202;
@@ -201,32 +200,31 @@ public class Radio {
             //if (Util.DEBUG) System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000000011100000) >>> 5));
             ID_a = ID % 180;
             ID_b = ID / 180;
-            if (enemyIDToAge[ID_a] == null) {
-                if (last == 201 || (byteCodeLimit - Clock.getBytecodeNum() < 5000)) {
+            if (enemyIDToPos[ID_a] == null) {
+                if (last > 199 || (byteCodeLimit - Clock.getBytecodeNum() < 5000)) {
                     continue;
                 }
-                enemyIDToAge[ID_a] = new int[180];
                 enemyIDToPos[ID_a] = new int[180];
             } else {
                 infoPos = enemyIDToPos[ID_a][ID_b];
                 if (infoPos > 0) {
                     rc.broadcast(infoPos, report);
-                    enemyIDToAge[ID_a][ID_b] = frame32;
+                    rc.broadcast(infoPos + 1, frame - 1);
                     continue;
                 }
             }
-            if (last == 201) {
+            if (last > 199) {
                 continue;
             }
-            enemyIDToAge[ID_a][ID_b] = frame32;
             enemyIDToPos[ID_a][ID_b] = last;
-            enemyPosToID[last - 101] = ID;
+            enemyPosToID[last - 2] = ID;
             rc.broadcast(last++, report);
+            rc.broadcast(last++, frame - 1);
             type = (report & 0b00000000000000000000000011100000) >>> 5;
             enemyCounts[type]++;
         }
 
-        setEnemyCounter(last - 101);
+        setEnemyCounter((last - 2) / 2);
         rc.broadcast(201, 0);
 
 
@@ -359,7 +357,7 @@ public class Radio {
 
             tempBloom[n1] |= b1;
 
-            info = ((int) Math.round(ri.location.x * 4) << 20) | ((int) Math.round(ri.location.y * 4) << 8) | (typeToInt(ri.type) << 5) | frame % 32;
+            info = ((int) Math.round(ri.location.x * 4) << 20) | ((int) Math.round(ri.location.y * 4) << 8) | (typeToInt(ri.type) << 5);
             rc.broadcast(numReports + 202, info);
             rc.broadcast(numReports + 203, ID);
             //if (Util.DEBUG) System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
@@ -411,7 +409,7 @@ public class Radio {
         if (numReports == 98) {
             return;
         }
-        int info = ((int) Math.round(location.x * 4) << 20) | ((int) Math.round(location.y * 4) << 8) | (typeToInt(type) << 5) | (frame % 32);
+        int info = ((int) Math.round(location.x * 4) << 20) | ((int) Math.round(location.y * 4) << 8) | (typeToInt(type) << 5);
         rc.broadcast(numReports + 202, info);
         rc.broadcast(numReports + 203, ID);
         rc.broadcast(201, numReports + 2);
