@@ -102,7 +102,7 @@ public class Radio {
         deleteBloom[2] = 0;
 
         int numDeletes = rc.readBroadcast(427);
-        int info, h1, n1, b1, h2, n2, b2;
+        long info, h1, n1, b1, h2, n2, b2;
         for (int i = 0; i < numDeletes; ++i) {
             info = rc.readBroadcast(i + 428);
             h1 = (info * 41 + 23) % 96;
@@ -111,8 +111,8 @@ public class Radio {
             h2 = (info * 97 + 67) % 96;
             n2 = h2 / 32;
             b2 = 1 << (h2 % 32);
-            deleteBloom[n1] |= b1;
-            deleteBloom[n2] |= b2;
+            deleteBloom[(int)n1] |= (int) b1;
+            deleteBloom[(int)n2] |= (int) b2;
         }
 
         rc.broadcast(427, 0);
@@ -147,7 +147,8 @@ public class Radio {
         int report = rc.readBroadcast(pos);
         int reportFrame = rc.readBroadcast(pos + 1);
         boolean writeNeeded = false;
-        int ID, ID_a, ID_b, age, info, h1, n1, b1, h2, n2, b2, h3, n3, b3, type;
+        int ID, ID_a, ID_b, age, type;
+        long info, h1, n1, b1, h2, n2, b2;
         while (pos < last) {
             ID = enemyPosToID[pos - 2];
             //if (Util.DEBUG) System.out.println("checking for eviction ID: " + ID);
@@ -163,7 +164,7 @@ public class Radio {
             n2 = h2 / 32;
             b2 = 1 << (h2 % 32);
             // evict units after not seeing them for ENEMY_EVICTION_AGE rounds
-            if ((age > ENEMY_EVICTION_AGE) || (((deleteBloom[n1] & b1) != 0) && ((deleteBloom[n2] & b2) != 0))) {
+            if ((age > ENEMY_EVICTION_AGE) || (((deleteBloom[(int)n1] & b1) != 0) && ((deleteBloom[(int)n2] & b2) != 0))) {
                 if (Util.DEBUG) System.out.println("evicting from pos: " + pos);
                 enemyIDToPos[ID_a][ID_b] = 0;
                 writeNeeded = true;
@@ -343,7 +344,7 @@ public class Radio {
         if (numReports == 98) {
             return;
         }
-        int ID, h1, n1, b1, h2, n2, b2, h3, n3, b3, info;
+        int ID, h1, n1, b1, h2, n2, b2, info;
         for (int i = 0; i < length; ++i) {
             RobotInfo ri = ris[i];
             if (ri.team.equals(myTeam)) {
