@@ -245,9 +245,9 @@ public class Soldier {
                         hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
                         fireDir = myLocation.directionTo(nextEnemy);
                         if (hasFired) {
+                            Movement.lastLOS = frame;
                             bullets = rc.senseNearbyBullets();
                         }
-                        Movement.lastLOS = frame;
                     } else {
                         if (Util.DEBUG) System.out.println("No LOS / " + (dist < minfiredist));
                     }
@@ -307,8 +307,8 @@ public class Soldier {
                         fireDir = myLocation.directionTo(nextEnemy);
                         if (hasFired) {
                             bullets = rc.senseNearbyBullets();
+                            Movement.lastLOS = frame;
                         }
-                        Movement.lastLOS = frame;
                     } else {
                         if (Util.DEBUG) System.out.println("No LOS");
                     }

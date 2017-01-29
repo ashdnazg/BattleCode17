@@ -382,9 +382,9 @@ public class Movement {
         if (DEBUG) {
             if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
-        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 1 && olddist < GO_STRAIGHT_DISTANCE * 2.0)) {
+        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 4 && olddist < GO_STRAIGHT_DISTANCE * 7.0)) {
             if (DEBUG) {
-                if (Util.DEBUG) System.out.println("Switching bugdir because of distance and los " + (lastLOS >= rc.getRoundNum() - 1));
+                if (Util.DEBUG) System.out.println("Switching bugdir because of distance and los " + (lastLOS >= rc.getRoundNum() - 4));
             }
             bugdir = !bugdir;
         }
