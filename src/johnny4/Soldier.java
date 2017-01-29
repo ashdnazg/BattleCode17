@@ -352,7 +352,7 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (rc.canFireSingleShot()) {
+        } else if (rc.canFireSingleShot() && (maxArc > 0.01f || dist < 3)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;
