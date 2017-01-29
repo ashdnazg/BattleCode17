@@ -262,8 +262,8 @@ public class Util {
                 ti = trees[i];
                 if (ti.radius > 0.1 && cnt < maxCnt) {
                     temp[cnt++] = ti;
-                    if (ti.containedBullets > 0) cnt2++;
-                } else if (ti.containedBullets > 0 && cnt2 < maxCnt) {
+                    if (ti.containedBullets > 0 || ti.containedRobot != null) cnt2++;
+                } else if ((ti.containedBullets > 0|| ti.containedRobot != null) && cnt2 < maxCnt) {
                     temp[cnt2++] = ti;
                 }
                 if (ti.containedRobot != null) {
