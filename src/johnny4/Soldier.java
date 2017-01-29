@@ -23,6 +23,7 @@ public class Soldier {
     static float MIN_ARCHON_BULLETS = 80f;
     final int getTargetType;
     int lastRandomLocTime = 10000;
+    static int nearbySoldiers = 0;
 
 
     public Soldier(RobotController rc) {
@@ -121,12 +122,16 @@ public class Soldier {
             RobotInfo nextEnemyInfo = null;
             RobotInfo nextSpotter = null;
             RobotInfo nextGardener = null;
+            nearbySoldiers = 0;
             boolean hasSpotter = false;
             trees = senseClosestTrees();
             TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.ARCHON)){
                     SUICIDAL_END = Math.min(SUICIDAL_END, frame + 15);
+                }
+                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER)){
+                    nearbySoldiers++;
                 }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
@@ -334,20 +339,22 @@ public class Soldier {
         if (!Util.fireAllowed) return false;
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
-        float maxArc = getMaximumArcOfFire(myLocation, myLocation.directionTo(nextEnemy), nearbyRobots, trees);
+        Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers) * 2 * enemyType.strideRadius);
+        if (Util.DEBUG) System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers) * 2 * enemyType.strideRadius) + " degrees");
+        float maxArc = getMaximumArcOfFire(myLocation, firedir, nearbyRobots, trees);
         if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
         if (enemyType == RobotType.SCOUT) {
             if (dist > 5f && Util.tooManyTrees && money < 110) return false;
             if (rc.canFirePentadShot() && maxArc > PENTAD_ARC_PLUSMINUS && (money > 50 || dist < 7f)) {
-                rc.firePentadShot(myLocation.directionTo(nextEnemy));
+                rc.firePentadShot(firedir);
                 return true;
             }
             if (rc.canFireTriadShot() && maxArc > TRIAD_ARC_PLUSMINUS) {
-                rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+                rc.fireTriadShot(firedir);
                 return true;
             }
             if (rc.canFireSingleShot() && dist < 3.0f) {
-                rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                rc.fireSingleShot(firedir);
                 return true;
             }
 
@@ -359,15 +366,15 @@ public class Soldier {
         }
         if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
-            rc.firePentadShot(myLocation.directionTo(nextEnemy));
+            rc.firePentadShot(firedir);
             return true;
-        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2 && (maxArc > TRIAD_ARC_PLUSMINUS || dist < 4) && rc.canFireTriadShot()) {
+        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 6 * enemyType.strideRadius + radius * 2 && (maxArc > TRIAD_ARC_PLUSMINUS || dist < 4) && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
-            rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+            rc.fireTriadShot(firedir);
             return true;
         } else if (rc.canFireSingleShot()/* && (dist < 11 - 6 * enemyType.strideRadius || maxArc <= TRIAD_ARC_PLUSMINUS)*/ && (maxArc > 0.01f || dist < 5)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
-            rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+            rc.fireSingleShot(firedir);
             return true;
         }
         return false;
