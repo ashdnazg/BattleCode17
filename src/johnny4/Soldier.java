@@ -139,7 +139,7 @@ public class Soldier {
                     nearbySoldiers++;
                 }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
-                        (ri.type != RobotType.SCOUT || !ignoreScouts || nextGardener != null) &&
+                        (ri.type != RobotType.SCOUT || !ignoreScouts || nextGardener != null || ri.location.distanceTo(myLocation) < 4.2f) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
                                 ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0))) {
                     nextEnemy = ri.location;
