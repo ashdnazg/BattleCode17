@@ -12,6 +12,7 @@ public class Radio {
     //Integer 301:      Tree cutting requests counter
     //Integer 302-320:  Requested trees to remove according to priority
     //Integer 321:      ALARM ALARM
+    //Integer 322:      Scout hunters
     //Integer 400-405:  active unit counters
     //Integer 406-411:  under construction unit counters
     //Integer 412:  radio unit ID
@@ -36,6 +37,7 @@ public class Radio {
     static int[] allyCounts = new int[6];
     static int[] buildees = new int[2];
     static int activeGardenersCount;
+    static int scoutHuntersCount;
 
     static int[] enemyCounts = new int[6];
     static int[] reportBloom = new int[6];
@@ -268,6 +270,7 @@ public class Radio {
             allyCounts[4] = Counter.commit(404) + Counter.commit(410);
             allyCounts[5] = Counter.commit(405) + Counter.commit(411);
             activeGardenersCount = Counter.commit(426);
+            scoutHuntersCount = Counter.commit(322);
 
             processDeleteRequests();
 
@@ -288,6 +291,7 @@ public class Radio {
             allyCounts[5] = Counter.get(405) + Counter.get(411);
 
             activeGardenersCount = Counter.get(426);
+            scoutHuntersCount = Counter.get(322);
 
             enemyCounts[0] = rc.readBroadcast(414);
             enemyCounts[1] = rc.readBroadcast(415);
@@ -554,6 +558,14 @@ public class Radio {
 
     public static int countActiveGardeners() throws GameActionException {
         return activeGardenersCount;
+    }
+
+    public static void reportScoutHunter() throws GameActionException {
+        Counter.increment(322);
+    }
+
+    public static int countScoutHunters() throws GameActionException {
+        return scoutHuntersCount;
     }
 
     public static void setAlarm() throws GameActionException {
