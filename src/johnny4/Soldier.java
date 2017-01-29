@@ -10,7 +10,7 @@ public class Soldier {
     Map map;
     Radio radio;
     Movement movement;
-    final boolean isRoamer;
+    final boolean ignoreScouts;
     MapLocation lastRandomLocation;
     RobotInfo lastEnemyInfo;
     // RobotInfo guardener = null;
@@ -19,6 +19,7 @@ public class Soldier {
     //final static float MIN_GUARDENER_DIST = RobotType.SOLDIER.sensorRadius + 10;
     final static float MIN_SCOUT_SHOOT_RANGE = 6.5f;
     static float MIN_ARCHON_BULLETS = 80f;
+    final int getTargetType;
 
 
     public Soldier(RobotController rc) {
@@ -28,7 +29,8 @@ public class Soldier {
         this.movement = new Movement(rc);
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
-        this.isRoamer = rc.getID() % 2 == 0;
+        this.ignoreScouts = rand() < 0.7f;
+        this.getTargetType = ignoreScouts ? 7 : 6;
 
         // boolean hasGuardener = false;
         // for (RobotInfo ri : rc.senseNearbyRobots()) {
@@ -135,7 +137,7 @@ public class Soldier {
             boolean spotterTarget = false;
             if (nextEnemy == null || true) {
                 Map.generateFarTargets(map.rc, myLocation, 2, 0);
-                MapLocation spotted = Map.getTarget(6, myLocation);
+                MapLocation spotted = Map.getTarget(getTargetType, myLocation);
                 if (spotted != null) {
                     if (Util.DEBUG) System.out.println("Found spotter target");
                     hasSpotter = true;
@@ -196,10 +198,10 @@ public class Soldier {
                 Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                 longrange = true;
                 if (Util.DEBUG) System.out.println("Using long range target");
-                nextEnemy = Map.getTarget( 6, myLocation);
+                nextEnemy = Map.getTarget(getTargetType, myLocation);
                 if (nextEnemy == null) {
                     if (Util.DEBUG) System.out.println("Using long range target fallback");
-                    nextEnemy = Map.getTarget(6, myLocation);
+                    nextEnemy = Map.getTarget(getTargetType, myLocation);
                 }
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);

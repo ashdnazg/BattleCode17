@@ -57,14 +57,43 @@ public class Map {
             MapLocation best = null;
             for (int t = 0; t < farTargets.length; t++) {
                 if (farTargets[t] == null) continue;
-                if (type == 1 && !(t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT))
-                    continue;
-                if (type == 2 && !(t == GARDENER)) continue;
-                if (type == 3 && !(t == ARCHON)) continue;
-                if (type == 4 && !(t == LUMBERJACK || t == SOLDIER || t == TANK)) continue;
-                if (type == 5 && !(t == GARDENER || t == SCOUT)) continue;
-                if (type == 6 && !(t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT || t== GARDENER))
-                    continue;
+                switch (type) {
+                    case 1:
+                        if (t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT) {
+                            break;
+                        }
+                        continue;
+                    case 2:
+                        if (t == GARDENER) {
+                            break;
+                        }
+                        continue;
+                    case 3:
+                        if (t == ARCHON) {
+                            break;
+                        }
+                        continue;
+                    case 4:
+                        if (t == LUMBERJACK || t == SOLDIER || t == TANK) {
+                            break;
+                        }
+                        continue;
+                    case 5:
+                        if (t == GARDENER || t == SCOUT) {
+                            break;
+                        }
+                        continue;
+                    case 6:
+                        if (t == LUMBERJACK || t == SOLDIER || t == TANK || t == SCOUT || t== GARDENER) {
+                            break;
+                        }
+                        continue;
+                    case 7:
+                        if (t == LUMBERJACK || t == SOLDIER || t == TANK || t== GARDENER) {
+                            break;
+                        }
+                        continue;
+                }
                 if (best == null || best.distanceTo(myLocation) > farTargets[t].distanceTo(myLocation)) {
                     best = farTargets[t];
                     targetType = t;
