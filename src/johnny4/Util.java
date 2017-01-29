@@ -145,7 +145,7 @@ public class Util {
         RobotInfo robot;
         TreeInfo tree;
         for (i = 0; i < trees.length; i++) {
-            if (cnt >= px.length || i > 5) break;
+            if (cnt >= px.length || i > 8) break;
             tree = trees[i];
             x = tree.location.x;
             y = tree.location.y;
@@ -158,7 +158,7 @@ public class Util {
             }
         }
         for (i = 0; i < robots.length; i++) {
-            if (cnt >= px.length || i > 3) break;
+            if (cnt >= px.length || i > 5) break;
             robot = robots[i];
             x = robot.location.x;
             y = robot.location.y;

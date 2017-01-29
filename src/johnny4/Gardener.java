@@ -21,11 +21,12 @@ public class Gardener {
     float health;
     int roundsSinceAttack;
     BulletInfo bullets[];
-    MapLocation escapeLocation;
+    int lastTreePlant=  -100;
     final float MIN_CONSTRUCTION_MONEY;
     MapLocation lastRandomLocation;
     final int spawnFrame;
     MapLocation walkingTarget;
+    boolean active = true;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
@@ -87,6 +88,8 @@ public class Gardener {
     protected void tick() {
         try {
             preTick();
+            if (active)Radio.reportActiveGardener();
+            if (DEBUG) System.out.println("Active gardener: " + active);
             //Sensing
             roundsSinceAttack++;
             int frame = rc.getRoundNum();
@@ -119,7 +122,7 @@ public class Gardener {
             Map.generateFarTargets(rc, myLocation, 1000, 0);
             MapLocation nextEnemy = Map.getTarget(0, myLocation);
             boolean unplugged = true;
-            if (nextEnemy != null && nextEnemy.distanceTo(myLocation) > 17 && nearbyAllies > 0){
+            if (nextEnemy != null && nextEnemy.distanceTo(myLocation) > 17 && nearbyAllies > 1){
                 if (DEBUG) System.out.println("Plukked");
                 unplugged = false;
             }
@@ -165,24 +168,30 @@ public class Gardener {
                 noBuildPosSince = 10000;
             }
 
+            Direction wouldBeTreeDir = null;
+            active = rc.getBuildCooldownTurns() > 0 || money < GameConstants.BULLET_TREE_COST;
+            for (int i = 0; i < buildDirs.length; i++) {
+                if (rc.canPlantTree(buildDirs[i])) {
+                    if (treesPlanted == 0 && (freeDir - i) % 2 != 0) continue;
+                    if (!freePos && Math.abs(i - freeDir) <= 1) {
+                        continue; //reserved spot
+                    }
+                    wouldBeTreeDir = buildDirs[i];
+                    active = buildDirValid[freeDir];
+                    break;
+                }
+            }
+
             // Trees
-            if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree() && inPosition && buildDirValid[freeDir]) {
+            if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree() && inPosition && buildDirValid[freeDir] && wouldBeTreeDir != null) {
                 //request to cut annoying trees
                 for (TreeInfo t : trees) {
                     if (t.team == myTeam)
                         continue;
                 }
-                for (int i = 0; i < buildDirs.length; i++) {
-                    if (rc.canPlantTree(buildDirs[i])) {
-                        if (treesPlanted == 0 && (freeDir - i) % 2 != 0) continue;
-                        if (!freePos && Math.abs(i - freeDir) <= 1) {
-                            continue; //reserved spot
-                        }
-                        rc.plantTree(buildDirs[i]);
-                        treesPlanted++;
-                        break;
-                    }
-                }
+                lastTreePlant = frame;
+                rc.plantTree(wouldBeTreeDir);
+                treesPlanted++;
             }
 
             TreeInfo[] tis = rc.senseNearbyTrees(3.0f);

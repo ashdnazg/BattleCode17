@@ -331,7 +331,7 @@ public class Soldier {
         float maxArc = getMaximumArcOfFire(myLocation, myLocation.directionTo(nextEnemy), nearbyRobots, trees);
         if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
         if (enemyType == RobotType.SCOUT) {
-
+            if (dist > 5f && Util.tooManyTrees && money < 110) return false;
             if (rc.canFirePentadShot() && maxArc > PENTAD_ARC_PLUSMINUS && (money > 50 || dist < 7f)) {
                 rc.firePentadShot(myLocation.directionTo(nextEnemy));
                 return true;
@@ -351,15 +351,15 @@ public class Soldier {
         if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS) {
             return false;
         }
-        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && maxArc > PENTAD_ARC_PLUSMINUS && rc.canFirePentadShot()) {
+        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2 && maxArc > TRIAD_ARC_PLUSMINUS && rc.canFireTriadShot()) {
+        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2 && (maxArc > TRIAD_ARC_PLUSMINUS || dist < 4) && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (rc.canFireSingleShot() && (maxArc > 0.01f || dist < 3)) {
+        } else if (rc.canFireSingleShot() && (maxArc > 0.01f || dist < 5)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;

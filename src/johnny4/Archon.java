@@ -109,6 +109,7 @@ public class Archon {
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
             if (eligibleSpot && rc.canHireGardener(oppositeDir) && hireGardener) {
                 rc.hireGardener(oppositeDir);
+                Radio.reportBuild(RobotType.GARDENER);
                 gardenersHired ++;
             } else if (hireGardener) {
                 boolean[] blockedDir = new boolean[directions.length];
@@ -141,6 +142,7 @@ public class Archon {
                 if (alternateBuildDir != null) {
                     rc.hireGardener(alternateBuildDir);
                     gardenersHired ++;
+                    Radio.reportBuild(RobotType.GARDENER);
                 }
             }
             Movement.init(nearbyRobots, trees, bullets);

@@ -327,6 +327,8 @@ public class Radio {
         // gardeners activate immediately
         if (robotType != RobotType.GARDENER) {
             buildees[frame < (buildees[0] & 0xFFFF) ? 1 : 0] = (frame + 20) + (index << 16);
+        }else{
+            reportActiveGardener();
         }
     }
 

@@ -2,6 +2,8 @@ package johnny4;
 
 import battlecode.common.*;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 public class BuildPlanner {
 
     static RobotController rc;
@@ -12,8 +14,10 @@ public class BuildPlanner {
     static float money = 0;
     static int nearbyProtectors = 0;
     static int nearbyLumberjacks = 0;
+    static int nearbySoldiers = 0;
     static int nearbyGardeners = 0;
     static int nearbyBulletTrees = 0;
+    static int nearbyNonBulletTrees = 0;
     static int nearbyEnemies = 0;
     static RobotInfo nextEnemy = null;
 
@@ -43,13 +47,13 @@ public class BuildPlanner {
 
     public static void init() {
         frame = rc.getRoundNum();
+        MapLocation myLocation = rc.getLocation();
+        startArchonDist = 1e10f;
+
         if (frame > 10) {
             graceRounds = 0;
             return;
         }
-
-        MapLocation myLocation = rc.getLocation();
-        startArchonDist = 1e10f;
         float curDist;
         for (MapLocation myArch : rc.getInitialArchonLocations(rc.getTeam())) {
             for (MapLocation archonPos : Map.enemyArchonPos) {
@@ -70,7 +74,7 @@ public class BuildPlanner {
 
         BuildPlanner.nearbyRobots = nearbyRobots;
         BuildPlanner.nearbyTrees = nearbyTrees;
-        nearbyProtectors = nearbyGardeners = nearbyBulletTrees = nearbyLumberjacks = nearbyArchons = nearbyEnemies = 0;
+        nearbyProtectors = nearbyGardeners = nearbyBulletTrees = nearbyLumberjacks = nearbyArchons = nearbyEnemies = nearbyNonBulletTrees = nearbySoldiers = 0;
         money = rc.getTeamBullets();
         nextEnemy = null;
         MapLocation myLocation = rc.getLocation();
@@ -83,7 +87,10 @@ public class BuildPlanner {
                 switch (r.type) {
                     case LUMBERJACK:
                         nearbyLumberjacks++;
+                        nearbyProtectors++;
+                        break;
                     case SOLDIER:
+                        nearbySoldiers++;
                         nearbyProtectors++;
                         break;
                     case GARDENER:
@@ -94,7 +101,7 @@ public class BuildPlanner {
                         break;
                 }
                 continue;
-            }else {
+            } else {
                 nearbyEnemies++;
                 curDist = r.location.distanceTo(myLocation);
                 if (nextEnemy == null || closestDanger > curDist) {
@@ -120,7 +127,9 @@ public class BuildPlanner {
                 myTrees++;
             }
             if (t.team.equals(myTeam)) {
-                nearbyBulletTrees ++;
+                nearbyBulletTrees++;
+            } else {
+                nearbyNonBulletTrees++;
             }
             if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 3f + t.radius) {
                 stuckingTrees++;
@@ -155,11 +164,14 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("enemy lumberjacks: " + enemyLumberjacks);
         if (Util.DEBUG) System.out.println("nearby trees: " + nearbyTrees.length);
         if (Util.DEBUG) System.out.println("nearby bullettrees: " + nearbyBulletTrees);
+        if (Util.DEBUG) System.out.println("nearby lumberjacks: " + nearbyLumberjacks);
+        if (Util.DEBUG) System.out.println("nearby non bullettrees: " + nearbyNonBulletTrees);
         if (Util.DEBUG) System.out.println("nearby gardeners: " + nearbyGardeners);
         if (Util.DEBUG) System.out.println("tree cutting requests: " + Radio.countTreeCutRequests());
         if (Util.DEBUG) System.out.println("grace rounds: " + graceRounds);
         if (Util.DEBUG) System.out.println("gardener stuck: " + gardenerStuckified);
         if (Util.DEBUG) System.out.println("all or nothing: " + allOrNothing);
+        if (Util.DEBUG) System.out.println("land contact: " + Radio.getLandContact());
     }
 
     public static boolean buildTree() throws GameActionException {
@@ -167,7 +179,7 @@ public class BuildPlanner {
             return false;
         }
 
-        if (graceRounds > 30){
+        if (graceRounds > 30) {
             return true;
         }
 
@@ -179,7 +191,7 @@ public class BuildPlanner {
             return false;
         }
 
-        if ( rc.getTreeCount() > ownSoldiers + frame / 300 && money < 120 && ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) {
+        if (rc.getTreeCount() > ownSoldiers + frame / 300 && money < 120 && ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) {
             return false;
         }
 
@@ -193,6 +205,10 @@ public class BuildPlanner {
         if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4) {
             return false;
         }
+        if (Radio.countActiveGardeners() > 0) {
+            if (Util.DEBUG) System.out.println("There are still " + Radio.countActiveGardeners() + " active gardeners");
+            return false;
+        }
 
         if (ownGardeners == 0 && ((money > 110 && frame > 4) || closestArchon)) {
             return true;
@@ -202,7 +218,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (ownGardeners > 0 && (rc.getTreeCount() / ownGardeners > 3)) {
+        if (ownGardeners > 0 && (rc.getTreeCount() / ownGardeners > 3) && (!Radio.getAlarm() || money > 105 + rc.getTreeCount())) {
             return true;
         }
 
@@ -218,18 +234,20 @@ public class BuildPlanner {
         boolean rich = money > 160 && frame > 80;
         boolean enemyWasScouted = totalEnemies > 2;
 
-        if (nearbyProtectors + nearbyArchons >= 4) return null; //dont overcrowd
+        if (nearbyProtectors + nearbyArchons >= 6) return null; //dont overcrowd
 
 
-        boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 1 + 0.3 * enemyLumberjacks)) || (Radio.getLandContact() || nextEnemyFar.distanceTo(rc.getLocation()) < 30) && ownSoldiers < 3;
+        boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 1 + 0.3 * enemyLumberjacks)) || (Radio.getLandContact() || nextEnemyFar != null && nextEnemyFar.distanceTo(rc.getLocation()) < 30) && ownSoldiers < 3 + ownGardeners / 2;
         if (!Radio.getLandContact() && ownSoldiers >= 1) {
             //needSoldiers = false;
         }
         boolean noScouts = ownScouts == 0;
-        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers + 1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && (ownLumberjacks < 1 || ownLumberjacks < 2 && frame > 180)) || gardenerStuckified && nearbyLumberjacks == 0;
+        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers + 1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && (ownLumberjacks < 1 || ownLumberjacks < 2 && frame > 180)) ||
+                gardenerStuckified && (nearbyLumberjacks == 0 || money > 140 && nearbyLumberjacks < 3) && nearbyNonBulletTrees > 0;
         boolean needScouts = ownScouts < (ownSoldiers + 1) / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
-        if (!Radio.getLandContact() && ownLumberjacks >= 2) {
+        if (!Radio.getLandContact() && ownLumberjacks >= 1 && nextEnemyFar != null && nextEnemyFar.distanceTo(rc.getLocation()) < 30) {
             needLumberJacks = false;
+            if (Util.DEBUG) System.out.println("Too dangerous for lumberjacks");
         }
 
         if (Util.DEBUG) System.out.println("needSoldiers: " + needSoldiers);
@@ -243,7 +261,7 @@ public class BuildPlanner {
 
         if (allOrNothing) {
             if (Util.DEBUG) System.out.println("all or nothing");
-            if ((nearbyProtectors < 2 ) && (ownLumberjacks > 0 || !gardenerStuckified) || needSoldiers) {
+            if ((nearbyProtectors < 2) && (ownLumberjacks > 0 || !gardenerStuckified) || needSoldiers) {
                 return RobotType.SOLDIER;
             }
             if (ownLumberjacks == 0 && gardenerStuckified || (needLumberJacks && frame > 160)) {
@@ -267,7 +285,7 @@ public class BuildPlanner {
         //if (alarm && !rich && nextEnemy == null) return null;
 
 
-        if (needSoldiers && canSoldier && (nearbyLumberjacks > 0 || !gardenerStuckified) && nearbyProtectors + nearbyArchons < 3) {
+        if (needSoldiers && canSoldier && (nearbyLumberjacks > 0 || !gardenerStuckified) && (nearbyProtectors + nearbyArchons < 3 || nearbySoldiers == 0)) {
             return RobotType.SOLDIER;
         }
 
