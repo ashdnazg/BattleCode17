@@ -33,7 +33,7 @@ public class Soldier {
         this.movement = new Movement(rc);
         stuckLocation = rc.getLocation();
         stuckSince = rc.getRoundNum();
-        this.ignoreScouts = rand() < 0.7f;
+        this.ignoreScouts = rand() < 10.7f;
         this.getTargetType = ignoreScouts ? 7 : 6;
         spawnLocation = stuckLocation;
         suicidal = rc.getRoundNum() < 100;
@@ -127,13 +127,19 @@ public class Soldier {
             trees = senseClosestTrees();
             TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
-                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.ARCHON)){
+                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.GARDENER) && (nextGardener == null || nextGardener.location.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
+                    nextGardener = ri;
+                }
+            }
+            for (RobotInfo ri : nearbyRobots) {
+                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.ARCHON)) {
                     SUICIDAL_END = Math.min(SUICIDAL_END, frame + 15);
                 }
-                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER)){
+                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER)) {
                     nearbySoldiers++;
                 }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
+                        (ri.type != RobotType.SCOUT || !ignoreScouts || nextGardener != null) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
                                 ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0))) {
                     nextEnemy = ri.location;
@@ -147,24 +153,19 @@ public class Soldier {
                     nextSpotter = ri;
                     hasSpotter = true;
                 }
-                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.GARDENER) && (nextGardener == null || nextGardener.location.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
-                    nextGardener = ri;
-                }
             }
             boolean spotterTarget = false;
-            if (nextEnemy == null || true) {
-                Map.generateFarTargets(map.rc, myLocation, 2, 0);
-                MapLocation spotted = Map.getTarget(getTargetType, myLocation);
-                if (spotted != null) {
-                    if (Util.DEBUG) System.out.println("Found spotter target");
-                    hasSpotter = true;
-                    if (nextEnemy == null && spotted.distanceTo(myLocation) > RobotType.SOLDIER.sensorRadius && (!suicidal || spotted.distanceTo(myLocation) < 12)) {
-                        if (Util.DEBUG) System.out.println("Using spotter target");
-                        spotterTarget = true;
-                        nextEnemy = spotted;
-                        nextEnemyInfo = new RobotInfo(Map.targetType, rc.getTeam().opponent(), Radio.intToType(Map.targetType), nextEnemy, 42, 1, 1);
-                        enemyType = nextEnemyInfo.type;
-                    }
+            Map.generateFarTargets(map.rc, myLocation, 2, 0);
+            MapLocation spotted = Map.getTarget(getTargetType, myLocation);
+            if (spotted != null) {
+                if (Util.DEBUG) System.out.println("Found spotter target");
+                hasSpotter = true;
+                if (nextEnemy == null && spotted.distanceTo(myLocation) > RobotType.SOLDIER.sensorRadius && (!suicidal || spotted.distanceTo(myLocation) < 12)) {
+                    if (Util.DEBUG) System.out.println("Using spotter target");
+                    spotterTarget = true;
+                    nextEnemy = spotted;
+                    nextEnemyInfo = new RobotInfo(Map.targetType, rc.getTeam().opponent(), Radio.intToType(Map.targetType), nextEnemy, 42, 1, 1);
+                    enemyType = nextEnemyInfo.type;
                 }
             }
             if (nextGardener != null && nextEnemy != null/* && nextEnemy.distanceTo(nextGardener.location) < myLocation.distanceTo(nextEnemy) + 2.5*/) {
@@ -340,7 +341,8 @@ public class Soldier {
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers) * 1.6f * enemyType.strideRadius);
-        if (Util.DEBUG) System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers) * 2 * enemyType.strideRadius) + " degrees");
+        if (Util.DEBUG)
+            System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers) * 2 * enemyType.strideRadius) + " degrees");
         float maxArc = getMaximumArcOfFire(myLocation, firedir, nearbyRobots, trees);
         if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
         if (enemyType == RobotType.SCOUT) {
