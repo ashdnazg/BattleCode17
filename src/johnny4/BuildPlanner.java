@@ -221,7 +221,7 @@ public class BuildPlanner {
         if (nearbyProtectors + nearbyArchons >= 4) return null; //dont overcrowd
 
 
-        boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) || Radio.getLandContact() && ownSoldiers < 3;
+        boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 1 + 0.3 * enemyLumberjacks)) || (Radio.getLandContact() || nextEnemyFar.distanceTo(rc.getLocation()) < 30) && ownSoldiers < 3;
         if (!Radio.getLandContact() && ownSoldiers >= 1) {
             //needSoldiers = false;
         }
