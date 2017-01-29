@@ -361,11 +361,11 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2 && (maxArc > TRIAD_ARC_PLUSMINUS || dist < 4) && rc.canFireTriadShot()) {
+        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 50 + radius * 2 && (maxArc > TRIAD_ARC_PLUSMINUS || dist < 4) && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (rc.canFireSingleShot() && (maxArc > 0.01f || dist < 5)) {
+        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || maxArc <= TRIAD_ARC_PLUSMINUS) && (maxArc > 0.01f || dist < 5)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(myLocation.directionTo(nextEnemy));
             return true;
