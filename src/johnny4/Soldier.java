@@ -22,6 +22,7 @@ public class Soldier {
     final static float MIN_SCOUT_SHOOT_RANGE = 6.5f;
     static float MIN_ARCHON_BULLETS = 80f;
     final int getTargetType;
+    int lastRandomLocTime = 10000;
 
 
     public Soldier(RobotController rc) {
@@ -90,6 +91,7 @@ public class Soldier {
     TreeInfo trees[];
     boolean evasionMode = true;
     float MIN_EVASION_DIST = 8f;
+    int SUICIDAL_END = 250;
 
     float money;
 
@@ -104,7 +106,7 @@ public class Soldier {
             nearbyRobots = null;
             RobotType enemyType = RobotType.SOLDIER;
             int cnt1 = Clock.getBytecodeNum();
-            if (frame > 250) {
+            if (frame > SUICIDAL_END) {
                 suicidal = false;
             }
             if (frame % 8 == 0) {
@@ -123,6 +125,9 @@ public class Soldier {
             trees = senseClosestTrees();
             TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
+                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.ARCHON)){
+                    SUICIDAL_END = Math.min(SUICIDAL_END, frame + 15);
+                }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
                                 ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0))) {
@@ -303,8 +308,9 @@ public class Soldier {
                     }
                 }
             } else if (!hasMoved) {
-                while (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) {
+                while (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || frame - lastRandomLocTime > 69 || !movement.findPath(lastRandomLocation, null)) {
                     lastRandomLocation = myLocation.add(randomDirection(), 100);
+                    lastRandomLocTime = frame;
                 }
                 myLocation = rc.getLocation();
             }

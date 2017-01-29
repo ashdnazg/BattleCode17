@@ -26,7 +26,9 @@ public class Gardener {
     MapLocation lastRandomLocation;
     final int spawnFrame;
     MapLocation walkingTarget;
-    boolean active = true;
+    static boolean active = true;
+    boolean _active = true;
+    int disabledSince = 10000;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
@@ -63,6 +65,7 @@ public class Gardener {
     }
 
     public boolean tryBuild(RobotType robotType) throws GameActionException {
+        if (robotType == RobotType.SOLDIER && rc.getTeamBullets() > RobotType.TANK.bulletCost && tryBuild(RobotType.TANK)) return true;
         BuildPlanner.gardenerCantBuild = false;
         if (robotType == null) return false;
         for (int i = 0; i < buildDirs.length; i++) {
@@ -170,7 +173,14 @@ public class Gardener {
             freePos |= !Util.fireAllowed; // in endgame build all hexes
 
             Direction wouldBeTreeDir = null;
-            active = rc.getBuildCooldownTurns() > 0 || money < GameConstants.BULLET_TREE_COST;
+            active = true;
+            if (!_active){
+                disabledSince = Math.min(frame, disabledSince);
+                if (frame - disabledSince > 20) active = false;
+            }else{
+                disabledSince = 100000;
+            }
+            _active = rc.getBuildCooldownTurns() > 0 || money < GameConstants.BULLET_TREE_COST;
             for (int i = 0; i < buildDirs.length; i++) {
                 if (rc.canPlantTree(buildDirs[i])) {
                     if (treesPlanted == 0 && (freeDir - i) % 2 != 0) continue;
@@ -178,7 +188,7 @@ public class Gardener {
                         continue; //reserved spot
                     }
                     wouldBeTreeDir = buildDirs[i];
-                    active = buildDirValid[freeDir];
+                    _active = buildDirValid[freeDir];
                     break;
                 }
             }

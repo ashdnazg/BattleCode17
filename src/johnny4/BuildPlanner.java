@@ -131,11 +131,12 @@ public class BuildPlanner {
             } else {
                 nearbyNonBulletTrees++;
             }
-            if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 3f + t.radius) {
+            if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 5f + t.radius) {
                 stuckingTrees++;
+                Radio.requestTreeCut(t);
             }
         }
-        gardenerStuckified = stuckingTrees >= 4 || gardenerCantBuild;
+        gardenerStuckified = !Gardener.active && stuckingTrees >= 3;
         nextEnemyFar = nextEnemy != null ? nextEnemy.location : Map.getTarget(Map.ARCHON, Map.GARDENER, Map.LUMBERJACK, Map.SCOUT, Map.SOLDIER, Map.TANK, 4, myLocation);
         if (frame % 5 == 0) {
             Map.generateFarTargets(rc, myLocation, 50, 0);
