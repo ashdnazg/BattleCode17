@@ -339,7 +339,7 @@ public class Soldier {
         if (!Util.fireAllowed) return false;
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
-        Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers) * 1.6 * enemyType.strideRadius);
+        Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers) * 1.6f * enemyType.strideRadius);
         if (Util.DEBUG) System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers) * 2 * enemyType.strideRadius) + " degrees");
         float maxArc = getMaximumArcOfFire(myLocation, firedir, nearbyRobots, trees);
         if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
