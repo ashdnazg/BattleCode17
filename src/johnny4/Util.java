@@ -124,7 +124,7 @@ public class Util {
         float maxPlusMinus = 3.14159265358979323f;
         for (int i = 0; i < robots.length; i++) {
             if (robots[i].team.equals(enemyTeam)) continue;
-            maxPlusMinus = Math.min(maxPlusMinus, Math.abs(start.directionTo(robots[i].location).radiansBetween(toTarget)));
+            maxPlusMinus = Math.min(maxPlusMinus, Math.abs(start.directionTo(robots[i].location).radiansBetween(toTarget)) - (robots[i].type.bodyRadius + 1) / (start.distanceTo(robots[i].location)));
         }
         for (int i = 0; i < trees.length; i++) {
             if (!trees[i].team.equals(myTeam)) continue;

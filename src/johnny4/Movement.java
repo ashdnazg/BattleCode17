@@ -79,13 +79,13 @@ public class Movement {
                 MIN_ENEMY_SCOUT_DIST = 5f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_FRIENDLY_GARDENER_DIST = 6;
-                MIN_FRIENDLY_ARCHON_DIST = 10;
+                MIN_FRIENDLY_ARCHON_DIST = 0;
                 break;
             case ARCHON:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;
                 MIN_FRIENDLY_GARDENER_DIST = 10f;
-                MIN_ENEMY_DIST = 0f;
+                MIN_ENEMY_DIST = 10f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 MIN_FRIENDLY_ARCHON_DIST = 10;
@@ -146,7 +146,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_LUMBERJACK_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_LUMBERJACK_DIST * MIN_FRIENDLY_LUMBERJACK_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.5f;
+                        currentThreat.severity = 0.2f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -163,7 +163,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_GARDENER_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_GARDENER_DIST * MIN_FRIENDLY_GARDENER_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.9f;
+                        currentThreat.severity = 0.6f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -180,7 +180,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_ARCHON_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_ARCHON_DIST * MIN_FRIENDLY_ARCHON_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.9f;
+                        currentThreat.severity = 0.5f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();

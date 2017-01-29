@@ -183,7 +183,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (!allOrNothing && money > 140 && frame > 4 && (nearbyGardeners-1) * 2.5 <= nearbyBulletTrees) {
+        if (!allOrNothing && money > 140 && frame > 4 + nearbyGardeners * 120 && (nearbyGardeners-1) * 2.5 <= nearbyBulletTrees) {
             return true;
         }
 
@@ -203,7 +203,7 @@ public class BuildPlanner {
         boolean rich = money > 160 && frame > 80;
         boolean enemyWasScouted = totalEnemies > 2;
 
-        //if (nearbyProtectors > 4) return null; //dont overcrowd
+        if (nearbyProtectors >= 4) return null; //dont overcrowd
 
 
         boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks));

@@ -131,7 +131,7 @@ public class Soldier {
             }
             boolean spotterTarget = false;
             if (nextEnemy == null || true) {
-                Map.generateFarTargets(map.rc, myLocation, 9, 0);
+                Map.generateFarTargets(map.rc, myLocation, 2, 0);
                 MapLocation spotted = Map.getTarget(6, myLocation);
                 if (spotted != null) {
                     if (Util.DEBUG) System.out.println("Found spotter target");

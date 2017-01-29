@@ -24,8 +24,8 @@ public class Gardener {
     MapLocation escapeLocation;
     final float MIN_CONSTRUCTION_MONEY;
     MapLocation lastRandomLocation;
-    RobotInfo nearestProtector;
-    int lastProtectorContact = -1000;
+    final int spawnFrame;
+    MapLocation walkingTarget;
 
     public Gardener(RobotController rc) {
         this.rc = rc;
@@ -47,6 +47,7 @@ public class Gardener {
         BuildPlanner.rc = rc;
         if (Util.DEBUG) System.out.println("Finished Constructing gardener: " + Clock.getBytecodeNum());
         BuildPlanner.init();
+        spawnFrame = rc.getRoundNum();
     }
 
     public void run() {
@@ -101,6 +102,9 @@ public class Gardener {
                     if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK){
                         nearbyAllyFighters ++;
                     }
+                }else
+                if (walkingTarget == null && r.type == RobotType.ARCHON){
+                    walkingTarget = myLocation.add(r.location.directionTo(myLocation), 12);
                 }
             }
             if (nearbyEnemies > nearbyAllyFighters){
@@ -146,7 +150,7 @@ public class Gardener {
             if (DEBUG && buildDirValid[freeDir]) rc.setIndicatorDot(myLocation.add(buildDirs[freeDir], 2f), 190, 255, 190);
             if (freePos) {
                 if (noBuildPosSince > frame) noBuildPosSince = frame;
-                if (frame - noBuildPosSince > 69 && Radio.countAllies(RobotType.GARDENER) > 4) {
+                if (frame - noBuildPosSince > 69 && frame % 23 == 0 && Radio.countAllies(RobotType.GARDENER) > 5) {
                     if (DEBUG && freePos) System.out.println("No build pos, going full eco");
                 } else {
                     freePos = false;
@@ -202,8 +206,11 @@ public class Gardener {
 
             // Positioning
             if (treesPlanted == 0) {
+                if (frame - spawnFrame > 30){
+                    walkingTarget = myLocation;
+                }
                 Movement.init(nearbyRobots, trees, bullets);
-                inPosition = !movement.findPath(myLocation, null);
+                inPosition = !movement.findPath(walkingTarget, null);
                 if (DEBUG) System.out.println("Gardener positioning");
             }
 

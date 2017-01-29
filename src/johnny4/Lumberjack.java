@@ -86,7 +86,7 @@ public class Lumberjack {
             myLocation = rc.getLocation();
             bullets = rc.senseNearbyBullets();
             nearbyRobots = map.sense();
-            trees = senseClosestTrees();
+            trees = senseBiggestTrees();
 
             boolean alarm = radio.getAlarm();
 
@@ -141,20 +141,31 @@ public class Lumberjack {
                 minDistToTask = 10000;
             }
 
-            if (nextEnemy == null && !alarm && currentTreeTarget == null) {
+            if (!alarm) {
+                MapLocation nextRobot = null;
                 for (TreeInfo ti : trees) {
                     if (ti.team.equals(rc.getTeam())) continue;
                     if (nextTree == null || nextTree.distanceTo(myLocation) > ti.location.distanceTo(myLocation)) {
                         nextTree = ti.location;
                     }
+                    if (ti.containedRobot != null) {
+                        if (nextRobot == null || nextRobot.distanceTo(myLocation) > ti.location.distanceTo(myLocation)) {
+                            nextRobot = ti.location;
+                        }
+                    }
                     if (ti.containedBullets > 0 && rc.canShake(ti.location)) {
                         rc.shake(ti.location);
                     }
                 }
-                if (nextTree != null) {
+                if (nextTree != null && nextEnemy == null && currentTreeTarget == null) {
                     currentTreeTarget = nextTree;
                     treeInSenseSince = 100000;
                     fakeTask = true;
+                }
+                if (nextRobot != null){
+                    currentTreeTarget = nextRobot;
+                    treeInSenseSince = 100000;
+                    fakeTask = false;
                 }
             }
             if ((alarm || currentTreeTarget == null) && nextEnemy == null) {
