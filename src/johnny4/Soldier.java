@@ -109,9 +109,9 @@ public class Soldier {
             MapLocation nextEnemy = null;
             RobotInfo nextEnemyInfo = null;
             RobotInfo nextSpotter = null;
+            RobotInfo nextGardener = null;
             boolean hasSpotter = false;
             trees = senseClosestTrees();
-            // boolean hasGuardener = false;
             TreeInfo hideTree = null;
             for (RobotInfo ri : nearbyRobots) {
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
@@ -127,6 +127,9 @@ public class Soldier {
                 if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SCOUT) && (nextSpotter == null || nextSpotter.location.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
                     nextSpotter = ri;
                     hasSpotter = true;
+                }
+                if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.GARDENER) && (nextGardener == null || nextGardener.location.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
+                    nextGardener = ri;
                 }
             }
             boolean spotterTarget = false;
@@ -145,16 +148,17 @@ public class Soldier {
                     }
                 }
             }
-            if (hasSpotter) {
-                MIN_EVASION_DIST = 10f;
-            } else {
-                MIN_EVASION_DIST = 10f;
-            }
-            if (enemyType == RobotType.LUMBERJACK) {
-                MIN_EVASION_DIST = 5f;
-            }
-            if (enemyType == RobotType.GARDENER || enemyType == RobotType.ARCHON) {
+            if (nextGardener != null && nextEnemy != null && nextEnemy.distanceTo(nextGardener.location) < myLocation.distanceTo(nextEnemy) + 2.5) {
                 MIN_EVASION_DIST = 0f;
+                if (Util.DEBUG) System.out.println("Protect gardener");
+            }else{
+                MIN_EVASION_DIST = 7f + rc.getType().bodyRadius * 3;
+                if (enemyType == RobotType.LUMBERJACK) {
+                    MIN_EVASION_DIST = 5f;
+                }
+                if (enemyType == RobotType.GARDENER || enemyType == RobotType.ARCHON) {
+                    MIN_EVASION_DIST = 0f;
+                }
             }
 
             if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy + " of type " + enemyType);
@@ -220,7 +224,7 @@ public class Soldier {
 
                 boolean hasFired = longrange;
                 Direction fireDir = null;
-                float minfiredist = 3f / enemyType.strideRadius + 9;
+                float minfiredist = 3f / enemyType.strideRadius + 6 + rc.getType().bodyRadius * 3;
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
                 boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius);
                 if (!hasFired && evasionMode && false) {

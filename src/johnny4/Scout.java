@@ -281,7 +281,7 @@ public class Scout {
             //Movement
             if (Util.DEBUG)
                 System.out.println("Starting movement " + Clock.getBytecodeNum());
-            if (toShake == null && isShaker) {
+            if ( isShaker) {
                 for (TreeInfo t : trees) {
                     if (t.getContainedBullets() > 1.0 * Math.max(0, t.location.distanceTo(myLocation) - t.radius)) {
                         if (DEBUG)

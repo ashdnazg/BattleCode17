@@ -26,6 +26,7 @@ public class BuildPlanner {
     static int enemyLumberjacks;
     static int enemySoldiers;
     static int enemyGardeners;
+    static int nearbyArchons;
     static int frame;
     static int totalEnemies;
     static boolean alarm;
@@ -38,6 +39,7 @@ public class BuildPlanner {
     static boolean closestArchon;
     static MapLocation nextEnemyFar = null;
     static boolean gardenerStuckified = false;
+    static boolean gardenerCantBuild = false;
 
     public static void init() {
         frame = rc.getRoundNum();
@@ -68,7 +70,7 @@ public class BuildPlanner {
 
         BuildPlanner.nearbyRobots = nearbyRobots;
         BuildPlanner.nearbyTrees = nearbyTrees;
-        nearbyProtectors = nearbyGardeners = nearbyBulletTrees = nearbyLumberjacks= 0;
+        nearbyProtectors = nearbyGardeners = nearbyBulletTrees = nearbyLumberjacks = nearbyArchons = nearbyEnemies = 0;
         money = rc.getTeamBullets();
         nextEnemy = null;
         MapLocation myLocation = rc.getLocation();
@@ -87,23 +89,27 @@ public class BuildPlanner {
                     case GARDENER:
                         nearbyGardeners++;
                         break;
-                }
-                continue;
-            }
-            nearbyEnemies++;
-            curDist = r.location.distanceTo(myLocation);
-            if (nextEnemy == null || closestDanger > curDist) {
-                switch (r.type) {
-                    case SCOUT:
-                        lastScoutRound = frame;
-                    case LUMBERJACK:
-                    case SOLDIER:
-                    case TANK:
-                        nextEnemy = r;
-                        closestDanger = curDist;
+                    case ARCHON:
+                        nearbyArchons++;
                         break;
                 }
+                continue;
+            }else {
+                nearbyEnemies++;
+                curDist = r.location.distanceTo(myLocation);
+                if (nextEnemy == null || closestDanger > curDist) {
+                    switch (r.type) {
+                        case SCOUT:
+                            lastScoutRound = frame;
+                        case LUMBERJACK:
+                        case SOLDIER:
+                        case TANK:
+                            nextEnemy = r;
+                            closestDanger = curDist;
+                            break;
+                    }
 
+                }
             }
         }
         myTrees = 0;
@@ -113,13 +119,16 @@ public class BuildPlanner {
             if (t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 2.0f) {
                 myTrees++;
             }
-            if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 3f + t.radius){
-                stuckingTrees ++;
+            if (t.team.equals(myTeam)) {
+                nearbyBulletTrees ++;
+            }
+            if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 3f + t.radius) {
+                stuckingTrees++;
             }
         }
-        gardenerStuckified = stuckingTrees >= 4;
+        gardenerStuckified = stuckingTrees >= 4 || gardenerCantBuild;
         nextEnemyFar = nextEnemy != null ? nextEnemy.location : Map.getTarget(Map.ARCHON, Map.GARDENER, Map.LUMBERJACK, Map.SCOUT, Map.SOLDIER, Map.TANK, 4, myLocation);
-        if (frame%5 == 0){
+        if (frame % 5 == 0) {
             Map.generateFarTargets(rc, myLocation, 50, 0);
         }
         alarm = Radio.getAlarm();
@@ -135,7 +144,7 @@ public class BuildPlanner {
         enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
         enemyGardeners = enemyCounts[Radio.typeToInt(RobotType.GARDENER)];
-        allOrNothing = frame < 200 && startArchonDist < 40;
+        allOrNothing = frame < 180 && startArchonDist < 33 || frame < 200 && Radio.getLandContact();
         if (Util.DEBUG) System.out.println("own scouts: " + ownScouts);
         if (Util.DEBUG) System.out.println("own soldiers: " + ownSoldiers);
         if (Util.DEBUG) System.out.println("own gardeners: " + ownGardeners);
@@ -145,10 +154,12 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("enemy gardeners: " + enemyGardeners);
         if (Util.DEBUG) System.out.println("enemy lumberjacks: " + enemyLumberjacks);
         if (Util.DEBUG) System.out.println("nearby trees: " + nearbyTrees.length);
+        if (Util.DEBUG) System.out.println("nearby bullettrees: " + nearbyBulletTrees);
         if (Util.DEBUG) System.out.println("nearby gardeners: " + nearbyGardeners);
         if (Util.DEBUG) System.out.println("tree cutting requests: " + Radio.countTreeCutRequests());
         if (Util.DEBUG) System.out.println("grace rounds: " + graceRounds);
         if (Util.DEBUG) System.out.println("gardener stuck: " + gardenerStuckified);
+        if (Util.DEBUG) System.out.println("all or nothing: " + allOrNothing);
     }
 
     public static boolean buildTree() throws GameActionException {
@@ -156,7 +167,11 @@ public class BuildPlanner {
             return false;
         }
 
-        if (ownSoldiers < 1) {
+        if (graceRounds > 30){
+            return true;
+        }
+
+        if (ownSoldiers + ownLumberjacks < 2 && frame < 200 || ownSoldiers < 1 || allOrNothing) {
             return false;
         }
 
@@ -164,7 +179,7 @@ public class BuildPlanner {
             return false;
         }
 
-        if (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) {
+        if ( rc.getTreeCount() > ownSoldiers + frame / 300 && money < 120 && ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) {
             return false;
         }
 
@@ -175,7 +190,7 @@ public class BuildPlanner {
     public static boolean hireGardener() throws GameActionException {
         money = rc.getTeamBullets();
         boolean haveMoney = money > ((nextEnemy == null) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
-        if (!haveMoney || nearbyGardeners > 4) {
+        if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4) {
             return false;
         }
 
@@ -183,11 +198,11 @@ public class BuildPlanner {
             return true;
         }
 
-        if (!allOrNothing && money > 140 && frame > 4 + nearbyGardeners * 120 && (nearbyGardeners-1) * 2.5 <= nearbyBulletTrees) {
+        if (!allOrNothing && (!Radio.getLandContact() || frame > 300) && (money > 140 || ownSoldiers > rc.getTreeCount()) && frame > 4 + Math.min(Archon.gardenersHired, ownGardeners) * 120 && (nearbyGardeners - 1) * 2.5 <= nearbyBulletTrees) {
             return true;
         }
 
-        if (ownGardeners > 0 && rc.getTreeCount() / ownGardeners > 3) {
+        if (ownGardeners > 0 && (rc.getTreeCount() / ownGardeners > 3)) {
             return true;
         }
 
@@ -203,16 +218,16 @@ public class BuildPlanner {
         boolean rich = money > 160 && frame > 80;
         boolean enemyWasScouted = totalEnemies > 2;
 
-        if (nearbyProtectors >= 4) return null; //dont overcrowd
+        if (nearbyProtectors + nearbyArchons >= 4) return null; //dont overcrowd
 
 
-        boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks));
+        boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 0.3 * enemyLumberjacks)) || Radio.getLandContact() && ownSoldiers < 3;
         if (!Radio.getLandContact() && ownSoldiers >= 1) {
             //needSoldiers = false;
         }
         boolean noScouts = ownScouts == 0;
-        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers+1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && ownLumberjacks < 2) || gardenerStuckified && ownLumberjacks == 0 || money > 200;
-        boolean needScouts = ownScouts < (ownSoldiers+1) / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
+        boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers + 1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && (ownLumberjacks < 1 || ownLumberjacks < 2 && frame > 180)) || gardenerStuckified && nearbyLumberjacks == 0;
+        boolean needScouts = ownScouts < (ownSoldiers + 1) / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
         if (!Radio.getLandContact() && ownLumberjacks >= 2) {
             needLumberJacks = false;
         }
@@ -228,12 +243,13 @@ public class BuildPlanner {
 
         if (allOrNothing) {
             if (Util.DEBUG) System.out.println("all or nothing");
-            if (ownSoldiers < 2 && (ownLumberjacks > 0 || !gardenerStuckified)) {
+            if ((nearbyProtectors < 2 ) && (ownLumberjacks > 0 || !gardenerStuckified) || needSoldiers) {
                 return RobotType.SOLDIER;
             }
-            if (ownLumberjacks == 0) {
+            if (ownLumberjacks == 0 && gardenerStuckified || (needLumberJacks && frame > 160)) {
                 return RobotType.LUMBERJACK;
             }
+            return null;
         }
 
 
@@ -244,14 +260,14 @@ public class BuildPlanner {
             } else if (needLumberJacks && canLumberjack) {
                 return RobotType.LUMBERJACK;
             } else if (canSoldier) {
-                return (!gardenerStuckified || nearbyLumberjacks > 0 || true) ? RobotType.SOLDIER : RobotType.LUMBERJACK ;
+                return (!gardenerStuckified || nearbyLumberjacks > 0 || true) ? RobotType.SOLDIER : RobotType.LUMBERJACK;
             }
         }
 
         //if (alarm && !rich && nextEnemy == null) return null;
 
 
-        if (needSoldiers && canSoldier && (ownLumberjacks > 0 || !gardenerStuckified)) {
+        if (needSoldiers && canSoldier && (nearbyLumberjacks > 0 || !gardenerStuckified) && nearbyProtectors + nearbyArchons < 3) {
             return RobotType.SOLDIER;
         }
 

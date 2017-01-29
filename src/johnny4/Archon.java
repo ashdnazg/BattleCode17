@@ -19,6 +19,7 @@ public class Archon {
     int stuckSince;
     int lastGardener = -1000;
     Team myTeam;
+    static int gardenersHired = 0;
 
     public Archon(RobotController rc) {
         BuildPlanner.rc = rc;
@@ -108,6 +109,7 @@ public class Archon {
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
             if (eligibleSpot && rc.canHireGardener(oppositeDir) && hireGardener) {
                 rc.hireGardener(oppositeDir);
+                gardenersHired ++;
             } else if (hireGardener) {
                 boolean[] blockedDir = new boolean[directions.length];
                 for (TreeInfo t : trees){
@@ -138,6 +140,7 @@ public class Archon {
                 }
                 if (alternateBuildDir != null) {
                     rc.hireGardener(alternateBuildDir);
+                    gardenersHired ++;
                 }
             }
             Movement.init(nearbyRobots, trees, bullets);

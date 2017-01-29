@@ -65,7 +65,7 @@ public class Movement {
                 break;
             case SOLDIER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
-                MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
+                MIN_FRIENDLY_LUMBERJACK_DIST = 0;//RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 GO_STRAIGHT_DISTANCE = 1.5f;
@@ -75,7 +75,7 @@ public class Movement {
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
-                MIN_ENEMY_DIST = 5f;
+                MIN_ENEMY_DIST = 7f;
                 MIN_ENEMY_SCOUT_DIST = 5f;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_FRIENDLY_GARDENER_DIST = 6;
