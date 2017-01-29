@@ -12,7 +12,9 @@ public class Soldier {
     Movement movement;
     final boolean ignoreScouts;
     MapLocation lastRandomLocation;
+    final MapLocation spawnLocation;
     RobotInfo lastEnemyInfo;
+    boolean suicidal;
     // RobotInfo guardener = null;
     // int guardenerID = -1;
     //int lastContactWithGuardener = -1000;
@@ -31,6 +33,8 @@ public class Soldier {
         stuckSince = rc.getRoundNum();
         this.ignoreScouts = rand() < 0.7f;
         this.getTargetType = ignoreScouts ? 7 : 6;
+        spawnLocation = stuckLocation;
+        suicidal = rc.getRoundNum() < 100;
 
         // boolean hasGuardener = false;
         // for (RobotInfo ri : rc.senseNearbyRobots()) {
@@ -100,6 +104,9 @@ public class Soldier {
             nearbyRobots = null;
             RobotType enemyType = RobotType.SOLDIER;
             int cnt1 = Clock.getBytecodeNum();
+            if (frame > 250){
+                suicidal = false;
+            }
             if (frame % 8 == 0) {
                 nearbyRobots = map.sense();
             }
@@ -141,7 +148,7 @@ public class Soldier {
                 if (spotted != null) {
                     if (Util.DEBUG) System.out.println("Found spotter target");
                     hasSpotter = true;
-                    if (nextEnemy == null && spotted.distanceTo(myLocation) > RobotType.SOLDIER.sensorRadius) {
+                    if (nextEnemy == null && spotted.distanceTo(myLocation) > RobotType.SOLDIER.sensorRadius && (!suicidal || spotted.distanceTo(myLocation) < 12)) {
                         if (Util.DEBUG) System.out.println("Using spotter target");
                         spotterTarget = true;
                         nextEnemy = spotted;
@@ -153,7 +160,7 @@ public class Soldier {
             if (nextGardener != null && nextEnemy != null/* && nextEnemy.distanceTo(nextGardener.location) < myLocation.distanceTo(nextEnemy) + 2.5*/) {
                 MIN_EVASION_DIST = 0f;
                 if (Util.DEBUG) System.out.println("Protect gardener");
-            }else{
+            } else {
                 MIN_EVASION_DIST = 7f + rc.getType().bodyRadius * 3;
                 if (enemyType == RobotType.LUMBERJACK) {
                     MIN_EVASION_DIST = 5f;
@@ -194,7 +201,8 @@ public class Soldier {
             int cnt2 = Clock.getBytecodeNum();
 
             boolean longrange = false;
-            if (nextEnemy == null) {
+            if (Util.DEBUG && nextEnemy != null ) System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
+            if (nextEnemy == null && !suicidal) {
                 Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                 longrange = true;
                 if (Util.DEBUG) System.out.println("Using long range target");
@@ -205,14 +213,8 @@ public class Soldier {
                 }
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
-                }/*
-                if (frame % 9 == 0) {
-                    Map.generateFarTargets(map.rc, myLocation, 1000, 0);
-                }*/
+                }
                 if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy);
-            } else {
-
-                if (Util.DEBUG) System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
             }
             Movement.init(nearbyRobots, trees, bullets);
             boolean hasMoved = false;
@@ -259,7 +261,15 @@ public class Soldier {
                 cnt4 = Clock.getBytecodeNum();
                 //movement.MIN_ENEMY_DIST = MIN_EVASION_DIST;
                 if (evasionMode && !longrange && (dist < MIN_EVASION_DIST) && hasLosOnEnemy) {
-                    if (!hasMoved && movement.findPath(nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1), fireDir)) {
+                    MapLocation evadePos;
+                    if (myLocation.distanceTo(spawnLocation) - 2 < nextEnemyInfo.location.distanceTo(spawnLocation)) {
+                        if (Util.DEBUG) System.out.println("Evading to spawn");
+                        evadePos = nextEnemy.add(nextEnemy.directionTo(spawnLocation), MIN_EVASION_DIST + 1);
+                    } else {
+                        if (Util.DEBUG) System.out.println("Evading perpendicularly");
+                        evadePos = nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1);
+                    }
+                    if (!hasMoved && movement.findPath(evadePos, fireDir)) {
                         myLocation = rc.getLocation();
                     }
                     hasMoved = true;
@@ -350,7 +360,7 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(myLocation.directionTo(nextEnemy));
             return true;
-        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2  && maxArc > TRIAD_ARC_PLUSMINUS && rc.canFireTriadShot()) {
+        } else if (/*dist - radius < 2.21 + Math.max(0, money / 20f - 2) && */ dist <= 5 + radius * 2 && maxArc > TRIAD_ARC_PLUSMINUS && rc.canFireTriadShot()) {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(myLocation.directionTo(nextEnemy));
             return true;
