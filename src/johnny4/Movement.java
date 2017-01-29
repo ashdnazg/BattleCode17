@@ -31,6 +31,7 @@ public class Movement {
     static float MIN_FRIENDLY_GARDENER_DIST;
     static float MIN_FRIENDLY_ARCHON_DIST;
     static float MIN_FRIENDLY_SOLDIER_DIST;
+    static float MIN_OBSTACLE_DIST;
     static boolean evadeBullets = true;
 
     public Movement(RobotController rc) {
@@ -55,6 +56,7 @@ public class Movement {
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 attemptDist[1] = 1.1f;
                 MIN_FRIENDLY_SOLDIER_DIST = 4;
+                MIN_OBSTACLE_DIST = 0;
                 break;
             case LUMBERJACK:
                 MIN_ENEMY_LUMBERJACK_DIST = 0;
@@ -65,6 +67,7 @@ public class Movement {
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 MIN_FRIENDLY_SOLDIER_DIST = 0;
+                MIN_OBSTACLE_DIST = 0;
                 break;
             case SOLDIER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
@@ -75,6 +78,7 @@ public class Movement {
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 MIN_FRIENDLY_SOLDIER_DIST = 4;
+                MIN_OBSTACLE_DIST = 0;
                 break;
             case GARDENER:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -85,6 +89,7 @@ public class Movement {
                 MIN_FRIENDLY_GARDENER_DIST = 6;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 MIN_FRIENDLY_SOLDIER_DIST = 0;
+                MIN_OBSTACLE_DIST = 3;
                 break;
             case ARCHON:
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
@@ -95,6 +100,7 @@ public class Movement {
                 MIN_ENEMY_SCOUT_DIST = 0f;
                 MIN_FRIENDLY_ARCHON_DIST = 10;
                 MIN_FRIENDLY_SOLDIER_DIST = 0;
+                MIN_OBSTACLE_DIST = 0;
                 //evadeBullets = false;
                 break;
             default:
@@ -106,6 +112,7 @@ public class Movement {
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 MIN_FRIENDLY_SOLDIER_DIST = 0;
+                MIN_OBSTACLE_DIST = 0;
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
@@ -394,17 +401,24 @@ public class Movement {
     }
 
 
-    private float valueMove(Direction dir) {
+    private float valueMove(Direction dir) throws GameActionException {
         return valueMove(dir, strideDistance);
     }
 
     static MapLocation nloc, nloc2, b1, b2, b3;
     static float br;
 
-    static private float valueMove(Direction dir, float dist) {
+    static private float valueMove(Direction dir, float dist) throws GameActionException{
         Threat threat;
         if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
         float max = 0;
+        if (MIN_OBSTACLE_DIST > 0.0001){
+            if (rc.senseNearbyTrees(MIN_OBSTACLE_DIST).length > 0) return 0.1f;
+            if (!rc.onTheMap(myLocation.add(Direction.getNorth(), MIN_OBSTACLE_DIST))) return 0.1f;
+            if (!rc.onTheMap(myLocation.add(Direction.getEast(), MIN_OBSTACLE_DIST))) return 0.1f;
+            if (!rc.onTheMap(myLocation.add(Direction.getSouth(), MIN_OBSTACLE_DIST))) return 0.1f;
+            if (!rc.onTheMap(myLocation.add(Direction.getWest(), MIN_OBSTACLE_DIST))) return 0.1f;
+        }
         if (evadeBullets && fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
             //if (Util.DEBUG) System.out.println(dir + " would collide with own bullet");
             max = 0.9f;

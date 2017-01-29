@@ -238,7 +238,7 @@ public class Gardener {
                     walkingTarget = myLocation;
                 }
                 Movement.init(nearbyRobots, trees, bullets);
-                inPosition = !movement.findPath(walkingTarget, null);
+                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 30 && rc.getTreeCount() < 4;
                 if (DEBUG) System.out.println("Gardener positioning");
             }
 
