@@ -134,11 +134,11 @@ public class Map {
             //if (Util.DEBUG) System.out.println("1.2: " + Clock.getBytecodeNum());
             if ((frame - reportFrame) >= maxAge)
                 continue;
-            ut = (unitData & 0b00000000000000000000000011100000) >>> 5;
+            ut = (unitData & 0b00000000000000000000000000000111);
             //if (Util.DEBUG) System.out.println("2: " + Clock.getBytecodeNum());
 
-            x = ((unitData & 0b11111111111100000000000000000000) >>> 20) / 4.0f;
-            y = ((unitData & 0b00000000000011111111111100000000) >>> 8) / 4.0f;
+            x = ((unitData & 0b11111111111111000000000000000000) >>> 18) / 16.0f;
+            y = ((unitData & 0b00000000000000111111111111110000) >>> 4) / 16.0f;
             dx = (mx - x);
             dy = (my - y);
             dist = dx * dx + dy * dy;

@@ -153,7 +153,7 @@ public class Radio {
             ID_b = ID / 180;
             age = frame - reportFrame;
 
-            info = report >>> 8;
+            info = report >>> 4;
             h1 = (info * 41 + 23) % 96;
             n1 = h1 / 32;
             b1 = 1 << (h1 % 32);
@@ -172,7 +172,7 @@ public class Radio {
 
                 continue;
             }
-            type = (report & 0b00000000000000000000000011100000) >>> 5;
+            type = (report & 0b00000000000000000000000000000111);
             enemyCounts[type]++;
             if (writeNeeded) {
                 rc.broadcast(pos, report);
@@ -197,7 +197,7 @@ public class Radio {
             report = rc.readBroadcast(pos);
             //if (Util.DEBUG) System.out.println("reading new report from pos: " + pos + " info: " + report);
             ID = rc.readBroadcast(pos + 1);
-            //if (Util.DEBUG) System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000000011100000) >>> 5));
+            //if (Util.DEBUG) System.out.println("ID: " + ID + " type: " + ((report & 0b00000000000000000000000000000111)));
             ID_a = ID % 180;
             ID_b = ID / 180;
             if (enemyIDToPos[ID_a] == null) {
@@ -220,7 +220,7 @@ public class Radio {
             enemyPosToID[last - 2] = ID;
             rc.broadcast(last++, report);
             rc.broadcast(last++, frame - 1);
-            type = (report & 0b00000000000000000000000011100000) >>> 5;
+            type = (report & 0b00000000000000000000000000000111);
             enemyCounts[type]++;
         }
 
@@ -359,7 +359,7 @@ public class Radio {
 
             tempBloom[n1] |= b1;
 
-            info = ((int) Math.round(ri.location.x * 4) << 20) | ((int) Math.round(ri.location.y * 4) << 8) | (typeToInt(ri.type) << 5);
+            info = ((int) Math.round(ri.location.x * 16) << 18) | ((int) Math.round(ri.location.y * 16) << 4) | typeToInt(ri.type);
             rc.broadcast(numReports + 202, info);
             rc.broadcast(numReports + 203, ID);
             //if (Util.DEBUG) System.out.println("Reported unit ID: " + ID + " type: " + typeToInt(ri.type) + " to cell " + (numReports + 202) + "report: " + info);
@@ -411,36 +411,34 @@ public class Radio {
         if (numReports == 98) {
             return;
         }
-        int info = ((int) Math.round(location.x * 4) << 20) | ((int) Math.round(location.y * 4) << 8) | (typeToInt(type) << 5);
+        int info = ((int) Math.round(location.x * 16) << 18) | ((int) Math.round(location.y * 16) << 4) | typeToInt(type);
         rc.broadcast(numReports + 202, info);
         rc.broadcast(numReports + 203, ID);
         rc.broadcast(201, numReports + 2);
 
 
-        // if (Util.DEBUG) System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
     }
 
 
     public static void deleteEnemyReport(MapLocation location) throws GameActionException {
         if (Util.DEBUG) System.out.println("Clearing invalid report at " + location);
         if (Util.DEBUG) rc.setIndicatorDot(location, 255, 0, 0);
-        int info = ((int) Math.round(location.x * 4) << 12) | ((int) Math.round(location.y * 4));
+        int info = ((int) Math.round(location.x * 16) << 18) | ((int) Math.round(location.y * 16));
         int numDeletes = rc.readBroadcast(427);
         if (numDeletes == 22) {
             return;
         }
         rc.broadcast(427, numDeletes + 1);
         rc.broadcast(428 + numDeletes, info);
-        // if (Util.DEBUG) System.out.println("Reported enemy #" + (getEnemyCounter() + 101) + " at " + location + " age " + (rc.getRoundNum() - getUnitAge(getEnemyCounter() + 101)));
     }
 
     public static float getUnitX(int info) {
-        return ((info & 0b11111111111100000000000000000000) >>> 20) / 4.0f;
+        return ((info & 0b11111111111111000000000000000000) >>> 18) / 16.0f;
     }
 
 
     public static float getUnitY(int info) {
-        return ((info & 0b00000000000011111111111100000000) >>> 8) / 4.0f;
+        return ((info & 0b00000000000000111111111111110000) >>> 4) / 16.0f;
     }
 
     public static float getTreeX(int info) {
@@ -451,13 +449,8 @@ public class Radio {
         return (info & 0b00000000001111111111000000000000) >>> 12;
     }
 
-    public static int getUnitAge(int info) {
-        return (info & 0b00000000000000000000000000011111);
-    }
-
-
     public static RobotType getUnitType(int info) {
-        return intToType((info & 0b00000000000000000000000011100000) >>> 5);
+        return intToType(info & 0b00000000000000000000000000000111);
     }
 
 
