@@ -423,10 +423,6 @@ public class Movement {
             bugdir = !bugdir;
             if (Util.DEBUG) System.out.println("Switching bugdir to evade enemy");
         }
-        if (rand() < 0.02f || ret < 0 && rand() < 0.2f) {
-            bugdir = !bugdir;
-            if (Util.DEBUG) System.out.println("Switching bugdir");
-        }
         if (Util.DEBUG) System.out.println("end bugmove: " + Clock.getBytecodeNum());
         return ret > -0.01f;
     }
