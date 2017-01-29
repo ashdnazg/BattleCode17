@@ -383,7 +383,7 @@ public class Scout {
                                 myLocation = rc.getLocation();
                             }
                         }
-                        if (!hasFired && !longRangeCiv && !cantfire) {
+                        if (!hasFired && !longRangeCiv && !cantfire && (Radio.countAllies(RobotType.GARDENER) > 0 || nearbyAlliedFighters == 0)) {
                             if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
@@ -426,7 +426,7 @@ public class Scout {
             }
             if (Util.DEBUG)
                 System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && "  + " < 12");
-            if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12)) {
+            if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12 && (Radio.countAllies(RobotType.GARDENER) > 0 || nextEnemy.distanceTo(myLocation) < 4))) {
                 if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
                     hasFired = true;
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));

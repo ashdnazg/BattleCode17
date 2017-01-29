@@ -77,7 +77,7 @@ public class Movement {
                 GO_STRAIGHT_DISTANCE = 1.5f;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
-                MIN_FRIENDLY_SOLDIER_DIST = 4;
+                MIN_FRIENDLY_SOLDIER_DIST = 4; //overriden in soldier
                 MIN_OBSTACLE_DIST = 0;
                 break;
             case GARDENER:
@@ -116,7 +116,8 @@ public class Movement {
                 evadeBullets = false;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
-        if (Util.DEBUG) System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE + " mingard: " + MIN_FRIENDLY_GARDENER_DIST);
+        if (Util.DEBUG)
+            System.out.println("min angle for " + robotType + " is " + MIN_MOVE_TO_FIRE_ANGLE + " mingard: " + MIN_FRIENDLY_GARDENER_DIST);
     }
 
     // Call this every frame before using
@@ -389,9 +390,10 @@ public class Movement {
         if (DEBUG) {
             if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
-        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 4 && olddist < GO_STRAIGHT_DISTANCE * 7.0)) {
+        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 4 && olddist < GO_STRAIGHT_DISTANCE * 8.0)) {
             if (DEBUG) {
-                if (Util.DEBUG) System.out.println("Switching bugdir because of distance and los " + (lastLOS >= rc.getRoundNum() - 4));
+                if (Util.DEBUG)
+                    System.out.println("Switching bugdir because of distance and los " + (lastLOS >= rc.getRoundNum() - 4));
             }
             bugdir = !bugdir;
         }
@@ -408,22 +410,25 @@ public class Movement {
     static MapLocation nloc, nloc2, b1, b2, b3;
     static float br;
 
-    static private float valueMove(Direction dir, float dist) throws GameActionException{
+    static private float valueMove(Direction dir, float dist) throws GameActionException {
         Threat threat;
         if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
         float max = 0;
-        if (MIN_OBSTACLE_DIST > 0.0001){
-            if (rc.senseNearbyTrees(MIN_OBSTACLE_DIST).length > 0) return 0.1f;
-            if (!rc.onTheMap(myLocation.add(Direction.getNorth(), MIN_OBSTACLE_DIST))) return 0.1f;
-            if (!rc.onTheMap(myLocation.add(Direction.getEast(), MIN_OBSTACLE_DIST))) return 0.1f;
-            if (!rc.onTheMap(myLocation.add(Direction.getSouth(), MIN_OBSTACLE_DIST))) return 0.1f;
-            if (!rc.onTheMap(myLocation.add(Direction.getWest(), MIN_OBSTACLE_DIST))) return 0.1f;
-        }
         if (evadeBullets && fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
             //if (Util.DEBUG) System.out.println(dir + " would collide with own bullet");
             max = 0.9f;
         }
         nloc = myLocation.add(dir, rc.getType().strideRadius);
+        if (MIN_OBSTACLE_DIST > 0.0001) {
+            TreeInfo[] ntrees = rc.senseNearbyTrees(nloc, MIN_OBSTACLE_DIST, null);
+            if (ntrees.length > 0) return 1f - 0.1f * ntrees[0].location.distanceTo(nloc);
+            for (int i = 0; i < 5; i++) {
+                if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i+1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getEast(), (i+1) / 5  * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getSouth(), (i+1) / 5  * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getWest(),(i+1) / 5  * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+            }
+        }
         for (int i = 0; i < threatsLen; i++) {
 
             threat = threats[i];

@@ -234,7 +234,7 @@ public class Gardener {
 
             // Positioning
             if (treesPlanted == 0) {
-                if (frame - spawnFrame > 20){
+                if (frame - spawnFrame > 14){
                     walkingTarget = myLocation;
                 }
                 Movement.init(nearbyRobots, trees, bullets);

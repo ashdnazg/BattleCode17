@@ -176,7 +176,7 @@ public class BuildPlanner {
     }
 
     public static boolean buildTree() throws GameActionException {
-        if (money < GameConstants.BULLET_TREE_COST) {
+        if (money < GameConstants.BULLET_TREE_COST || nextEnemy != null && nearbyProtectors == 0) {
             return false;
         }
 
@@ -205,7 +205,7 @@ public class BuildPlanner {
 
 
     public static boolean hireGardener() throws GameActionException {
-        money = rc.getTeamBullets();
+        money = rc.getTeamBullets() - (ownGardeners == 0 ? 0 : 0);
         boolean haveMoney = money > ((nextEnemy == null) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
         if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4 || !Util.fireAllowed) {
             return false;
