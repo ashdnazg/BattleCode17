@@ -179,6 +179,10 @@ public class BuildPlanner {
             return false;
         }
 
+        if (!Util.fireAllowed){
+            return true;
+        }
+
         if (graceRounds > 30) {
             return true;
         }

@@ -167,6 +167,7 @@ public class Gardener {
             } else {
                 noBuildPosSince = 10000;
             }
+            freePos |= !Util.fireAllowed; // in endgame build all hexes
 
             Direction wouldBeTreeDir = null;
             active = rc.getBuildCooldownTurns() > 0 || money < GameConstants.BULLET_TREE_COST;
