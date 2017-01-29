@@ -48,7 +48,7 @@ public class Radio {
     static int[] enemyPosToID;
 
     static boolean haveBeenFirst = false;
-    static final int ENEMY_EVICTION_AGE = 64;
+    static final int ENEMY_EVICTION_AGE = 128;
 
 
     public Radio(RobotController rc_) {
