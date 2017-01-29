@@ -391,20 +391,56 @@ public class Util {
     }
 
     static boolean fireAllowed = true;
+    static final float q = 2987.5f / 3000f;
+    static final float q_1 = q - 1.0f;
+    static final float log_q = (float) Math.log(q);
+
 
     static void preTick() throws GameActionException {
-
         // Find out if we're the first unit to run this round
         Radio.frame = rc.getRoundNum();
         Radio.keepAlive();
 
-        if (rc.getTeamBullets() / rc.getVictoryPointCost() >= (1000 - rc.getTeamVictoryPoints())) {
-            rc.donate(((int) (rc.getTeamBullets() / rc.getVictoryPointCost())) * rc.getVictoryPointCost());
+        // VP stuff is here so only the first unit processes them
+        int income = rc.getTreeCount();
+        float currentVPCost = rc.getVictoryPointCost();
+        float currentVPIncome = income / currentVPCost;
+        int requiredVPs = (1000 - rc.getTeamVictoryPoints());
+
+        if (rc.getTeamBullets() / currentVPCost >= requiredVPs) {
+            rc.donate(((int) (rc.getTeamBullets() / currentVPCost)) * currentVPCost);
+        } else if (!fireAllowed) {
+            if (Util.DEBUG) System.out.println("There are " + Radio.countActiveGardeners() + " active gardeners");
+            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST;
+            if (bulletsToDonate > 0.0f) {
+                rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
+            }
+        } else {
+            float bulletsToDonate = (rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST) / currentVPCost;
+            if (bulletsToDonate > 0.0f) {
+                requiredVPs -= ((int) (bulletsToDonate / currentVPCost)) * currentVPCost;
+                float logArg = (requiredVPs * (q_1) + currentVPIncome) / currentVPIncome;
+                if (logArg > 0.0f) {
+                    float turnsToWin = (float) (Math.log(logArg) / log_q);
+                    if (Util.DEBUG) System.out.println("Winning expected in " + turnsToWin + " rounds");
+                    if (Util.DEBUG) System.out.println("currentVPIncome " + currentVPIncome);
+                    if (Util.DEBUG) System.out.println("up " + Math.log((requiredVPs * (q_1) + currentVPIncome) / currentVPIncome));
+                    if (Util.DEBUG) System.out.println("down " + log_q);
+                    if (turnsToWin < 200.0f) {
+                        if (Util.DEBUG) System.out.println("Victory expected 200");
+                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
+                        fireAllowed = false;
+                    } else if (turnsToWin < 400.0f && !Radio.getLandContact()) {
+                        if (Util.DEBUG) System.out.println("Victory expected 400");
+                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
+                        fireAllowed = false;
+                    }
+                }
+            }
         }
-        int totalUnits = 3 * Radio.allyCounts[0] + Radio.allyCounts[1] + Radio.allyCounts[2] + Radio.allyCounts[3] + 2 * Radio.allyCounts[4] + Radio.allyCounts[5];
-        if ((float) rc.getRoundNum() / GameConstants.GAME_DEFAULT_ROUNDS > 1f - 0.005f * totalUnits) {
-            rc.donate(((int) (rc.getTeamBullets() / rc.getVictoryPointCost())) * rc.getVictoryPointCost());
-            fireAllowed = false;
-        }
+        // if () {
+            // rc.donate(((int) (rc.getTeamBullets() / currentVPCost)) * currentVPCost);
+            // fireAllowed = false;
+        // }
     }
 }
