@@ -144,17 +144,19 @@ public class Util {
         int i;
         RobotInfo robot;
         TreeInfo tree;
-        for (i = 0; i < trees.length; i++) {
-            if (cnt >= px.length || i > 8) break;
-            tree = trees[i];
-            x = tree.location.x;
-            y = tree.location.y;
-            r = tree.radius;
-            if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < (rs + r) * (rs + r)) {
-                px[cnt] = x;
-                py[cnt] = y;
-                pr[cnt] = r + 0.0001f;
-                pg[cnt++] = false;
+        if (rc.getTeamBullets() < 110) {
+            for (i = 0; i < trees.length; i++) {
+                if (cnt >= px.length || i > 8) break;
+                tree = trees[i];
+                x = tree.location.x;
+                y = tree.location.y;
+                r = tree.radius;
+                if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < (rs + r) * (rs + r)) {
+                    px[cnt] = x;
+                    py[cnt] = y;
+                    pr[cnt] = r + 0.0001f;
+                    pg[cnt++] = false;
+                }
             }
         }
         for (i = 0; i < robots.length; i++) {

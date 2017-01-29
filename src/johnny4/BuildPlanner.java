@@ -131,7 +131,7 @@ public class BuildPlanner {
             } else {
                 nearbyNonBulletTrees++;
             }
-            if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 5f + t.radius) {
+            if (!t.team.equals(myTeam) && myLocation.distanceTo(t.location) < 5f + t.radius && rc.getType() == RobotType.GARDENER) {
                 stuckingTrees++;
                 Radio.requestTreeCut(t);
             }
@@ -145,7 +145,7 @@ public class BuildPlanner {
         int ownCounts[] = Radio.countAllies();
         ownScouts = ownCounts[Radio.typeToInt(RobotType.SCOUT)];
         ownLumberjacks = ownCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
-        ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)];
+        ownSoldiers = ownCounts[Radio.typeToInt(RobotType.SOLDIER)] + ownCounts[Radio.typeToInt(RobotType.TANK)] * 2;
         ownGardeners = Math.max(ownCounts[Radio.typeToInt(RobotType.GARDENER)], lastOwnGardeners);
         lastOwnGardeners = ownCounts[Radio.typeToInt(RobotType.GARDENER)];
         int enemyCounts[] = Radio.countEnemies();
@@ -249,7 +249,7 @@ public class BuildPlanner {
         boolean noScouts = ownScouts == 0;
         boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers + 1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && (ownLumberjacks < 1 || ownLumberjacks < 2 && frame > 180)) ||
                 gardenerStuckified && (nearbyLumberjacks == 0 || money > 140 && nearbyLumberjacks < 3) && nearbyNonBulletTrees > 0;
-        boolean needScouts = ownScouts < (ownSoldiers + 1) / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
+        boolean needScouts = ownScouts < (ownSoldiers + ownLumberjacks) / 3 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
         if (!Radio.getLandContact() && ownLumberjacks >= 1 && nextEnemyFar != null && nextEnemyFar.distanceTo(rc.getLocation()) < 30) {
             needLumberJacks = false;
             if (Util.DEBUG) System.out.println("Too dangerous for lumberjacks");
