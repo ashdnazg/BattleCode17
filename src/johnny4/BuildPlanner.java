@@ -202,7 +202,7 @@ public class BuildPlanner {
     public static boolean hireGardener() throws GameActionException {
         money = rc.getTeamBullets();
         boolean haveMoney = money > ((nextEnemy == null) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
-        if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4) {
+        if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4 || !Util.fireAllowed) {
             return false;
         }
         if (Radio.countActiveGardeners() > 0) {
@@ -234,7 +234,7 @@ public class BuildPlanner {
         boolean rich = money > 160 && frame > 80;
         boolean enemyWasScouted = totalEnemies > 2;
 
-        if (nearbyProtectors + nearbyArchons >= 6) return null; //dont overcrowd
+        if (nearbyProtectors + nearbyArchons >= 6 || !Util.fireAllowed) return null; //dont overcrowd
 
 
         boolean needSoldiers = ownSoldiers < 1 + ownGardeners / 2 || (ownSoldiers * 1.2f + ownLumberjacks * 0.2 < (enemySoldiers + 1 + 0.3 * enemyLumberjacks)) || (Radio.getLandContact() || nextEnemyFar != null && nextEnemyFar.distanceTo(rc.getLocation()) < 30) && ownSoldiers < 3 + ownGardeners / 2;
