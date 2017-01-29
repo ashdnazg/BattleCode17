@@ -180,16 +180,18 @@ public class Gardener {
             }else{
                 disabledSince = 100000;
             }
-            _active = rc.getBuildCooldownTurns() > 0 || money < GameConstants.BULLET_TREE_COST;
-            for (int i = 0; i < buildDirs.length; i++) {
-                if (rc.canPlantTree(buildDirs[i])) {
-                    if (treesPlanted == 0 && (freeDir - i) % 2 != 0) continue;
-                    if (!freePos && Math.abs(i - freeDir) <= 1) {
-                        continue; //reserved spot
+            if (rc.getBuildCooldownTurns() <= 0 && money > GameConstants.BULLET_TREE_COST) {
+                _active = false;
+                for (int i = 0; i < buildDirs.length; i++) {
+                    if (rc.canPlantTree(buildDirs[i])) {
+                        if (treesPlanted == 0 && (freeDir - i) % 2 != 0) continue;
+                        if (!freePos && Math.abs(i - freeDir) <= 1) {
+                            continue; //reserved spot
+                        }
+                        wouldBeTreeDir = buildDirs[i];
+                        _active = buildDirValid[freeDir];
+                        break;
                     }
-                    wouldBeTreeDir = buildDirs[i];
-                    _active = buildDirValid[freeDir];
-                    break;
                 }
             }
 
