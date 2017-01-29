@@ -427,7 +427,7 @@ public class Radio {
     public static void deleteEnemyReport(MapLocation location) throws GameActionException {
         if (Util.DEBUG) System.out.println("Clearing invalid report at " + location);
         if (Util.DEBUG) rc.setIndicatorDot(location, 255, 0, 0);
-        int info = ((int) Math.round(location.x * 16) << 18) | ((int) Math.round(location.y * 16));
+        int info = ((int) Math.round(location.x * 16) << 14) | ((int) Math.round(location.y * 16));
         int numDeletes = rc.readBroadcast(427);
         if (numDeletes == 22) {
             return;
