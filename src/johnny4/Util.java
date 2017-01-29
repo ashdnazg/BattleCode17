@@ -398,12 +398,12 @@ public class Util {
         Radio.frame = rc.getRoundNum();
         Radio.keepAlive();
 
-        if (rc.getTeamBullets() >= 10000f) {
-            rc.donate(10000f);
+        if (rc.getTeamBullets() / rc.getVictoryPointCost() >= (1000 - rc.getTeamVictoryPoints())) {
+            rc.donate(((int) (rc.getTeamBullets() / rc.getVictoryPointCost())) * rc.getVictoryPointCost());
         }
         int totalUnits = 3 * Radio.allyCounts[0] + Radio.allyCounts[1] + Radio.allyCounts[2] + Radio.allyCounts[3] + 2 * Radio.allyCounts[4] + Radio.allyCounts[5];
         if ((float) rc.getRoundNum() / GameConstants.GAME_DEFAULT_ROUNDS > 1f - 0.005f * totalUnits) {
-            rc.donate(((int) rc.getTeamBullets()) / 10 * 10);
+            rc.donate(((int) (rc.getTeamBullets() / rc.getVictoryPointCost())) * rc.getVictoryPointCost());
             fireAllowed = false;
         }
     }
