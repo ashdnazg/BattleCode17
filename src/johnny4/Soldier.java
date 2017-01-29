@@ -104,7 +104,7 @@ public class Soldier {
             nearbyRobots = null;
             RobotType enemyType = RobotType.SOLDIER;
             int cnt1 = Clock.getBytecodeNum();
-            if (frame > 250){
+            if (frame > 250) {
                 suicidal = false;
             }
             if (frame % 8 == 0) {
@@ -201,16 +201,13 @@ public class Soldier {
             int cnt2 = Clock.getBytecodeNum();
 
             boolean longrange = false;
-            if (Util.DEBUG && nextEnemy != null ) System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
-            if (nextEnemy == null && !suicidal) {
+            if (Util.DEBUG && nextEnemy != null)
+                System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
+            if (nextEnemy == null) {
                 Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                 longrange = true;
                 if (Util.DEBUG) System.out.println("Using long range target");
-                nextEnemy = Map.getTarget(getTargetType, myLocation);
-                if (nextEnemy == null) {
-                    if (Util.DEBUG) System.out.println("Using long range target fallback");
-                    nextEnemy = Map.getTarget(getTargetType, myLocation);
-                }
+                nextEnemy = Map.getTarget(suicidal ? 2 : getTargetType, myLocation);
                 if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                     Radio.deleteEnemyReport(nextEnemy);
                 }
@@ -262,9 +259,9 @@ public class Soldier {
                 //movement.MIN_ENEMY_DIST = MIN_EVASION_DIST;
                 if (evasionMode && !longrange && (dist < MIN_EVASION_DIST) && hasLosOnEnemy) {
                     MapLocation evadePos;
-                    if (myLocation.distanceTo(spawnLocation) - 2 < nextEnemyInfo.location.distanceTo(spawnLocation)) {
+                    if (myLocation.distanceTo(spawnLocation) - 2 < nextEnemyInfo.location.distanceTo(spawnLocation) && dist > MIN_EVASION_DIST - 3) {
                         if (Util.DEBUG) System.out.println("Evading to spawn");
-                        evadePos = nextEnemy.add(nextEnemy.directionTo(spawnLocation), MIN_EVASION_DIST + 1);
+                        evadePos = nextEnemy.add(nextEnemy.directionTo(spawnLocation), MIN_EVASION_DIST + 5);
                     } else {
                         if (Util.DEBUG) System.out.println("Evading perpendicularly");
                         evadePos = nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1);
@@ -334,22 +331,20 @@ public class Soldier {
         float maxArc = getMaximumArcOfFire(myLocation, myLocation.directionTo(nextEnemy), nearbyRobots, trees);
         if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
         if (enemyType == RobotType.SCOUT) {
-            if (money < 110 && dist > 5.0f) {
-                return false;
-            } else {
-                if (rc.canFirePentadShot() && maxArc > PENTAD_ARC_PLUSMINUS) {
-                    rc.firePentadShot(myLocation.directionTo(nextEnemy));
-                    return true;
-                }
-                if (rc.canFireTriadShot() && maxArc > TRIAD_ARC_PLUSMINUS && dist < 4.0f) {
-                    rc.fireTriadShot(myLocation.directionTo(nextEnemy));
-                    return true;
-                }
-                if (rc.canFireSingleShot() && dist < 3.0f) {
-                    rc.fireSingleShot(myLocation.directionTo(nextEnemy));
-                    return true;
-                }
+
+            if (rc.canFirePentadShot() && maxArc > PENTAD_ARC_PLUSMINUS && (money > 50 || dist < 7f)) {
+                rc.firePentadShot(myLocation.directionTo(nextEnemy));
+                return true;
             }
+            if (rc.canFireTriadShot() && maxArc > TRIAD_ARC_PLUSMINUS) {
+                rc.fireTriadShot(myLocation.directionTo(nextEnemy));
+                return true;
+            }
+            if (rc.canFireSingleShot() && dist < 3.0f) {
+                rc.fireSingleShot(myLocation.directionTo(nextEnemy));
+                return true;
+            }
+
             return false;
         }
         Radio.reportContact();
