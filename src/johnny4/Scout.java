@@ -85,7 +85,7 @@ public class Scout {
         isSpotter = value;
         if (isSpotter) {
             Movement.MIN_ENEMY_DIST = 11f;
-            Movement.MIN_ENEMY_SCOUT_DIST = 0f;
+            Movement.MIN_ENEMY_SCOUT_DIST = 6f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = 5f;
         }
         if (!isSpotter) {
@@ -149,7 +149,7 @@ public class Scout {
                     if ((ut == RobotType.GARDENER)) {
                         nearbyAlliedGardeners++;
                     }
-                } else if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT)) {
+                } else if ((ut == RobotType.LUMBERJACK || ut == RobotType.SOLDIER || ut == RobotType.TANK || ut == RobotType.SCOUT) && (r.moveCount + r.attackCount > 0 || r.health / r.type.maxHealth > 0.9f)) {
                     nearbyEnemyFighters++;
                 } else if (ut == RobotType.ARCHON && (nextArchon == null || nextArchon.distanceTo(myLocation) > r.location.distanceTo(myLocation))) {
                     nextArchon = r.location;
@@ -178,7 +178,7 @@ public class Scout {
 
                 RobotType ut = r.getType();
                 if (!r.getTeam().equals(rc.getTeam())) {
-                    if ((ut == RobotType.GARDENER && !isSpotter || rc.getHealth() / RobotType.SCOUT.maxHealth > 0.6 && r.getHealth() < 10 * (frame + 1500f) / 1500 && ut != RobotType.SCOUT && nearbyAlliedFighters == 0 || ut == RobotType.SCOUT && (chaseAllScouts)) &&
+                    if ((ut == RobotType.GARDENER && (!isSpotter || nearbyEnemyFighters == 0) || rc.getHealth() / RobotType.SCOUT.maxHealth > 0.6 && r.getHealth() < 10 * (frame + 1500f) / 1500 && ut != RobotType.SCOUT && nearbyAlliedFighters == 0 || ut == RobotType.SCOUT && (chaseAllScouts)) &&
                             (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
                         nextCivilian = r.location;
                         nextCivilianInfo = r;
