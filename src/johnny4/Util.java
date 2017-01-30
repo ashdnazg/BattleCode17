@@ -223,21 +223,40 @@ public class Util {
             if (lastEnemy.location.distanceTo(enemy.location) > enemy.type.strideRadius + 0.0001f){
                 if (Util.DEBUG) System.out.println("Invalid data for prediction");
 
-                //return nextEnemy;
+                return nextEnemy;
             }
-            float dx = enemy.location.x - lastEnemy.location.x;
-            float dy = enemy.location.y - lastEnemy.location.y;
-            if (lastEnemy.location.distanceTo(enemy.location) > enemy.type.strideRadius + 0.0001f){
-                if (Util.DEBUG) System.out.println("Invalid data for prediction");
-                float mag = (float)Math.sqrt(dx * dx + dy * dy);
-                dx = dx / mag * enemy.type.strideRadius;
-                dy = dy / mag * enemy.type.strideRadius;
-            }
-            float time = -1f;
-            for (int i =0 ; i < 5; i++) {
-                time = (Math.min(15,(myLocation.distanceTo(nextEnemy) - bodyblub) )/ bulletspeed + extratime) * rand();
-                nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
-            }
+            float ux = enemy.location.x - lastEnemy.location.x;
+            float uy = enemy.location.y - lastEnemy.location.y;
+
+            float ABx = myLocation.x - enemy.location.x;
+            float ABy = myLocation.y - enemy.location.y;
+
+            float ABmag = (float) Math.sqrt(ABx * ABx + ABy * ABy);
+            ABx /= ABmag;
+            ABy /= ABmag;
+
+            float uDotAB = ABx * ux + ABy * uy;
+            float ujx = uDotAB * ABx;
+            float ujy = uDotAB * ABy;
+
+            float uix = ux - ujx;
+            float uiy = uy - ujy;
+
+            // float vix = uix;
+            // float viy = uiy;
+
+            float viMag = (float) Math.sqrt(uix * uix + uiy * uiy);
+            float vjMag = (float) Math.sqrt(bulletspeed * bulletspeed - viMag * viMag);
+
+            float vjx = ABx * vjMag;
+            float vjy = ABy * vjMag;
+
+            // float vx = vjx + vix;
+            // float vy = vjy + viy;
+
+            float time = (vjy - ujy) / (myLocation.y - enemy.location.y);
+
+            nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
             if (Util.DEBUG) rc.setIndicatorLine(lastEnemy.location, enemy.location, 255, 255, 0);
             if (Util.DEBUG) rc.setIndicatorLine(enemy.location, nextEnemy, 255, 100, 0);
