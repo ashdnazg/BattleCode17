@@ -93,6 +93,7 @@ public class Soldier {
     boolean evasionMode = true;
     float MIN_EVASION_DIST = 8f;
     int SUICIDAL_END = 250;
+    int nearbyEnemySoldiers = 0;
 
     float money;
 
@@ -124,7 +125,7 @@ public class Soldier {
             RobotInfo nextEnemyInfo = null;
             RobotInfo nextSpotter = null;
             RobotInfo nextGardener = null;
-            nearbySoldiers = 0;
+            nearbySoldiers = nearbyEnemySoldiers = 0;
             boolean hasSpotter = false;
             trees = senseClosestTrees();
             TreeInfo hideTree = null;
@@ -139,6 +140,9 @@ public class Soldier {
                 }
                 if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER)) {
                     nearbySoldiers++;
+                }
+                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER)) {
+                    nearbyEnemySoldiers++;
                 }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || money > MIN_ARCHON_BULLETS) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
@@ -369,7 +373,7 @@ public class Soldier {
         if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS) {
             return false;
         }
-        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
+        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
             return true;
