@@ -165,7 +165,7 @@ public class Soldier {
                 }
             }
             boolean spotterTarget = false;
-            Map.generateFarTargets(map.rc, myLocation, 2, 0);
+            Map.generateFarTargets(map.rc, myLocation, 5, 0);
             MapLocation spotted = Map.getTarget(getTargetType, myLocation);
             if (spotted != null) {
                 if (Util.DEBUG) System.out.println("Found spotter target");
@@ -346,9 +346,9 @@ public class Soldier {
 
     boolean tryFire(MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
         if (!Util.fireAllowed) return false;
-        if (money < 120 && rc.getTreeCount() < 6 && Radio.countActiveGardeners() > 0 && nextGardener == null && rc.getRoundNum() % (1 + Radio.countAllies(RobotType.SOLDIER)) > 0 && dist >= 7){
+        /*if (money < 120 && rc.getTreeCount() < 6 && Radio.countActiveGardeners() > 0 && nextGardener == null && rc.getRoundNum() % (1 + Radio.countAllies(RobotType.SOLDIER)) > 0 && dist >= 7 ){
             return false;
-        }
+        }*/
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
