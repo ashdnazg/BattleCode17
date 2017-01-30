@@ -223,7 +223,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (ownGardeners > 0 && (rc.getTreeCount() / ownGardeners > 3) && (!Radio.getAlarm() || money > 105 + rc.getTreeCount())) {
+        if (ownGardeners > 0 /*&& (rc.getTreeCount() / ownGardeners > 3)*/ && (!Radio.getAlarm() || money > 105 + rc.getTreeCount())) {
             return true;
         }
 
