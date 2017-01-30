@@ -219,7 +219,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (!allOrNothing && (!Radio.getLandContact() || frame > 300) && (money > 140 || ownSoldiers > rc.getTreeCount()) && frame > 4 + Math.min(Archon.gardenersHired, ownGardeners) * 120 && (nearbyGardeners - 1) * 2.5 <= nearbyBulletTrees) {
+        if (!allOrNothing && (!Radio.getLandContact() || frame > 300) && (money > 140 || ownSoldiers > rc.getTreeCount() || true) && frame > 4 + Math.min(Archon.gardenersHired, ownGardeners) * 120 && (nearbyGardeners - 1) * 2.5 <= nearbyBulletTrees) {
             return true;
         }
 
@@ -260,7 +260,7 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("needLumberJacks: " + needLumberJacks);
         if (Util.DEBUG) System.out.println("needScouts: " + needScouts);
 
-        if (noScouts && canScout && !Radio.getLandContact() && totalEnemies == 0 && startArchonDist > 17) {
+        if (noScouts && canScout && !Radio.getLandContact() && totalEnemies == 0 && startArchonDist > 17 && (!allOrNothing || frame > 55)) {
             return RobotType.SCOUT;
         }
 

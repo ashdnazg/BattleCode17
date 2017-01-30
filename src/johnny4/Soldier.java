@@ -270,7 +270,7 @@ public class Soldier {
                 }*/
                 cnt4 = Clock.getBytecodeNum();
                 //movement.MIN_ENEMY_DIST = MIN_EVASION_DIST;
-                if (evasionMode && !longrange && (dist < MIN_EVASION_DIST) && hasLosOnEnemy) {
+                if (evasionMode && !longrange && (dist < MIN_EVASION_DIST) && (hasLosOnEnemy || Radio.countAllies(RobotType.SOLDIER) <= Radio.countEnemies(RobotType.SOLDIER))) { //retreat when low on units
                     MapLocation evadePos;
                     if (myLocation.distanceTo(spawnLocation) - 2 < nextEnemyInfo.location.distanceTo(spawnLocation) && dist > MIN_EVASION_DIST - 3) {
                         if (Util.DEBUG) System.out.println("Evading to spawn");
