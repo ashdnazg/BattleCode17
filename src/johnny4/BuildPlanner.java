@@ -154,7 +154,7 @@ public class BuildPlanner {
         enemyLumberjacks = enemyCounts[Radio.typeToInt(RobotType.LUMBERJACK)];
         enemySoldiers = enemyCounts[Radio.typeToInt(RobotType.SOLDIER)];
         enemyGardeners = enemyCounts[Radio.typeToInt(RobotType.GARDENER)];
-        allOrNothing = frame < 180 && startArchonDist < 33 || frame < 200 && Radio.getLandContact();
+        allOrNothing = frame < 180 && startArchonDist < 33 || frame < 200 - ownSoldiers * 50 && Radio.getLandContact();
         if (Util.DEBUG) System.out.println("own scouts: " + ownScouts);
         if (Util.DEBUG) System.out.println("own soldiers: " + ownSoldiers);
         if (Util.DEBUG) System.out.println("own gardeners: " + ownGardeners);
