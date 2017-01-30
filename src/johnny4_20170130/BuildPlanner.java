@@ -1,4 +1,4 @@
-package johnny4;
+package johnny4_20170130;
 
 import battlecode.common.*;
 

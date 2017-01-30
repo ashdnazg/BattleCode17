@@ -1,8 +1,8 @@
-package johnny4;
+package johnny4_20170130;
 
 import battlecode.common.*;
 
-import static johnny4.Util.*;
+import static johnny4_20170130.Util.*;
 
 public class Movement {
 
@@ -12,7 +12,7 @@ public class Movement {
     static int lastInit = -1;
     static RobotInfo[] robots;
     static TreeInfo[] trees;
-    static BulletInfo[] bullets = new BulletInfo[10];
+    static BulletInfo[] bullets = new BulletInfo[5];
     static int bulletLen = 0;
     static MapLocation myLocation;
     static Direction fireDir;
@@ -139,7 +139,7 @@ public class Movement {
             currentThreat = threats[threatsLen];
         }
         for (int i = 0; i < bullets_.length; i++) {
-            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > 2 * strideDistance +  2 * bullets_[i].speed + robotType.bodyRadius)
+            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > strideDistance + bullets_[i].speed + robotType.bodyRadius)
                 break;
             bullets[bulletLen++] = bullets_[i];
         }
