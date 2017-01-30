@@ -138,6 +138,7 @@ public class BuildPlanner {
         }
         gardenerStuckified = !Gardener.active && stuckingTrees >= 3;
         nextEnemyFar = nextEnemy != null ? nextEnemy.location : Map.getTarget(Map.ARCHON, Map.GARDENER, Map.LUMBERJACK, Map.SCOUT, Map.SOLDIER, Map.TANK, 4, myLocation);
+        if (nextEnemyFar != null) closestDanger = Math.min(closestDanger, nextEnemyFar.distanceTo(myLocation));
         if (frame % 5 == 0) {
             Map.generateFarTargets(rc, myLocation, 50, 0);
         }
@@ -188,7 +189,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (ownSoldiers + ownLumberjacks < 2 && frame < 200 || ownSoldiers < 1 || allOrNothing) {
+        if (ownSoldiers + ownLumberjacks < 2 && frame < 200 && closestDanger < 30  || ownSoldiers < 1 || allOrNothing) {
             return false;
         }
 
@@ -205,8 +206,7 @@ public class BuildPlanner {
 
 
     public static boolean hireGardener() throws GameActionException {
-        money = rc.getTeamBullets() - (ownGardeners == 0 ? 0 : 0);
-        boolean haveMoney = money > ((nextEnemy == null) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
+        boolean haveMoney = money > ((nextEnemy == null || nearbyProtectors > 0) ? RobotType.GARDENER.bulletCost : RobotType.GARDENER.bulletCost + RobotType.SOLDIER.bulletCost);
         if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4 || !Util.fireAllowed) {
             return false;
         }
