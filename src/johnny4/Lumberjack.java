@@ -153,9 +153,6 @@ public class Lumberjack {
                             nextRobot = ti.location;
                         }
                     }
-                    if (ti.containedBullets > 0 && rc.canShake(ti.location)) {
-                        rc.shake(ti.location);
-                    }
                 }
                 if (nextTree != null && nextEnemy == null && currentTreeTarget == null) {
                     currentTreeTarget = nextTree;
@@ -270,9 +267,6 @@ public class Lumberjack {
                     nextEnemy = ti.location;
                     enemyRadius = ti.radius;
                     if (Util.DEBUG) System.out.println("Targeting enemy tree");
-                }
-                if (ti.containedBullets > 0 && rc.canShake(ti.location)) {
-                    rc.shake(ti.location);
                 }
             }
 

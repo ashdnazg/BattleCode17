@@ -252,13 +252,13 @@ public class Gardener {
                 } else if (nextEnemyFarScout != null && nextEnemyFarScout.distanceTo(myLocation) < 8.5f) {
                     walkingTarget = myLocation.add(nextEnemyFarScout.directionTo(myLocation), 3);
                 } else {
-                    if (frame - spawnFrame > 17) {
+                    if (frame - spawnFrame > 16) {
                         walkingTarget = myLocation;
                         Movement.MIN_OBSTACLE_DIST = 3;
                     }
                 }
                 Movement.init(nearbyRobots, trees, bullets);
-                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 30 && rc.getTreeCount() < 4;
+                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 31 && rc.getTreeCount() < 4;
                 if (DEBUG) System.out.println("Gardener positioning");
             }
 

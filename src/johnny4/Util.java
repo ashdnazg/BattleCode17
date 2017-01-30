@@ -268,9 +268,11 @@ public class Util {
 
     static TreeInfo[] temp = new TreeInfo[10];
     static TreeInfo[] cache = new TreeInfo[0];
+    static boolean resense = false;
 
     static TreeInfo[] senseBiggestTrees() throws GameActionException {
-        if (rc.getRoundNum() % 3 == 0 || cache.length == 0) {
+        if (rc.getRoundNum() % 3 == 0 || cache.length == 0 || resense) {
+            resense = false;
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
@@ -279,6 +281,7 @@ public class Util {
             int maxCnt = temp.length;
             int cnt2 = 0;
 
+            boolean shaken = false;
             for (int i = 0; i < len && Clock.getBytecodeNum() - time < 1000; i++) {
                 ti = trees[i];
                 if (ti.radius > 0.1 && cnt < maxCnt) {
@@ -289,6 +292,10 @@ public class Util {
                 }
                 if (ti.containedRobot != null) {
                     Radio.requestTreeCut(ti);
+                }
+                if (!shaken && ti.containedBullets > 0 && rc.canShake(ti.location)) {
+                    rc.shake(ti.location);
+                    resense = true;
                 }
             }
             if (DEBUG) {
@@ -315,13 +322,15 @@ public class Util {
     static TreeInfo[] cache2 = new TreeInfo[0];
 
     static TreeInfo[] senseClosestTrees() throws GameActionException {
-        if (rc.getRoundNum() % 3 == 0 || cache2.length == 0) {
+        if (rc.getRoundNum() % 3 == 0 || cache2.length == 0|| resense) {
+            resense = false;
             int time = Clock.getBytecodeNum();
             int cnt = 0;
             TreeInfo trees[] = rc.senseNearbyTrees();
             int length = Math.min(15, trees.length);
             int maxCnt = temp2.length;
             TreeInfo ti;
+            boolean shaken = false;
             for (int i = 0; i < length && Clock.getBytecodeNum() - time < 1300; i++) {
                 ti = trees[i];
                 if (cnt < maxCnt) {
@@ -329,6 +338,10 @@ public class Util {
                 }
                 if (ti.containedRobot != null) {
                     Radio.requestTreeCut(ti);
+                }
+                if (!shaken && ti.containedBullets > 0 && rc.canShake(ti.location)) {
+                    rc.shake(ti.location);
+                    resense = true;
                 }
             }
             cache2 = new TreeInfo[cnt];

@@ -227,9 +227,6 @@ public class Soldier {
                         if (Util.DEBUG) System.out.println("Reported tree at " + t.location);
                         radio.requestTreeCut(t);
                     }
-                    if (t.containedBullets > 0 && rc.canShake(t.location)) {
-                        rc.shake(t.location);
-                    }
                 }
             }
             int cnt2 = Clock.getBytecodeNum();
