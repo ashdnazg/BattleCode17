@@ -260,7 +260,7 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("needLumberJacks: " + needLumberJacks);
         if (Util.DEBUG) System.out.println("needScouts: " + needScouts);
 
-        if (noScouts && canScout && !Radio.getLandContact() && totalEnemies == 0) {
+        if (noScouts && canScout && !Radio.getLandContact() && totalEnemies == 0 && startArchonDist > 17) {
             return RobotType.SCOUT;
         }
 
