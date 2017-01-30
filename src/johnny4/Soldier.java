@@ -93,6 +93,7 @@ public class Soldier {
     boolean evasionMode = true;
     float MIN_EVASION_DIST = 8f;
     int SUICIDAL_END = 250;
+    RobotInfo nextGardener;
     int nearbyEnemySoldiers = 0;
 
     float money;
@@ -124,7 +125,7 @@ public class Soldier {
             MapLocation nextEnemyScout = null;
             RobotInfo nextEnemyInfo = null;
             RobotInfo nextSpotter = null;
-            RobotInfo nextGardener = null;
+            nextGardener = null;
             nearbySoldiers = nearbyEnemySoldiers = 0;
             boolean hasSpotter = false;
             trees = senseClosestTrees();
@@ -154,7 +155,7 @@ public class Soldier {
                         if (enemyType == RobotType.SCOUT) {
                             hideTree = rc.canSenseLocation(ri.location) ? rc.senseTreeAtLocation(ri.location) : null;
                         }
-                    }else{
+                    } else {
                         nextEnemyScout = ri.location;
                     }
                 }
@@ -233,9 +234,9 @@ public class Soldier {
                 }
                 if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy);
             }
-            if (nextEnemy == null){
+            if (nextEnemy == null) {
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 10f;
-            }else{
+            } else {
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 4f;
             }
             Movement.init(nearbyRobots, trees, bullets);
@@ -319,10 +320,10 @@ public class Soldier {
                 myLocation = rc.getLocation();
             }
 
-            if (!hasFired && nextEnemyScout != null){
+            if (!hasFired && nextEnemyScout != null) {
                 if (checkLineOfFire(myLocation, nextEnemyScout, trees, nearbyRobots, rc.getType().bodyRadius)) {
-                    if (DEBUG) System.out.println("Firing at scout " );
-                    hasFired = tryFire(nextEnemyScout, RobotType.SCOUT, nextEnemyScout.distanceTo(myLocation),  RobotType.SCOUT.bodyRadius);
+                    if (DEBUG) System.out.println("Firing at scout ");
+                    hasFired = tryFire(nextEnemyScout, RobotType.SCOUT, nextEnemyScout.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
                 } else {
                     if (Util.DEBUG) System.out.println("No LOS on scout");
                 }
@@ -345,6 +346,9 @@ public class Soldier {
 
     boolean tryFire(MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
         if (!Util.fireAllowed) return false;
+        if (money < 120 && rc.getTreeCount() < 6 && nextGardener == null && rc.getRoundNum() % (2 + Radio.countAllies(RobotType.SOLDIER)) > 0 && dist >= 7){
+            return false;
+        }
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
