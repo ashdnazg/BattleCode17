@@ -243,16 +243,6 @@ public class Scout {
                     //setSpotter(false);
                 }
             }
-            if (nextCivilianInfo != null && lastCivilianInfo != null) {
-                nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
-            }
-            if (nextEnemyInfo != null && lastEnemyInfo != null) {
-                nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
-            }
-            lastCivilian = nextCivilian;
-            lastCivilianInfo = nextCivilianInfo;
-            lastEnemyInfo = nextEnemyInfo;
-
 
             if (Util.DEBUG) System.out.println("Checking safe " + Clock.getBytecodeNum());
 
@@ -345,6 +335,9 @@ public class Scout {
                         Direction fireDir = null;
                         if (!hasFired && false) {//don't fire before moving
                             if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
+                                if (nextCivilianInfo != null && lastCivilianInfo != null) {
+                                    nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
+                                }
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
@@ -381,6 +374,9 @@ public class Scout {
                         }
                         if (!hasFired && !longRangeCiv && !cantfire && (Radio.countAllies(RobotType.GARDENER) > 0 && rc.getTreeCount() > 1 || nearbyAlliedFighters == 0)) {
                             if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
+                                if (nextCivilianInfo != null && lastCivilianInfo != null) {
+                                    nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
+                                }
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
@@ -414,6 +410,7 @@ public class Scout {
                 }
             }
 
+
             if (Util.DEBUG) System.out.println("Scout late " + Clock.getBytecodeNum());
             if (Clock.getBytecodesLeft() < 1000) {
                 if (Util.DEBUG) System.out.println("Aborting scout at " + myLocation + " early");
@@ -424,6 +421,9 @@ public class Scout {
                 System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && " + " < 12");
             if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12 && (Radio.countActiveGardeners() == 0 || rc.getTreeCount() > 5 || nextEnemy.distanceTo(myLocation) < 4))) {
                 if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
+                    if (nextEnemyInfo != null && lastEnemyInfo != null) {
+                        nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
+                    }
                     hasFired = true;
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     Movement.lastLOS = frame;
@@ -432,6 +432,9 @@ public class Scout {
                     if (Util.DEBUG) System.out.println("No LOS on enemy");
                 }
             }
+            lastCivilian = nextCivilian;
+            lastCivilianInfo = nextCivilianInfo;
+            lastEnemyInfo = nextEnemyInfo;
             if (Util.DEBUG) System.out.println("Scout late2 " + Clock.getBytecodeNum() + " trees: " + trees.length);
             if (Util.DEBUG) System.out.println("Scout late3 " + Clock.getBytecodeNum());
             lastHP = rc.getHealth();

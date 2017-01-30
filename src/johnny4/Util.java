@@ -255,7 +255,9 @@ public class Util {
             // float vy = vjy + viy;
 
             // 0.9 factor is important!
-            float time = ((enemy.location.y - myLocation.y) / (vjy + ujy) + extratime) * 0.8f;
+
+            float time = vjy - ujy > 0.01f ? ((enemy.location.y - myLocation.y) / (vjy - ujy) + extratime) : ((enemy.location.x - myLocation.x) / (vjx - ujx) + extratime);
+            time *= (ABmag - enemyRadius) / ABmag;
 
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
