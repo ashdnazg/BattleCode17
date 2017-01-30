@@ -403,7 +403,7 @@ public class Scout {
                             if (nextFriendlyFighter != null) {
                                 if (Util.DEBUG)
                                     System.out.println("blubbing " + nextFighter.type + " at " + nextFighter.location);
-                                movement.findPath(nextFriendlyFighter.location.add(nextFighter.location.directionTo(nextFriendlyFighter.location), 2.5f), null);
+                                movement.findPath(nextFriendlyFighter.location.add(nextFighter.location.directionTo(nextFriendlyFighter.location).rotateLeftDegrees(((rc.getID() % 2) * 2 - 1) * 60), 4.5f), null);
                             } else {
                                 if (Util.DEBUG)
                                     System.out.println("Stalking " + nextFighter.type + " at " + nextFighter.location);
