@@ -55,7 +55,7 @@ public class Movement {
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 attemptDist[1] = 1.1f;
-                MIN_FRIENDLY_SOLDIER_DIST = 4;
+                MIN_FRIENDLY_SOLDIER_DIST = 0;
                 MIN_OBSTACLE_DIST = 0;
                 break;
             case LUMBERJACK:

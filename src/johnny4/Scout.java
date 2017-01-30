@@ -84,7 +84,7 @@ public class Scout {
         if (DEBUG) System.out.println("Converting to spotter " + value);
         isSpotter = value;
         if (isSpotter) {
-            Movement.MIN_ENEMY_DIST = 11f;
+            Movement.MIN_ENEMY_DIST = 9f;
             Movement.MIN_ENEMY_SCOUT_DIST = 6f;
             Movement.MIN_ENEMY_LUMBERJACK_DIST = 5f;
         }
@@ -403,7 +403,7 @@ public class Scout {
                             if (nextFriendlyFighter != null) {
                                 if (Util.DEBUG)
                                     System.out.println("blubbing " + nextFighter.type + " at " + nextFighter.location);
-                                movement.findPath(nextFriendlyFighter.location, null);
+                                movement.findPath(nextFriendlyFighter.location.add(nextFighter.location.directionTo(nextFriendlyFighter.location), 2.5f), null);
                             } else {
                                 if (Util.DEBUG)
                                     System.out.println("Stalking " + nextFighter.type + " at " + nextFighter.location);
