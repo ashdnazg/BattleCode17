@@ -65,7 +65,7 @@ public class Gardener {
     }
 
     public boolean tryBuild(RobotType robotType) throws GameActionException {
-        if (robotType == RobotType.SOLDIER && rc.getTeamBullets() > RobotType.TANK.bulletCost && tryBuild(RobotType.TANK)) return true;
+        if (robotType == RobotType.SOLDIER && rc.getTeamBullets() > RobotType.TANK.bulletCost && rc.getRoundNum() > 250 && tryBuild(RobotType.TANK)) return true;
         BuildPlanner.gardenerCantBuild = false;
         if (robotType == null) return false;
         for (int i = 0; i < buildDirs.length; i++) {
