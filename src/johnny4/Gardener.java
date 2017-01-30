@@ -236,8 +236,15 @@ public class Gardener {
 
             // Positioning
             if (treesPlanted == 0) {
-                if (frame - spawnFrame > 14){
-                    walkingTarget = myLocation;
+                MapLocation nextEnemyFar = Map.getTarget(1, myLocation);
+                if (nextEnemyFar != null && nextEnemyFar.distanceTo(myLocation) < 12){
+                    walkingTarget = myLocation.add(BuildPlanner.nextEnemyFar.directionTo(myLocation), 5);
+                    Movement.MIN_OBSTACLE_DIST = 0;
+                }else {
+                    Movement.MIN_OBSTACLE_DIST = 3;
+                    if (frame - spawnFrame > 14) {
+                        walkingTarget = myLocation;
+                    }
                 }
                 Movement.init(nearbyRobots, trees, bullets);
                 inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 30 && rc.getTreeCount() < 4;
