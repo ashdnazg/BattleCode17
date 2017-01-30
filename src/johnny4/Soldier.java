@@ -96,6 +96,7 @@ public class Soldier {
     int SUICIDAL_END = 250;
     RobotInfo nextGardener;
     int nearbyEnemySoldiers = 0;
+    int ignoreBTrees = 0;
 
     float money;
 
@@ -238,9 +239,13 @@ public class Soldier {
                 System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
             if (nextEnemy == null) {
                 longrange = true;
-                if (nextBulletTree != null) {
+                if (nextBulletTree != null && frame - ignoreBTrees > 50) {
                     if (Util.DEBUG) System.out.println("Using bullet tree target");
                     nextEnemy = nextBulletTree.location;
+                    if (nextEnemy.distanceTo(myLocation) < 3){
+                        if (Util.DEBUG) System.out.println("Ignoring bullet tree targets");
+                        ignoreBTrees = frame;
+                    }
                 } else {
                     Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                     if (Util.DEBUG) System.out.println("Using long range target");
