@@ -324,7 +324,7 @@ public class Movement {
         Direction bulletDir = randomDirection();
         if (evadeBullets) {
             for (int i = 0; i < bulletLen; i++) {
-                if (willCollideWithMe(myLocation, bullets[i])) {
+                if (willCollideWithMe(myLocation, bullets[i]) > 0) {
                     gonnaBeHit = true;
                     bulletDir = bullets[i].dir;
                     break;
@@ -407,8 +407,8 @@ public class Movement {
         return valueMove(dir, strideDistance);
     }
 
-    static MapLocation nloc, nloc2, b1, b2, b3;
-    static float br;
+    static MapLocation nloc;
+    static float br, retval;
 
     static private float valueMove(Direction dir, float dist) throws GameActionException {
         Threat threat;
@@ -442,13 +442,9 @@ public class Movement {
 
         if (evadeBullets) {
             for (int i = 0; i < bulletLen; i++) {
-                b1 = bullets[i].location;
-                b2 = bullets[i].location.add(bullets[i].dir, bullets[i].speed / 2);
-                b3 = bullets[i].location.add(bullets[i].dir, bullets[i].speed);
-                if ((b1.x - nloc.x) * (b1.x - nloc.x) + (b1.y - nloc.y) * (b1.y - nloc.y) < br ||
-                        (b2.x - nloc.x) * (b2.x - nloc.x) + (b2.y - nloc.y) * (b2.y - nloc.y) < br ||
-                        (b3.x - nloc.x) * (b3.x - nloc.x) + (b3.y - nloc.y) * (b3.y - nloc.y) < br) {
-                    return 1;
+                retval = willCollideWithMe(myLocation, bullets[i]);
+                if (retval > 0){
+                    return 1f / retval;
                 }
             }
         }

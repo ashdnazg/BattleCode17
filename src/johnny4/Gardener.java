@@ -87,6 +87,7 @@ public class Gardener {
     int noBuildPosSince = 10000;
     int lastBuild = -1000;
     int freeDir = -1;
+    int directionModulus = 0;
 
     protected void tick() {
         try {
@@ -172,7 +173,7 @@ public class Gardener {
             }
             freePos |= !Util.fireAllowed; // in endgame build all hexes
 
-            Direction wouldBeTreeDir = null;
+            int wouldBeTreeDir = -1;
             active = true;
             if (!_active){
                 disabledSince = Math.min(frame, disabledSince);
@@ -183,12 +184,12 @@ public class Gardener {
             if (rc.getBuildCooldownTurns() <= 0 && money > GameConstants.BULLET_TREE_COST) {
                 _active = false;
                 for (int i = 0; i < buildDirs.length; i++) {
-                    if (rc.canPlantTree(buildDirs[i])) {
+                    if ((treesPlanted == 0 || i % 2 == directionModulus) && rc.canPlantTree(buildDirs[i])) {
                         if (treesPlanted == 0 && (freeDir - i) % 2 != 0) continue;
                         if (!freePos && Math.abs(i - freeDir) <= 1) {
                             continue; //reserved spot
                         }
-                        wouldBeTreeDir = buildDirs[i];
+                        wouldBeTreeDir = i;
                         _active = buildDirValid[freeDir];
                         break;
                     }
@@ -196,15 +197,16 @@ public class Gardener {
             }
 
             // Trees
-            if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree() && inPosition && buildDirValid[freeDir] && wouldBeTreeDir != null) {
+            if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree() && inPosition && buildDirValid[freeDir] && wouldBeTreeDir >= 0) {
                 //request to cut annoying trees
                 for (TreeInfo t : trees) {
                     if (t.team == myTeam)
                         continue;
                 }
                 lastTreePlant = frame;
-                rc.plantTree(wouldBeTreeDir);
+                rc.plantTree(buildDirs[wouldBeTreeDir]);
                 treesPlanted++;
+                directionModulus =wouldBeTreeDir % 2;
             }
 
             TreeInfo[] tis = rc.senseNearbyTrees(3.0f);

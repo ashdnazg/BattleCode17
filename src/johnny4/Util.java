@@ -367,29 +367,25 @@ public class Util {
      * @return True if the line of the bullet's path intersects with this robot's current position.
      */
 
-    static boolean willCollideWithMe(MapLocation myLocation, BulletInfo bullet) {
+    static float distToRobot, theta;
+
+    static float willCollideWithMe(MapLocation myLocation, BulletInfo bullet) {
 
         // Get relevant bullet information
-        Direction propagationDirection = bullet.dir;
-        MapLocation bulletLocation = bullet.location;
 
         // Calculate bullet relations to this robot
-        Direction directionToRobot = bulletLocation.directionTo(myLocation);
-        float distToRobot = bulletLocation.distanceTo(myLocation);
-        float theta = propagationDirection.radiansBetween(directionToRobot);
+        distToRobot = bullet.location.distanceTo(myLocation);
+        theta = bullet.dir.radiansBetween(bullet.location.directionTo(myLocation));
 
         // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
         if (Math.abs(theta) > Math.PI / 2) {
-            return false;
+            return -1f;
         }
 
-        // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
-        // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
-        // This corresponds to the smallest radius circle centered at our location that would intersect with the
-        // line that is the path of the bullet.
-        float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
-
-        return (perpendicularDist <= rc.getType().bodyRadius);
+        if (((float) Math.abs(distToRobot * Math.sin(theta)) <= rc.getType().bodyRadius)) {
+            return distToRobot;
+        }
+        return -1f;
     }
 
     static boolean fireAllowed = true;

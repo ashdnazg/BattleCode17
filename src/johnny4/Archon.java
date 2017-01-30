@@ -177,7 +177,7 @@ public class Archon {
             if (!tryingToShake && frame - lastGardener < 30) {
                 if (!movement.findPath(myLocation, null)){
                     int iterations = 0;
-                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 5) {
+                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 3) {
                         lastRandomLocation = myLocation.add(randomDirection(), 20);
                     }
                 }
