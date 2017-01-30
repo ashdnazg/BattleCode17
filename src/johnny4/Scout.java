@@ -281,7 +281,8 @@ public class Scout {
             //Movement
             if (Util.DEBUG)
                 System.out.println("Starting movement " + Clock.getBytecodeNum());
-            if ( isShaker) {
+            if (isShaker) {
+                toShake = null;
                 for (TreeInfo t : trees) {
                     if (t.getContainedBullets() > 1.0 * Math.max(0, t.location.distanceTo(myLocation) - t.radius)) {
                         if (DEBUG)
@@ -299,11 +300,6 @@ public class Scout {
                 } else {
                     hasMoved = true;
                     myLocation = rc.getLocation();
-                }
-                if (toShake != null && rc.canShake(toShake.getID())) {
-                    rc.shake(toShake.getID());
-                    if (Util.DEBUG) System.out.println("Shaken " + toShake.getLocation());
-                    clearShake = true;
                 }
                 if (clearShake) {
                     toShake = null;
@@ -425,7 +421,7 @@ public class Scout {
                 return;
             }
             if (Util.DEBUG)
-                System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && "  + " < 12");
+                System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && " + " < 12");
             if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12 && (Radio.countActiveGardeners() == 0 || rc.getTreeCount() > 5 || nextEnemy.distanceTo(myLocation) < 4))) {
                 if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
                     hasFired = true;
@@ -437,22 +433,6 @@ public class Scout {
                 }
             }
             if (Util.DEBUG) System.out.println("Scout late2 " + Clock.getBytecodeNum() + " trees: " + trees.length);
-            for (TreeInfo t : trees) {
-                if (t.getContainedBullets() > 0 && rc.canShake(t.location)) {
-                    rc.shake(t.location);
-                    if (toShake != null && t.ID == toShake.ID) {
-                        toShake = null;
-                        cache = new TreeInfo[0];
-                        cache2 = new TreeInfo[0];
-                    }
-                    if (Util.DEBUG)
-                        System.out.println("Shaken " + t.getLocation() + " gaining " + t.getContainedBullets() + " bullets (not shaker)");
-                }
-                if (Clock.getBytecodesLeft() < 100) {
-                    BYTECODE2();
-                    return;
-                }
-            }
             if (Util.DEBUG) System.out.println("Scout late3 " + Clock.getBytecodeNum());
             lastHP = rc.getHealth();
             if (rc.getRoundNum() - frame > 0 && frame % 8 != 0 && (longRangeCiv == false && longRangeEnemy == false)) {

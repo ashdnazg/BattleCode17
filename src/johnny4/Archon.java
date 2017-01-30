@@ -157,10 +157,6 @@ public class Archon {
                         if (movement.findPath(t.location.add(dir, -t.radius - RobotType.ARCHON.bodyRadius), null)) {
                             tryingToShake = true;
                         }
-                        if (rc.canShake(t.location)) {
-                            rc.shake(t.location);
-                            tryingToShake = true;
-                        }
                         if (tryingToShake) {
                             break;
                         }
