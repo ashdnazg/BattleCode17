@@ -235,7 +235,7 @@ public class Util {
             }
             float time = -1f;
             for (int i =0 ; i < 5; i++) {
-                time = (Math.min(15,(myLocation.distanceTo(nextEnemy) - bodyblub) )/ bulletspeed + extratime) * 0.5f;
+                time = (Math.min(15,(myLocation.distanceTo(nextEnemy) - bodyblub) )/ bulletspeed + extratime) * rand();
                 nextEnemy = new MapLocation(enemy.location.x + dx * time, enemy.location.y + dy * time);
             }
             if (Util.DEBUG) System.out.println("Time: " + time);
