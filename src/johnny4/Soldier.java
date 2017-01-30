@@ -205,10 +205,6 @@ public class Soldier {
             }
 
             if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy + " of type " + enemyType);
-            if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
-                nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, spotterTarget ? 1 : 0);
-            }
-            lastEnemyInfo = nextEnemyInfo;
 
             if (myLocation.distanceTo(stuckLocation) > 7) {
                 stuckSince = frame;
@@ -329,7 +325,7 @@ public class Soldier {
                 if (!hasFired && !longrange) {
                     if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius) && dist < minfiredist) {
                         if (DEBUG) System.out.println("Firing late " + nextEnemyInfo.location.distanceTo(myLocation));
-                        hasFired = tryFire(nextEnemy, enemyType, dist, enemyType.bodyRadius);
+                        hasFired = tryFire(nextEnemyInfo, nextEnemy, enemyType, dist, enemyType.bodyRadius);
                         if (hasFired) {
                             Movement.lastLOS = frame;
                         }
@@ -348,11 +344,12 @@ public class Soldier {
             if (!hasFired && nextEnemyScout != null) {
                 if (checkLineOfFire(myLocation, nextEnemyScout, trees, nearbyRobots, rc.getType().bodyRadius)) {
                     if (DEBUG) System.out.println("Firing at scout ");
-                    hasFired = tryFire(nextEnemyScout, RobotType.SCOUT, nextEnemyScout.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
+                    hasFired = tryFire(nextEnemyInfo, nextEnemyScout, RobotType.SCOUT, nextEnemyScout.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
                 } else {
                     if (Util.DEBUG) System.out.println("No LOS on scout");
                 }
             }
+            lastEnemyInfo = nextEnemyInfo;
 
             int cnt7 = Clock.getBytecodeNum();
             if (rc.getRoundNum() - frame > 0) {
@@ -363,16 +360,22 @@ public class Soldier {
             }
 
 
+
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Soldier Exception");
             e.printStackTrace();
         }
     }
 
-    boolean tryFire(MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
+    boolean tryFire(RobotInfo nextEnemyInfo, MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
         if (!Util.fireAllowed) return false;
         if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS && lastEnemyInfo.health / lastEnemyInfo.type.maxHealth > 0.2f)
             return false;
+
+        if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
+            nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
+        }
+
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
