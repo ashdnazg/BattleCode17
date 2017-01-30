@@ -266,7 +266,7 @@ public class Util {
     }
 
 
-    static TreeInfo[] temp = new TreeInfo[8];
+    static TreeInfo[] temp = new TreeInfo[10];
     static TreeInfo[] cache = new TreeInfo[0];
 
     static TreeInfo[] senseBiggestTrees() throws GameActionException {
@@ -311,7 +311,7 @@ public class Util {
         return cache;
     }
 
-    static TreeInfo[] temp2 = new TreeInfo[8];
+    static TreeInfo[] temp2 = new TreeInfo[10];
     static TreeInfo[] cache2 = new TreeInfo[0];
 
     static TreeInfo[] senseClosestTrees() throws GameActionException {

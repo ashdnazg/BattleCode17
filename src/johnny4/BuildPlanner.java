@@ -247,7 +247,7 @@ public class BuildPlanner {
         boolean noScouts = ownScouts == 0;
         boolean needLumberJacks = ((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers + 1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && (ownLumberjacks < 1 || ownLumberjacks < 2 && frame > 180)) ||
                 gardenerStuckified && (nearbyLumberjacks == 0 || money > 140 && !needSoldiers && nearbyLumberjacks < 3) && nearbyNonBulletTrees > 0;
-        boolean needScouts = ownScouts < (ownSoldiers * 2 + ownLumberjacks + 1) / 4 && ownScouts < 3 /*|| !Radio.getLandContact() && frame >= 42 && ownScouts < Math.min(ownGardeners, 3)*/;
+        boolean needScouts = ownScouts < (ownSoldiers * 2 + ownLumberjacks + 1) / 4 && ownScouts < 3;
         if (!Radio.getLandContact() && ownLumberjacks >= 1 && nextEnemyFar != null && nextEnemyFar.distanceTo(rc.getLocation()) < 30) {
             needLumberJacks = false;
             if (Util.DEBUG) System.out.println("Too dangerous for lumberjacks");
@@ -258,7 +258,7 @@ public class BuildPlanner {
         if (Util.DEBUG) System.out.println("needLumberJacks: " + needLumberJacks);
         if (Util.DEBUG) System.out.println("needScouts: " + needScouts);
 
-        if (noScouts && canScout && !Radio.getLandContact() && totalEnemies == 0 && startArchonDist > 17 && (!allOrNothing || frame > 55)) {
+        if (noScouts && canScout && !Radio.getLandContact() && totalEnemies == 0 && startArchonDist > 17 && ownSoldiers + ownLumberjacks > 0) {
             return RobotType.SCOUT;
         }
 

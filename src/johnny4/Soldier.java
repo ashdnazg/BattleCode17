@@ -237,14 +237,17 @@ public class Soldier {
             if (Util.DEBUG && nextEnemy != null)
                 System.out.println("Attacking local " + nextEnemyInfo.type + " at " + nextEnemy);
             if (nextEnemy == null) {
+                longrange = true;
                 if (nextBulletTree != null) {
                     if (Util.DEBUG) System.out.println("Using bullet tree target");
                     nextEnemy = nextBulletTree.location;
                 } else {
                     Map.generateFarTargets(map.rc, myLocation, 1000, 0);
-                    longrange = true;
                     if (Util.DEBUG) System.out.println("Using long range target");
                     nextEnemy = Map.getTarget(suicidal ? 2 : getTargetType, myLocation);
+                    if (nextEnemy == null && suicidal){
+                        nextEnemy = Map.getTarget(3, myLocation);
+                    }
                     if (nextEnemy != null && nextEnemy.distanceTo(myLocation) < 0.6 * RobotType.SOLDIER.sensorRadius) {
                         Radio.deleteEnemyReport(nextEnemy);
                     }
@@ -367,9 +370,9 @@ public class Soldier {
             return false;
         MapLocation myLocation = rc.getLocation();
         if (nextEnemy.equals(myLocation)) return false;
-        Direction firedir = myLocation.directionTo(nextEnemy); //.rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
+        Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
         // if (Util.DEBUG)
-        // System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers + 2) * 2 * enemyType.strideRadius) + " degrees");
+        System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers + 2) * 2 * enemyType.strideRadius) + " degrees");
         float maxArc = getMaximumArcOfFire(myLocation, firedir, nearbyRobots, trees);
         if (DEBUG) System.out.println("Maximum arc is " + (int) (maxArc * 180 / 3.1415) + " degrees");
         if (enemyType == RobotType.SCOUT) {
@@ -390,7 +393,7 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
+        if ((dist - radius < 1.51 + Math.max(0, money / 50f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
             return true;
