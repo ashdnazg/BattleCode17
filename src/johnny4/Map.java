@@ -93,6 +93,11 @@ public class Map {
                             break;
                         }
                         continue;
+                    case 8:
+                        if (t == SCOUT) {
+                            break;
+                        }
+                        continue;
                 }
                 if (best == null || best.distanceTo(myLocation) > farTargets[t].distanceTo(myLocation)) {
                     best = farTargets[t];

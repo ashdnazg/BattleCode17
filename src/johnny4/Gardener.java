@@ -21,7 +21,7 @@ public class Gardener {
     float health;
     int roundsSinceAttack;
     BulletInfo bullets[];
-    int lastTreePlant=  -100;
+    int lastTreePlant = -100;
     final float MIN_CONSTRUCTION_MONEY;
     MapLocation lastRandomLocation;
     final int spawnFrame;
@@ -65,7 +65,8 @@ public class Gardener {
     }
 
     public boolean tryBuild(RobotType robotType) throws GameActionException {
-        if (robotType == RobotType.SOLDIER && rc.getTeamBullets() > RobotType.TANK.bulletCost && rc.getRoundNum() > 250 && tryBuild(RobotType.TANK)) return true;
+        if (robotType == RobotType.SOLDIER && rc.getTeamBullets() > RobotType.TANK.bulletCost && rc.getRoundNum() > 250 && tryBuild(RobotType.TANK))
+            return true;
         BuildPlanner.gardenerCantBuild = false;
         if (robotType == null) return false;
         for (int i = 0; i < buildDirs.length; i++) {
@@ -77,7 +78,7 @@ public class Gardener {
             }
         }
         if (DEBUG) System.out.println("Failed to build " + robotType);
-        if (!(robotType == RobotType.LUMBERJACK || robotType == RobotType.SCOUT)){
+        if (!(robotType == RobotType.LUMBERJACK || robotType == RobotType.SCOUT)) {
             BuildPlanner.gardenerCantBuild = true;
         }
         return false;
@@ -92,7 +93,7 @@ public class Gardener {
     protected void tick() {
         try {
             preTick();
-            if (active)Radio.reportActiveGardener();
+            if (active) Radio.reportActiveGardener();
             if (DEBUG) System.out.println("Active gardener: " + active);
             //Sensing
             roundsSinceAttack++;
@@ -109,16 +110,15 @@ public class Gardener {
             for (RobotInfo r : nearbyRobots) {
                 if (r.getTeam().equals(rc.getTeam().opponent())) nearbyEnemies++;
                 else if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK || r.type == RobotType.LUMBERJACK) {
-                    nearbyAllies ++;
-                    if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK){
-                        nearbyAllyFighters ++;
+                    nearbyAllies++;
+                    if (r.type == RobotType.SOLDIER || r.type == RobotType.TANK) {
+                        nearbyAllyFighters++;
                     }
-                }else
-                if (walkingTarget == null && r.type == RobotType.ARCHON){
+                } else if (walkingTarget == null && r.type == RobotType.ARCHON) {
                     walkingTarget = myLocation.add(r.location.directionTo(myLocation), 10);
                 }
             }
-            if (nearbyEnemies > 0 && nearbyAllyFighters == 0){
+            if (nearbyEnemies > 0 && nearbyAllyFighters == 0) {
                 Radio.setAlarm();
             }
 
@@ -126,7 +126,7 @@ public class Gardener {
             Map.generateFarTargets(rc, myLocation, 1000, 0);
             MapLocation nextEnemy = Map.getTarget(0, myLocation);
             boolean unplugged = true;
-            if (nextEnemy != null && nextEnemy.distanceTo(myLocation) > 17 && nearbyAllies > 1){
+            if (nextEnemy != null && nextEnemy.distanceTo(myLocation) > 17 && nearbyAllies > 1) {
                 if (DEBUG) System.out.println("Plukked");
                 unplugged = false;
             }
@@ -138,7 +138,7 @@ public class Gardener {
                 }
             } else {
                 for (int i = 0; i < buildDirs.length; i++) {
-                    buildDirValid[i] =  !rc.isCircleOccupied(myLocation.add(buildDirs[i], 2f), 0.999f) && rc.onTheMap(myLocation.add(buildDirs[i], 3f));
+                    buildDirValid[i] = !rc.isCircleOccupied(myLocation.add(buildDirs[i], 2f), 0.999f) && rc.onTheMap(myLocation.add(buildDirs[i], 3f));
                     if (DEBUG && buildDirValid[i]) rc.setIndicatorDot(myLocation.add(buildDirs[i], 2f), 90, 255, 90);
                     if (DEBUG && !buildDirValid[i]) rc.setIndicatorDot(myLocation.add(buildDirs[i], 2f), 180, 0, 0);
                 }
@@ -151,16 +151,17 @@ public class Gardener {
                     if ((nFreeDir < 0 || Math.abs(dir.degreesBetween(buildDirs[i])) < Math.abs(dir.degreesBetween(buildDirs[nFreeDir]))) && buildDirValid[i])
                         nFreeDir = i;
                 }
-                if (freeDir < 0){
-                    freeDir = (int)(rand() * buildDirs.length);
+                if (freeDir < 0) {
+                    freeDir = (int) (rand() * buildDirs.length);
                 }
-                if (nFreeDir >= 0 && buildDirValid[nFreeDir]){
+                if (nFreeDir >= 0 && buildDirValid[nFreeDir]) {
                     freeDir = nFreeDir;
-                }else{
+                } else {
                     freePos = true; //no space to build
                 }
             }
-            if (DEBUG && buildDirValid[freeDir]) rc.setIndicatorDot(myLocation.add(buildDirs[freeDir], 2f), 190, 255, 190);
+            if (DEBUG && buildDirValid[freeDir])
+                rc.setIndicatorDot(myLocation.add(buildDirs[freeDir], 2f), 190, 255, 190);
             if (freePos) {
                 if (noBuildPosSince > frame) noBuildPosSince = frame;
                 if (frame - noBuildPosSince > 69 && frame % 23 == 0 && Radio.countAllies(RobotType.GARDENER) > 5) {
@@ -175,10 +176,10 @@ public class Gardener {
 
             int wouldBeTreeDir = -1;
             active = true;
-            if (!_active){
+            if (!_active) {
                 disabledSince = Math.min(frame, disabledSince);
                 if (frame - disabledSince > 20) active = false;
-            }else{
+            } else {
                 disabledSince = 100000;
             }
             if (rc.getBuildCooldownTurns() <= 0 && money > GameConstants.BULLET_TREE_COST) {
@@ -206,7 +207,7 @@ public class Gardener {
                 lastTreePlant = frame;
                 rc.plantTree(buildDirs[wouldBeTreeDir]);
                 treesPlanted++;
-                directionModulus =wouldBeTreeDir % 2;
+                directionModulus = wouldBeTreeDir % 2;
             }
 
             TreeInfo[] tis = rc.senseNearbyTrees(3.0f);
@@ -236,11 +237,22 @@ public class Gardener {
 
             // Positioning
             if (treesPlanted == 0) {
-                MapLocation nextEnemyFar = Map.getTarget(1, myLocation);
-                if (nextEnemyFar != null && nextEnemyFar.distanceTo(myLocation) < 12){
-                    walkingTarget = myLocation.add(BuildPlanner.nextEnemyFar.directionTo(myLocation), 5);
+                MapLocation nextEnemyFarDangerous = Map.getTarget(4, myLocation);
+                MapLocation nextEnemyFarScout = Map.getTarget(8, myLocation);
+                if (nextEnemyFarDangerous != null && nextEnemyFarScout != null) {
+                    if (nextEnemyFarDangerous.distanceTo(myLocation) < nextEnemyFarScout.distanceTo(myLocation)) {
+                        nextEnemyFarScout = null;
+                    } else {
+                        nextEnemyFarDangerous = null;
+                    }
+                }
+                if (nextEnemyFarDangerous != null && nextEnemyFarDangerous.distanceTo(myLocation) < 12) {
+                    walkingTarget = myLocation.add(nextEnemyFarDangerous.directionTo(myLocation), 5);
                     Movement.MIN_OBSTACLE_DIST = 0;
-                }else {
+                } else if (nextEnemyFarScout != null && nextEnemyFarScout.distanceTo(myLocation) < 8.5f) {
+                    walkingTarget = myLocation.add(nextEnemyFarScout.directionTo(myLocation), 3);
+                    Movement.MIN_OBSTACLE_DIST = 0;
+                } else {
                     Movement.MIN_OBSTACLE_DIST = 3;
                     if (frame - spawnFrame > 14) {
                         walkingTarget = myLocation;
