@@ -177,7 +177,7 @@ public class Soldier {
                     enemyType = nextEnemyInfo.type;
                 }
             }
-            if (nextGardener != null && nextEnemy != null/* && nextEnemy.distanceTo(nextGardener.location) < myLocation.distanceTo(nextEnemy) + 2.5*/) {
+            if (nextGardener != null && nextEnemy != null && nextEnemy.distanceTo(nextGardener.location) < myLocation.distanceTo(nextEnemy) + 1) {
                 MIN_EVASION_DIST = 0f;
                 if (Util.DEBUG) System.out.println("Protect gardener");
             } else {
