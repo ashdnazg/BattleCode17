@@ -84,7 +84,7 @@ public class Movement {
                 MIN_ENEMY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f + RobotType.LUMBERJACK.strideRadius;
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 10f;
-                MIN_ENEMY_SCOUT_DIST = 10f;
+                MIN_ENEMY_SCOUT_DIST = 0;
                 GO_STRAIGHT_DISTANCE = 0;
                 MIN_FRIENDLY_GARDENER_DIST = 6;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
