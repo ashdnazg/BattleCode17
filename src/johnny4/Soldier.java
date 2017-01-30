@@ -374,9 +374,6 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS) {
-            return false;
-        }
         if (dist - radius < 1.51 + Math.max(0, money / 50f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
