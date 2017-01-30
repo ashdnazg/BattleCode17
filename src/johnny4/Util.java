@@ -216,7 +216,7 @@ public class Util {
 
     static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy, float extratime) throws GameActionException {
         MapLocation nextEnemy = enemy.location;
-        float bodyblub = enemy.type.bodyRadius * 0 + rc.getType().bodyRadius;
+        float enemyRadius = enemy.type.bodyRadius;
         float bulletspeed = rc.getType().bulletSpeed;
         MapLocation myLocation = rc.getLocation();
         if (lastEnemy != null && lastEnemy.getID() == enemy.getID()) {
@@ -228,8 +228,8 @@ public class Util {
             float ux = enemy.location.x - lastEnemy.location.x;
             float uy = enemy.location.y - lastEnemy.location.y;
 
-            float ABx = myLocation.x - enemy.location.x;
-            float ABy = myLocation.y - enemy.location.y;
+            float ABx = enemy.location.x - myLocation.x;
+            float ABy = enemy.location.y - myLocation.y;
 
             float ABmag = (float) Math.sqrt(ABx * ABx + ABy * ABy);
             ABx /= ABmag;
@@ -254,7 +254,7 @@ public class Util {
             // float vx = vjx + vix;
             // float vy = vjy + viy;
 
-            float time = (vjy - ujy) / (myLocation.y - enemy.location.y);
+            float time = (enemy.location.y - myLocation.y) / (vjy + ujy);
 
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
