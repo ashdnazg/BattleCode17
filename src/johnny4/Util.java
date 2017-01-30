@@ -254,7 +254,7 @@ public class Util {
             // float vx = vjx + vix;
             // float vy = vjy + viy;
 
-            float time = (enemy.location.y - myLocation.y) / (vjy + ujy);
+            float time = ((enemy.location.y - myLocation.y) / (vjy + ujy)) * 0.8f;
 
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
