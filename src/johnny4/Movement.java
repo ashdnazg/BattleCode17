@@ -139,7 +139,7 @@ public class Movement {
             currentThreat = threats[threatsLen];
         }
         for (int i = 0; i < bullets_.length; i++) {
-            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > 2 * strideDistance +  2 * bullets_[i].speed + robotType.bodyRadius)
+            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > 2 * strideDistance + 2 * bullets_[i].speed + robotType.bodyRadius)
                 break;
             bullets[bulletLen++] = bullets_[i];
         }
@@ -287,7 +287,7 @@ public class Movement {
             threatsLen = 0;
             if (Util.DEBUG) System.out.println("No threats, hugging friendly lumberjacks");
         }
-        if (myLocation.distanceTo(stuckLocation) > strideDistance * 1.1) {
+        if (myLocation.distanceTo(stuckLocation) > strideDistance * 2.6) {
             stuckLocation = myLocation;
             stuckSince = lastInit;
         }
@@ -305,7 +305,7 @@ public class Movement {
             if (Util.DEBUG) System.out.println("Pathfinding to null, that's easy");
             return false;
         }
-        if (oldTarget != null && oldTarget.distanceTo(target) > 2) {
+        if (oldTarget != null && oldTarget.distanceTo(target) > 5) {
             stuckSince = rc.getRoundNum();
         }
         oldTarget = target;
@@ -348,40 +348,46 @@ public class Movement {
         }
         if (Util.DEBUG) rc.setIndicatorLine(myLocation, target, 0, 0, 255);
         if (robotType != RobotType.SCOUT && olddist > 0.9 * strideDistance) {
-            float t, bestval = 10000f;
-            TreeInfo best = null;
-            for (TreeInfo tree : trees) {
-                if (myLocation.distanceTo(tree.location) - tree.radius - robotType.bodyRadius < strideDistance) {
-                    t = Math.abs(myLocation.directionTo(tree.location).degreesBetween(myLocation.directionTo(target)));
-                    if (t < bestval) {
-                        bestval = t;
-                        best = tree;
+            for (int i = 0; i < 3; i++) {
+                TreeInfo best = null;
+                float t, bestval = 10000f;
+                MapLocation nloc = myLocation.add(moveDir, strideDistance);
+                for (TreeInfo tree : trees) {
+                    if (MapLocation.doCirclesCollide(nloc, robotType.bodyRadius, tree.location, tree.radius)) {
+                        t = Math.abs(myLocation.directionTo(tree.location).degreesBetween(moveDir));
+                        if (t < bestval) {
+                            bestval = t;
+                            best = tree;
+                        }
                     }
                 }
-            }
-            if (best != null) {
-                Direction toTree = myLocation.directionTo(best.location);
-                float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));
-                if (Math.abs(moveDir.radiansBetween(toTree)) < correctionAngle) {
-                    if (DEBUG) {
-                        if (Util.DEBUG) System.out.println("Found blocking tree at angle " + bestval);
-                    }
-                    if (Util.DEBUG) rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
-                    //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
-                    moveDir = toTree.rotateLeftRads((bugdir ? 1 : -1) * correctionAngle);
+                if (best != null) {
+                    Direction toTree = myLocation.directionTo(best.location);
+                    float correctionAngle = (float) (Math.asin((robotType.bodyRadius + best.radius) / myLocation.distanceTo(best.location)));
+                    if (Math.abs(moveDir.radiansBetween(toTree)) < correctionAngle) {
+                        if (DEBUG) {
+                            if (Util.DEBUG) System.out.println("Found blocking tree #" + i + " at angle " + bestval);
+                        }
+                        if (Util.DEBUG) rc.setIndicatorLine(myLocation, best.location, 255, 0, 0);
+                        //float sqrt = (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + best.radius * best.radius);
+                        moveDir = toTree.rotateLeftRads((bugdir ? 1 : -1) * correctionAngle);
 
-                    if (Util.DEBUG)
-                        rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+                        if (Util.DEBUG)
+                            rc.setIndicatorLine(myLocation, myLocation.add(moveDir, (float) Math.sqrt(myLocation.distanceSquaredTo(best.location) + (robotType.bodyRadius + best.radius) * (robotType.bodyRadius + best.radius))), 0, 255, 0);
+                    }
+                } else {
+                    if (Util.DEBUG) System.out.println("No blocking trees");
+                    break;
                 }
             }
         }
-
         if (Util.DEBUG) System.out.println("Somewhere else in findPath " + Clock.getBytecodeNum());
-        if (olddist > 2 * strideDistance && lastInit - stuckSince > 4) {
-            if (DEBUG) {
-                if (Util.DEBUG) System.out.println("Switching bugdir because of stuck");
-            }
-            stuckSince = rc.getRoundNum();
+        if ((bugdir ? 1 : -1) * (moveDir.degreesBetween(myLocation.directionTo(target))) > 0) {
+            if (Util.DEBUG) System.out.println("Switching bugdir because of trees");
+            bugdir = !bugdir;
+        } else if (olddist > 2 * strideDistance && lastInit - stuckSince > 6) {
+            if (Util.DEBUG) System.out.println("Switching bugdir because of stuck");
+            stuckSince = rc.getRoundNum() + 10;
             bugdir = !bugdir;
         }
 
@@ -423,10 +429,10 @@ public class Movement {
             TreeInfo[] ntrees = rc.senseNearbyTrees(nloc, MIN_OBSTACLE_DIST, null);
             if (ntrees.length > 0) return 1f - 0.1f * ntrees[0].location.distanceTo(nloc);
             for (int i = 0; i < 5; i++) {
-                if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i+1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
-                if (!rc.onTheMap(nloc.add(Direction.getEast(), (i+1) / 5  * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
-                if (!rc.onTheMap(nloc.add(Direction.getSouth(), (i+1) / 5  * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
-                if (!rc.onTheMap(nloc.add(Direction.getWest(),(i+1) / 5  * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getEast(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getSouth(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+                if (!rc.onTheMap(nloc.add(Direction.getWest(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
             }
         }
         for (int i = 0; i < threatsLen; i++) {
@@ -443,7 +449,7 @@ public class Movement {
         if (evadeBullets) {
             for (int i = 0; i < bulletLen; i++) {
                 retval = willCollideWithMe(myLocation, bullets[i]);
-                if (retval > 0){
+                if (retval > 0) {
                     return 1f / retval;
                 }
             }
@@ -522,15 +528,15 @@ public class Movement {
                             bestDeg = degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
                         }
                         currentCheck++;
-                        if (Clock.getBytecodesLeft() < 800) break; //emergency brake
+                        if (Clock.getBytecodesLeft() < 1800) break; //emergency brake
                     }
-                    if (Clock.getBytecodesLeft() < 800) break;
+                    if (Clock.getBytecodesLeft() < 1800) break;
                     if (attempt >= maxAttempt) break;
                     dist = attemptDist[attempt++];
                 } while (true);
                 left = !left;
                 dist = strideDistance;
-                if (Clock.getBytecodesLeft() < 800) break;
+                if (Clock.getBytecodesLeft() < 1800) break;
             }
             if (bestVal > 9.9) {
                 return -1f;
