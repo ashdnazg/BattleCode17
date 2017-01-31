@@ -41,13 +41,32 @@ public class Archon {
         lastRandomLocation = rc.getLocation();
         float dist = 1e10f;
         float curDist;
+        int touchingFriendArchons = 0;
+        int touchingEnemyArchons = 0;
         for (MapLocation archonPos : map.enemyArchonPos) {
             curDist = archonPos.distanceTo(stuckLocation);
             if (curDist < dist) {
                 lastRandomLocation = archonPos;
                 dist = curDist;
             }
+            if (curDist < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
+                touchingEnemyArchons++;
+            }
         }
+        for (MapLocation archonPos : map.ourArchonPos) {
+            curDist = archonPos.distanceTo(stuckLocation);
+            if (curDist < dist) {
+                lastRandomLocation = archonPos;
+                dist = curDist;
+            }
+            if (curDist < 2 * RobotType.ARCHON.bodyRadius + 0.02 && curDist > 0) {
+                touchingFriendArchons++;
+            }
+        }
+        if (touchingFriendArchons > 0 && touchingEnemyArchons == 0) {
+            rc.disintegrate();
+        }
+
         lastRandomLocation = rc.getLocation();
     }
 
