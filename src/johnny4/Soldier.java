@@ -203,7 +203,11 @@ public class Soldier {
                 MIN_EVASION_DIST = 0f;
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 0;
                 if (Util.DEBUG) System.out.println("Protect gardener");
-            } else {
+            }else if (nextEnemyInfo != null && nextEnemyInfo.moveCount + nextEnemyInfo.attackCount  == 0){
+                rc.setIndicatorDot(nextGardener.location, 255, 100, 0);
+                MIN_EVASION_DIST = 0f;
+                Movement.MIN_FRIENDLY_SOLDIER_DIST = 0;
+            }else {
                 MIN_EVASION_DIST = 7f + rc.getType().bodyRadius * 3;
                 if (enemyType == RobotType.LUMBERJACK) {
                     MIN_EVASION_DIST = 5f;
@@ -288,7 +292,8 @@ public class Soldier {
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
                 boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius);
 
-                if (enemyType == RobotType.SCOUT) {
+
+                if (enemyType == RobotType.SCOUT || enemyType == RobotType.GARDENER && rc.getHealth() / rc.getType().maxHealth > 0.75f) {
                     if (Util.DEBUG) System.out.println("Soldier entering aggression mode");
                     movement.evadeBullets = false;
                     evasionMode = false;
