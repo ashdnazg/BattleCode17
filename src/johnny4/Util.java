@@ -143,7 +143,8 @@ public class Util {
 
     static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException {
         float sensorRadius = rc.getType().sensorRadius;
-        float maxDist = Math.min(start.distanceTo(target) - 1.0f, sensorRadius - 0.01f);
+        float targetDist = start.distanceTo(target);
+        float maxDist = Math.min(targetDist - 1.0f, sensorRadius - 0.01f);
         Direction dir = start.directionTo(target);
         float checkDist = shooterRadius + 0.5f;
         MapLocation checkLoc;
@@ -159,7 +160,13 @@ public class Util {
                 }
                 ri = rc.senseRobotAtLocation(checkLoc);
                 if (ri != null) {
-                    return ri.team != myTeam;
+                    if (ri.team == myTeam) {
+                        return false;
+                    }
+                    if (ri.type == RobotType.ARCHON && (checkDist < targetDist - RobotType.ARCHON.bodyRadius)) {
+                        return false;
+                    }
+                    return true;
                 }
                 return false;
             }
