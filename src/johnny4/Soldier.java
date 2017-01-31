@@ -154,7 +154,7 @@ public class Soldier {
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER)) {
                     nearbyEnemySoldiers++;
                 }
-                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || frame - stayWithArchon > 50) &&
+                if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || frame - stayWithArchon > 50 || money > MIN_ARCHON_BULLETS) &&
                         (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.GARDENER && suicidal ? -10 : 0) + (enemyType == RobotType.LUMBERJACK ? 3.7f : 0) >
                                 ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (ri.type == RobotType.GARDENER && suicidal ? -10 : 0) + (ri.type == RobotType.LUMBERJACK ? 3.7f : 0))) {
                     if ((ri.type != RobotType.SCOUT || !ignoreScouts || nextGardener != null)) {
