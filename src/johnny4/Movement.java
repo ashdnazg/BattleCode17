@@ -451,7 +451,7 @@ public class Movement {
             for (int i = 0; i < bulletLen; i++) {
                 retval = willCollideWithMe(nloc, bullets[i]);
                 if (retval > 0 && retval < 15) {
-                    max += (15f - retval / 15) * 0.1f;
+                    max += (15f - retval / 15) * 0.3f;
                 }
             }
         }
