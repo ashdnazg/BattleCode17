@@ -10,7 +10,7 @@ public class Util {
 
     static RobotController rc;
     static Random rnd;
-    static final boolean DEBUG = true;
+    static final boolean DEBUG = false;
     static final float PENTAD_ARC_PLUSMINUS = GameConstants.PENTAD_SPREAD_DEGREES * 2 / 180f * 3.14159265358979323f;
     static final float TRIAD_ARC_PLUSMINUS = GameConstants.TRIAD_SPREAD_DEGREES / 180f * 3.14159265358979323f;
 
