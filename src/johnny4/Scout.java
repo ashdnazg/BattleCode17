@@ -424,6 +424,7 @@ public class Scout {
                 }
             }
 
+            myLocation = rc.getLocation();
 
             if (Util.DEBUG) System.out.println("Scout late " + Clock.getBytecodeNum());
             if (Clock.getBytecodesLeft() < 1000) {
