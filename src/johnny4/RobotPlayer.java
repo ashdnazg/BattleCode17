@@ -1,4 +1,5 @@
 package johnny4;
+
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
@@ -7,7 +8,7 @@ public strictfp class RobotPlayer {
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
-    **/
+     **/
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
 
@@ -39,11 +40,11 @@ public strictfp class RobotPlayer {
                     new Soldier(rc).run();
                     break;
             }
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
+            Util.EXCEPTION();
         }
-	}
-
+    }
 
 
 }

@@ -138,6 +138,7 @@ public class Soldier {
             for (TreeInfo t : trees) {
                 if (t.getTeam().equals(rc.getTeam().opponent()) && (nextBulletTree == null || nextBulletTree.location.distanceTo(myLocation) < t.location.distanceTo(myLocation))) {
                     nextBulletTree = t;
+                    break;
                 }
             }
             for (RobotInfo ri : nearbyRobots) {
@@ -170,7 +171,7 @@ public class Soldier {
                     } else {
                         nextEnemyScout = ri.location;
                     }
-                    if (ri.type == RobotType.SOLDIER || ri.type == RobotType.TANK){
+                    if (ri.type == RobotType.SOLDIER || ri.type == RobotType.TANK) {
                         nextEnemySoldier = ri;
                     }
                 }
@@ -302,11 +303,13 @@ public class Soldier {
                         if (Util.DEBUG) System.out.println("Evading perpendicularly");
                         evadePos = nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1);
                     }
+                    movement.MIN_ENEMY_DIST = MIN_EVASION_DIST - 2;
                     Movement.MIN_FRIENDLY_SOLDIER_DIST = 0f;
                     if (!hasMoved && movement.findPath(evadePos, fireDir)) {
                         myLocation = rc.getLocation();
                     }
                     Movement.MIN_FRIENDLY_SOLDIER_DIST = 4f;
+                    movement.MIN_ENEMY_DIST = 0;
                     hasMoved = true;
                 } else {
                     if (!hasMoved) {
@@ -374,13 +377,14 @@ public class Soldier {
 
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Soldier Exception");
-            e.printStackTrace();
+            e.printStackTrace();EXCEPTION();
         }
     }
 
     boolean tryFire(RobotInfo nextEnemyInfo, MapLocation nextEnemy, RobotType enemyType, float dist, float radius) throws GameActionException {
+        dist += 2f - rc.getType().bodyRadius * 2;
         if (!Util.fireAllowed) return false;
-        if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS && lastEnemyInfo.health / lastEnemyInfo.type.maxHealth > 0.2f)
+        if (enemyType == RobotType.ARCHON && money < MIN_ARCHON_BULLETS && nextEnemyInfo.health / nextEnemyInfo.type.maxHealth > 0.2f)
             return false;
 
         if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
@@ -414,7 +418,7 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if ((dist - radius < 1.51 + Math.max(0, money / 50f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
+        if ((dist - radius < 1.51 + Math.max(0, money / 50f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
             return true;

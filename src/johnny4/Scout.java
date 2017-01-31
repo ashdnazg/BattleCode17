@@ -446,7 +446,7 @@ public class Scout {
 
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Scout Exception");
-            e.printStackTrace();
+            e.printStackTrace();EXCEPTION();
         }
     }
 

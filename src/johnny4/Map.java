@@ -107,7 +107,7 @@ public class Map {
             return best;
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace();Util.EXCEPTION();
             return null;
         }
     }

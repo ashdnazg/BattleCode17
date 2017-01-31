@@ -111,8 +111,8 @@ public class Radio {
             h2 = (info * 97 + 67) % 96;
             n2 = h2 / 32;
             b2 = 1 << (h2 % 32);
-            deleteBloom[(int)n1] |= (int) b1;
-            deleteBloom[(int)n2] |= (int) b2;
+            deleteBloom[(int) n1] |= (int) b1;
+            deleteBloom[(int) n2] |= (int) b2;
         }
 
         rc.broadcast(427, 0);
@@ -164,7 +164,7 @@ public class Radio {
             n2 = h2 / 32;
             b2 = 1 << (h2 % 32);
             // evict units after not seeing them for ENEMY_EVICTION_AGE rounds
-            if ((age > ENEMY_EVICTION_AGE) || (((deleteBloom[(int)n1] & b1) != 0) && ((deleteBloom[(int)n2] & b2) != 0))) {
+            if ((age > ENEMY_EVICTION_AGE) || (((deleteBloom[(int) n1] & b1) != 0) && ((deleteBloom[(int) n2] & b2) != 0))) {
                 if (Util.DEBUG) System.out.println("evicting from pos: " + pos);
                 enemyIDToPos[ID_a][ID_b] = 0;
                 writeNeeded = true;
@@ -332,7 +332,7 @@ public class Radio {
         // gardeners activate immediately
         if (robotType != RobotType.GARDENER) {
             buildees[frame < (buildees[0] & 0xFFFF) ? 1 : 0] = (frame + 20) + (index << 16);
-        }else{
+        } else {
             reportActiveGardener();
         }
     }
@@ -447,11 +447,11 @@ public class Radio {
     }
 
     public static float getTreeX(int info) {
-        return (info & 0b11111111110000000000000000000000) >>> 22;
+        return 0.5f * ((info & 0b11111111110000000000000000000000) >>> 21);
     }
 
     public static float getTreeY(int info) {
-        return (info & 0b00000000001111111111000000000000) >>> 12;
+        return 0.5f * ((info & 0b00000000001111111111000000000000) >>> 10);
     }
 
     public static RobotType getUnitType(int info) {
@@ -476,14 +476,14 @@ public class Radio {
             data = rc.readBroadcast(index);
             if (data == 0) {
                 zero_index = index;
-            } else if (((data ^ ti.ID) & 0b00000000000000000000111111111111) == 0) {
+            } else if (((data ^ ti.ID) & 0b00000000000000000000001111111111) == 0) {
                 return true;
             }
         }
         if (zero_index < 0) {
             return false;
         }
-        int info = ((int) Math.round(ti.location.x) << 22) | ((int) Math.round(ti.location.y) << 12) | (ti.ID & 0b00000000000000000000111111111111);
+        int info = ((int) Math.round(ti.location.x * 2) << 21) | ((int) Math.round(ti.location.y * 2) << 10) | (ti.ID & 0b00000000000000000000001111111111);
         rc.broadcast(zero_index, info);
         rc.broadcast(301, rc.readBroadcast(301) + 1);
         return true;
@@ -536,11 +536,11 @@ public class Radio {
     }
 
     public static void reportTreeCut(MapLocation location) throws GameActionException {
-        int loc = ((int) location.x << 22) | ((int) location.y << 12);
+        int loc = ((int) Math.round(location.x * 2) << 21) | ((int) Math.round(location.y * 2) << 10);
         int data;
         for (int index = 302; index <= 320; ++index) {
             data = rc.readBroadcast(index);
-            if (((data ^ loc) & 0b11111111111111111111000000000000) == 0) {
+            if (((data ^ loc) & 0b11111111111111111111110000000000) == 0) {
                 rc.broadcast(index, 0);
                 rc.broadcast(301, rc.readBroadcast(301) - 1);
                 break;

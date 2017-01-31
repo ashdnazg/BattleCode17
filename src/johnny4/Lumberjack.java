@@ -315,7 +315,7 @@ public class Lumberjack {
             if (hasChopped) minDistSince++;
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Lumberjack Exception");
-            e.printStackTrace();
+            e.printStackTrace();EXCEPTION();
         }
 
     }

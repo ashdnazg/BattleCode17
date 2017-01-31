@@ -173,7 +173,7 @@ public class Archon {
             if (!tryingToShake && frame - lastGardener < 30) {
                 if (!movement.findPath(myLocation, null)){
                     int iterations = 0;
-                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 3) {
+                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 2) {
                         lastRandomLocation = myLocation.add(randomDirection(), 20);
                     }
                 }
@@ -181,7 +181,7 @@ public class Archon {
             }
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Archon Exception");
-            e.printStackTrace();
+            e.printStackTrace();EXCEPTION();
         }
     }
 }

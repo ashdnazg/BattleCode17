@@ -65,6 +65,14 @@ public class Util {
         } catch (Exception ex) {
         }
     }
+    static void EXCEPTION() {
+        try {
+            System.out.println("EXCEPTION");
+            rc.setIndicatorLine(rc.getLocation().add(Direction.getNorth(), 30), rc.getLocation().add(Direction.getSouth(), 30), 0, 255, 0);
+            rc.setIndicatorLine(rc.getLocation().add(Direction.getEast(), 30), rc.getLocation().add(Direction.getWest(), 30), 0, 255, 0);
+        } catch (Exception ex) {
+        }
+    }
 
     /**
      * Attempts to move in a given direction, while avoiding small obstacles direction in the path.
@@ -102,7 +110,7 @@ public class Util {
                     return true;
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                ex.printStackTrace();EXCEPTION();
             }
             // No move performed, try slightly further
             currentCheck++;
@@ -402,7 +410,7 @@ public class Util {
      * @return True if the line of the bullet's path intersects with this robot's current position.
      */
 
-    static float distToRobot, theta;
+    static float distToRobot, theta, parallel;
 
     static float willCollideWithMe(MapLocation myLocation, BulletInfo bullet) {
 
@@ -416,9 +424,10 @@ public class Util {
         if (Math.abs(theta) > Math.PI / 2) {
             return -1f;
         }
+        parallel = (float) Math.abs(distToRobot * Math.sin(theta)) / rc.getType().bodyRadius;
 
-        if (((float) Math.abs(distToRobot * Math.sin(theta)) <= rc.getType().bodyRadius)) {
-            return distToRobot;
+        if ((parallel <= 1)) {
+            return (0.5f + parallel) * distToRobot;
         }
         return -1f;
     }

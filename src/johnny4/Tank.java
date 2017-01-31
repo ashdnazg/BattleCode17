@@ -112,7 +112,7 @@ public class Tank {
 
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Tank Exception");
-            e.printStackTrace();
+            e.printStackTrace();EXCEPTION();
         }
     }
 }

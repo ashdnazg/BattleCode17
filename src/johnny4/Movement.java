@@ -162,7 +162,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_LUMBERJACK_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_LUMBERJACK_DIST * MIN_FRIENDLY_LUMBERJACK_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.2f;
+                        currentThreat.severity = 0.1f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -180,7 +180,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_GARDENER_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_GARDENER_DIST * MIN_FRIENDLY_GARDENER_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.6f;
+                        currentThreat.severity = 0.3f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -198,7 +198,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_ARCHON_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_ARCHON_DIST * MIN_FRIENDLY_ARCHON_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.5f;
+                        currentThreat.severity = 0.25f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -216,7 +216,7 @@ public class Movement {
                         currentThreat.radius = MIN_FRIENDLY_SOLDIER_DIST;
                         currentThreat.radiusSquared = MIN_FRIENDLY_SOLDIER_DIST * MIN_FRIENDLY_SOLDIER_DIST;
                         //currentThreat.description = "friendly lumberjack";
-                        currentThreat.severity = 0.25f;
+                        currentThreat.severity = 0.1f;
                         currentThreat = threats[++threatsLen];
                         if (currentThreat == null) {
                             threats[threatsLen] = new Threat();
@@ -418,7 +418,7 @@ public class Movement {
 
     static private float valueMove(Direction dir, float dist) throws GameActionException {
         Threat threat;
-        if (!rc.canMove(dir, dist) || dist > strideDistance) return 10;
+        if (!rc.canMove(dir, dist) || dist > strideDistance) return 1000;
         float max = 0;
         if (evadeBullets && fireDir != null && Math.abs(fireDir.degreesBetween(dir)) < MIN_MOVE_TO_FIRE_ANGLE) {
             //if (Util.DEBUG) System.out.println(dir + " would collide with own bullet");
@@ -429,7 +429,7 @@ public class Movement {
             TreeInfo[] ntrees = rc.senseNearbyTrees(nloc, MIN_OBSTACLE_DIST, null);
             if (ntrees.length > 0) return 1f - 0.1f * ntrees[0].location.distanceTo(nloc);
             final float N = 11;
-            for (int i = 0; i < N; i++) {
+            for (int i = 0; i <= N; i++) {
                 if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
                 if (!rc.onTheMap(nloc.add(Direction.getEast(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
                 if (!rc.onTheMap(nloc.add(Direction.getSouth(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
@@ -441,22 +441,22 @@ public class Movement {
             threat = threats[i];
             if ((threat.x - nloc.x) * (threat.x - nloc.x) + (threat.y - nloc.y) * (threat.y - nloc.y) < threat.radiusSquared) {
                 //if (Util.DEBUG) System.out.println(nloc + " would be too close to " + threat.description + " at " + threat.loc);
-                max = Math.max(max, (threat.radius - nloc.distanceTo(threat.loc)) * threat.severity + 1);
+                max +=  (threat.radius - nloc.distanceTo(threat.loc)) * threat.severity + 1;
             }
         }
-        if (max > 0.0001) return max;
+        //if (max > 0.0001) return max;
         br = robotType.bodyRadius * robotType.bodyRadius;
 
         if (evadeBullets) {
             for (int i = 0; i < bulletLen; i++) {
-                retval = willCollideWithMe(myLocation, bullets[i]);
-                if (retval > 0) {
-                    return 1f / retval;
+                retval = willCollideWithMe(nloc, bullets[i]);
+                if (retval > 0 && retval < 15) {
+                    max += (15f - retval / 15) * 0.1f;
                 }
             }
         }
 
-        return 0;
+        return max;
     }
 
 
@@ -529,17 +529,17 @@ public class Movement {
                             bestDeg = degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
                         }
                         currentCheck++;
-                        if (Clock.getBytecodesLeft() < 1800) break; //emergency brake
+                        if (Clock.getBytecodesLeft() < 2500) break; //emergency brake
                     }
-                    if (Clock.getBytecodesLeft() < 1800) break;
+                    if (Clock.getBytecodesLeft() < 2500) break;
                     if (attempt >= maxAttempt) break;
                     dist = attemptDist[attempt++];
                 } while (true);
                 left = !left;
                 dist = strideDistance;
-                if (Clock.getBytecodesLeft() < 1800) break;
+                if (Clock.getBytecodesLeft() < 2500) break;
             }
-            if (bestVal > 9.9) {
+            if (bestVal > 999) {
                 return -1f;
             } else {
                 escaping = true;
@@ -547,7 +547,7 @@ public class Movement {
                 return bestDeg;
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace();EXCEPTION();
             return -1f;
         }
     }

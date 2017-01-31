@@ -265,7 +265,7 @@ public class Gardener {
 
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Gardener Exception");
-            e.printStackTrace();
+            e.printStackTrace();EXCEPTION();
         }
     }
 }
