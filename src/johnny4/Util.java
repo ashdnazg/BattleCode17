@@ -502,31 +502,26 @@ static int predictionFactor = 0;
         int requiredVPs = (1000 - rc.getTeamVictoryPoints());
 
         if (rc.getTeamBullets() / currentVPCost >= requiredVPs) {
-            rc.donate(((int) (rc.getTeamBullets() / currentVPCost)) * currentVPCost);
+            rc.donate(((int) ((rc.getTeamBullets() - 0.001f) / currentVPCost)) * currentVPCost + 0.001f);
         } else if (!fireAllowed) {
-            if (Util.DEBUG) System.out.println("There are " + Radio.countActiveGardeners() + " active gardeners");
-            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST;
+            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST - 0.001f;
             if (bulletsToDonate > 0.0f) {
-                rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
+                rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
             }
         } else {
-            float bulletsToDonate = (rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST) / currentVPCost;
+            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST - 0.001f;
             if (bulletsToDonate > 0.0f) {
-                requiredVPs -= ((int) (bulletsToDonate / currentVPCost)) * currentVPCost;
+                requiredVPs -= (int) (bulletsToDonate / currentVPCost);
                 float logArg = (requiredVPs * (q_1) + currentVPIncome) / currentVPIncome;
                 if (logArg > 0.0f) {
                     float turnsToWin = (float) (Math.log(logArg) / log_q);
-                    if (Util.DEBUG) System.out.println("Winning expected in " + turnsToWin + " rounds");
-                    if (Util.DEBUG) System.out.println("currentVPIncome " + currentVPIncome);
-                    if (Util.DEBUG) System.out.println("up " + Math.log((requiredVPs * (q_1) + currentVPIncome) / currentVPIncome));
-                    if (Util.DEBUG) System.out.println("down " + log_q);
                     if (turnsToWin < 200.0f) {
                         if (Util.DEBUG) System.out.println("Victory expected 200");
-                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
+                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
                         fireAllowed = false;
                     } else if (turnsToWin < 400.0f && !Radio.getLandContact()) {
                         if (Util.DEBUG) System.out.println("Victory expected 400");
-                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
+                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
                         fireAllowed = false;
                     }
                 }
