@@ -141,7 +141,7 @@ public class Util {
         return maxPlusMinus;
     }
 
-    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException {
+    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius, RobotType enemyType) throws GameActionException {
         float sensorRadius = rc.getType().sensorRadius;
         float targetDist = start.distanceTo(target);
         float maxDist = Math.min(targetDist - 1.0f, sensorRadius - 0.01f);
@@ -163,7 +163,7 @@ public class Util {
                     if (ri.team == myTeam) {
                         return false;
                     }
-                    if (ri.type == RobotType.ARCHON && (checkDist < targetDist - RobotType.ARCHON.bodyRadius)) {
+                    if (ri.type == RobotType.ARCHON && enemyType != RobotType.ARCHON) {
                         return false;
                     }
                     return true;

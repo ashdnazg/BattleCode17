@@ -290,7 +290,7 @@ public class Soldier {
                 Direction fireDir = null;
                 float minfiredist = 3f / enemyType.strideRadius + 6 + rc.getType().bodyRadius * 4;
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
-                boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius);
+                boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius, enemyType);
 
 
                 if (enemyType == RobotType.SCOUT || enemyType == RobotType.GARDENER && rc.getHealth() / rc.getType().maxHealth > 0.75f) {
@@ -408,7 +408,7 @@ public class Soldier {
         MapLocation myLocation = rc.getLocation();
 
         if (nextEnemy.equals(myLocation)) return false;
-        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius)) return false;
+        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius, enemyType)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
         if (Util.DEBUG) {
             System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers + 2) * 2 * enemyType.strideRadius) + " degrees");
