@@ -266,9 +266,9 @@ public class Soldier {
                 }
                 if (DEBUG && nextEnemy != null) System.out.println("Next enemy at " + nextEnemy);
             }
-            if (lastNoBullets && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > 14) && bullets.length > 0 && Radio.countAllies(RobotType.SOLDIER) <= 2) {
-                Radio.reportEnemies(new RobotInfo[]{new RobotInfo(2342, rc.getTeam().opponent(), RobotType.SOLDIER, bullets[bullets.length - 1].location, 42, 1, 1)});
-            }
+            // if (lastNoBullets && (nextEnemy == null || nextEnemy.distanceTo(myLocation) > 14) && bullets.length > 0 && Radio.countAllies(RobotType.SOLDIER) <= 2) {
+                // Radio.reportEnemies(new RobotInfo[]{new RobotInfo(2342, rc.getTeam().opponent(), RobotType.SOLDIER, bullets[bullets.length - 1].location, 42, 1, 1)});
+            // }
             if (nextEnemy == null) {
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 10f;
             }
