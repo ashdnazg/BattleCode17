@@ -175,7 +175,7 @@ public class Gardener {
                 noBuildPosSince = 10000;
             }
             boolean fillhexes = false;
-            if (rc.getHealth() < 10 || !Util.fireAllowed){
+            if (!Util.fireAllowed){
                 freePos = true;
                 fillhexes = true;
             }
