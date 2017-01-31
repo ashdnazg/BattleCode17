@@ -227,12 +227,8 @@ public class Util {
         float enemyRadius = enemy.type.bodyRadius;
         float bulletspeed = rc.getType().bulletSpeed;
         MapLocation myLocation = rc.getLocation();
-        if (lastEnemy != null && lastEnemy.getID() == enemy.getID()) {
-            if (lastEnemy.location.distanceTo(enemy.location) > enemy.type.strideRadius + 0.0001f){
-                if (Util.DEBUG) System.out.println("Invalid data for prediction");
+        if (lastEnemy != null && lastEnemy.location.distanceTo(enemy.location) < enemy.type.strideRadius + 0.2f) {
 
-                return nextEnemy;
-            }
             float ux = enemy.location.x - lastEnemy.location.x;
             float uy = enemy.location.y - lastEnemy.location.y;
 
