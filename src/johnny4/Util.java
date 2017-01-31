@@ -147,16 +147,18 @@ public class Util {
         float maxDist = Math.min(targetDist - 1.0f, sensorRadius - 0.01f);
         Direction dir = start.directionTo(target);
         float checkDist = shooterRadius + 0.5f;
+        boolean shootThroughEnemyTrees = rc.getOpponentVictoryPoints() > 500 || rc.getTeamBullets() > 500;
         MapLocation checkLoc;
         TreeInfo ti;
         RobotInfo ri;
         Team myTeam = rc.getTeam();
+        Team enemyTeam = myTeam.opponent();
         while (checkDist < maxDist) {
             checkLoc = start.add(dir, checkDist);
             if (rc.isLocationOccupied(checkLoc)) {
                 ti = rc.senseTreeAtLocation(checkLoc);
                 if (ti != null) {
-                    return false;
+                    return shootThroughEnemyTrees && ti.team == enemyTeam;
                 }
                 ri = rc.senseRobotAtLocation(checkLoc);
                 if (ri != null) {
