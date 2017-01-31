@@ -433,7 +433,7 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if ((dist - radius < 1.51 + Math.max(0, money / 70f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER && (money > 60.0f || rc.getTreeCount() > 5 || nextGardener != null || dist < 6.5f)) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
+        if ((dist - radius < 1.51 + Math.max(0, money / 70f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER && (money > 60.0f || nextGardener != null || dist < 6.5f)) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
             return true;
