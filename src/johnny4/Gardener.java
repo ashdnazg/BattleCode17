@@ -174,6 +174,7 @@ public class Gardener {
             } else {
                 noBuildPosSince = 10000;
             }
+            freePos |= rc.getHealth() < 10;
             freePos |= !Util.fireAllowed; // in endgame build all hexes
 
             int wouldBeTreeDir = -1;

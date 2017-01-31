@@ -436,7 +436,7 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(firedir);
             return true;
-        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || !spotterTarget || nearbySoldiers > 0 || nextGardener != null || rc.getTreeCount() > 4) && (maxArc > 0.01f || dist < 5)) {
+        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || !spotterTarget || nearbySoldiers > 0 || nextGardener != null || rc.getTreeCount() >= 4) && (maxArc > 0.01f || dist < 5)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(firedir);
             return true;
