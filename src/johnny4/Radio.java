@@ -312,12 +312,12 @@ public class Radio {
 
         // Only gardeners have buildees
         if (myType == 1) {
-            if (frame <= (buildees[0] & 0xFFFF)) {
+            if (frame < (buildees[0] & 0xFFFF)) {
                 int robotType = buildees[0] >>> 16;
                 Counter.increment(406 + robotType);
             }
 
-            if (frame <= (buildees[1] & 0xFFFF)) {
+            if (frame < (buildees[1] & 0xFFFF)) {
                 int robotType = buildees[1] >>> 16;
                 Counter.increment(406 + robotType);
             }
