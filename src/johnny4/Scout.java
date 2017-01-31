@@ -207,7 +207,7 @@ public class Scout {
             }
             if (nextCivilianInfo != null  && nextCivilianInfo.type == RobotType.SCOUT){
                 Movement.MIN_ENEMY_DIST = 4f;
-                if (nextEnemy.distanceTo(myLocation) < 5f && myLocation.distanceTo(nextCivilian) < 4f){
+                if (nextEnemy.distanceTo(myLocation) < 4f && myLocation.distanceTo(nextCivilian) < 4f || rc.getHealth() < 5){
                     stopScoutAttack = frame;
                 }
             }
@@ -375,7 +375,7 @@ public class Scout {
                             }
                         }
                         if (!hasMoved) { // Alternatively circle towards enemy
-                            if (movement.findPath(nextCivilianInfo.location.add(nextCivilianInfo.location.directionTo(myLocation), 2.005f), fireDir)) {
+                            if (movement.findPath(nextCivilianInfo.location.add(nextCivilianInfo.location.directionTo(nextEnemy), -2.005f), fireDir)) {
                                 hasMoved = true;
                                 myLocation = rc.getLocation();
                             }
