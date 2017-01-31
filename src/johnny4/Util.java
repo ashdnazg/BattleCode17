@@ -478,6 +478,13 @@ public class Util {
                 }
             }
         }
+        if (rc.getRoundLimit() - rc.getRoundNum() < 200) {
+            if (Util.DEBUG) System.out.println("GameEnd expected 200");
+            fireAllowed = false;
+        } else if (rc.getRoundLimit() - rc.getRoundNum()  < 400 && !Radio.getLandContact()) {
+            if (Util.DEBUG) System.out.println("GameEnd expected 400");
+            fireAllowed = false;
+        }
         // if () {
             // rc.donate(((int) (rc.getTeamBullets() / currentVPCost)) * currentVPCost);
             // fireAllowed = false;
