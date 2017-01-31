@@ -142,83 +142,29 @@ public class Util {
     }
 
     static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException {
-        float cx = 0.5f * (start.x + target.x);
-        float cy = 0.5f * (start.y + target.y);//first 2 variables have fast access
-        double rs = 0.5 * (start.distanceTo(target) - shooterRadius);
-        float x, y, r;
-        int cnt = 0;
-        int clock = Clock.getBytecodeNum();
-        Team enemy = rc.getTeam().opponent();
-        int i;
-        RobotInfo robot;
-        TreeInfo tree;
-        if (rc.getTeamBullets() < 110) {
-            for (i = 0; i < trees.length; i++) {
-                if (cnt >= px.length || i > 4) break;
-                tree = trees[i];
-                x = tree.location.x;
-                y = tree.location.y;
-                r = tree.radius;
-                if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < (rs + r) * (rs + r)) {
-                    px[cnt] = x;
-                    py[cnt] = y;
-                    pr[cnt] = r + 0.0001f;
-                    pg[cnt++] = false;
+        float sensorRadius = rc.getType().sensorRadius;
+        float maxDist = Math.min(start.distanceTo(target) - 1.0f, sensorRadius - 0.01f);
+        Direction dir = start.directionTo(target);
+        float checkDist = shooterRadius + 0.5f;
+        MapLocation checkLoc;
+        TreeInfo ti;
+        RobotInfo ri;
+        Team myTeam = rc.getTeam();
+        while (checkDist < maxDist) {
+            checkLoc = start.add(dir, checkDist);
+            if (rc.isLocationOccupied(checkLoc)) {
+                ti = rc.senseTreeAtLocation(checkLoc);
+                if (ti != null) {
+                    return false;
+                }
+                ri = rc.senseRobotAtLocation(checkLoc);
+                if (ri != null) {
+                    return ri.team != myTeam;
                 }
             }
+            checkDist += 0.5f;
         }
-        for (i = 0; i < robots.length; i++) {
-            if (cnt >= px.length || i > 4) break;
-            robot = robots[i];
-            x = robot.location.x;
-            y = robot.location.y;
-            r = robot.type.bodyRadius;
-            if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < (rs + r) * (rs + r)) {
-                px[cnt] = x;
-                py[cnt] = y;
-                pr[cnt] = r + 0.0001f;
-                pg[cnt++] = robot.team.equals(enemy);
-            }
-        }
-
-        double toTrgX = target.x - start.x;
-        double toTrgY = target.y - start.y;
-        double mag = Math.sqrt(toTrgX * toTrgX + toTrgY * toTrgY);
-        toTrgX /= mag;
-        toTrgY /= mag;
-        double dx, dy, distParallel, distPerpendicular, perpx, perpy;
-        double mindist = 100000d;
-        boolean outcome = true;
-        if (DEBUG) rc.setIndicatorLine(start, target, 0, 255, 255);
-        for (i = 0; i < cnt; i++) {
-            dx = px[i] - start.x;
-            dy = py[i] - start.y;
-            distParallel = toTrgX * dx + toTrgY * dy;
-            perpx = dx - distParallel * toTrgX;
-            perpy = dy - distParallel * toTrgY;
-            distPerpendicular = (perpx * perpx + perpy * perpy);
-            if (distParallel > shooterRadius + GameConstants.BULLET_SPAWN_OFFSET && distPerpendicular < pr[i] * pr[i] && distParallel < mindist) {
-                if (DEBUG) rc.setIndicatorDot(new MapLocation(px[i], py[i]), 0, 255, 255);
-                if (DEBUG) System.out.println("Blocked at " + new MapLocation(px[i], py[i]) + " " + pg[i]);
-                mindist = distParallel;
-                outcome = pg[i];
-            }
-        }
-        if (cnt >= px.length) {
-            if (Util.DEBUG) System.out.println("Exhausted array length");
-        }
-        if (mindist > 99999d) {
-            if (Util.DEBUG) System.out.println("No collision found");
-            if (cnt >= px.length) {
-                return false;
-            }
-        }
-        clock = Clock.getBytecodeNum() - clock;
-        if (clock > 300) {
-            if (Util.DEBUG)
-                System.out.println("Check LOF took " + clock + " evaluating " + cnt + " / " + (robots.length + trees.length) + " outcome " + outcome);
-        }
-        return outcome;
+        return true;
     }
 
 
