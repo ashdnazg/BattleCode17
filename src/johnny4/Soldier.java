@@ -349,7 +349,7 @@ public class Soldier {
                     }
                 }
             } else if (!hasMoved) {
-                while (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || frame - lastRandomLocTime > 69 || !movement.findPath(lastRandomLocation, null)) {
+                if (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || frame - lastRandomLocTime > 69 || !movement.findPath(lastRandomLocation, null)) {
                     lastRandomLocation = myLocation.add(randomDirection(), 100);
                     lastRandomLocTime = frame;
                 }
@@ -364,20 +364,12 @@ public class Soldier {
             }
 
             if (!hasFired && nextEnemySoldier != null) {
-                if (checkLineOfFire(myLocation, nextEnemySoldier.location, trees, nearbyRobots, rc.getType().bodyRadius)) {
-                    if (DEBUG) System.out.println("Firing at soldier ");
-                    hasFired = tryFire(nextEnemySoldier, nextEnemySoldier.location, RobotType.SCOUT, nextEnemySoldier.location.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
-                } else {
-                    if (Util.DEBUG) System.out.println("No LOS on soldier");
-                }
+                if (DEBUG) System.out.println("Firing at soldier ");
+                hasFired = tryFire(nextEnemySoldier, nextEnemySoldier.location, RobotType.SCOUT, nextEnemySoldier.location.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
             }
             if (!hasFired && nextEnemyScout != null) {
-                if (checkLineOfFire(myLocation, nextEnemyScout, trees, nearbyRobots, rc.getType().bodyRadius)) {
-                    if (DEBUG) System.out.println("Firing at scout ");
-                    hasFired = tryFire(nextEnemyInfo, nextEnemyScout, RobotType.SCOUT, nextEnemyScout.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
-                } else {
-                    if (Util.DEBUG) System.out.println("No LOS on scout");
-                }
+                if (DEBUG) System.out.println("Firing at scout ");
+                hasFired = tryFire(nextEnemyInfo, nextEnemyScout, RobotType.SCOUT, nextEnemyScout.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
             }
             lastEnemyInfo = nextEnemyInfo;
             lastNoBullets = bullets.length == 0;

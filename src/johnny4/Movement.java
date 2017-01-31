@@ -32,6 +32,7 @@ public class Movement {
     static float MIN_FRIENDLY_ARCHON_DIST;
     static float MIN_FRIENDLY_SOLDIER_DIST;
     static float MIN_OBSTACLE_DIST;
+    static int ABORT;
     static boolean evadeBullets = true;
 
     public Movement(RobotController rc) {
@@ -114,6 +115,11 @@ public class Movement {
                 MIN_FRIENDLY_SOLDIER_DIST = 0;
                 MIN_OBSTACLE_DIST = 0;
                 evadeBullets = false;
+        }
+        if (robotType == RobotType.SOLDIER || robotType == RobotType.TANK){
+            ABORT = 4200;
+        }else{
+            ABORT = 2000;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
         if (Util.DEBUG)
@@ -532,15 +538,15 @@ public class Movement {
                             bestDeg = degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
                         }
                         currentCheck++;
-                        if (Clock.getBytecodesLeft() < 5000) break; //emergency brake
+                        if (Clock.getBytecodesLeft() < ABORT) break; //emergency brake
                     }
-                    if (Clock.getBytecodesLeft() < 5000) break;
+                    if (Clock.getBytecodesLeft() < ABORT) break;
                     if (attempt >= maxAttempt) break;
                     dist = attemptDist[attempt++];
                 } while (true);
                 left = !left;
                 dist = strideDistance;
-                if (Clock.getBytecodesLeft() < 5000) break;
+                if (Clock.getBytecodesLeft() < ABORT) break;
             }
             if (bestVal > 999) {
                 return -1f;

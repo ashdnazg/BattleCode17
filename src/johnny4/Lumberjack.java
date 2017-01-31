@@ -249,7 +249,7 @@ public class Lumberjack {
                     } else {
                         treeInSenseSince = 100000;
                     }
-                    if (frame - treeInSenseSince > 10 && toBeCut == null) {
+                    if (frame - treeInSenseSince > 10 && toBeCut == null || myLocation.distanceTo(currentTreeTarget) < 1) {
                         radio.reportTreeCut(currentTreeTarget);
                         if (Util.DEBUG) System.out.println("Cut tree at " + currentTreeTarget);
                         currentTreeTarget = null;

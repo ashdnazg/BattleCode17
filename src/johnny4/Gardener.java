@@ -104,6 +104,7 @@ public class Gardener {
             MapLocation myLocation = rc.getLocation();
             float money = rc.getTeamBullets();
 
+
             int nearbyEnemies = 0;
             int nearbyAllies = 0;
             int nearbyAllyFighters = 0;
@@ -261,7 +262,7 @@ public class Gardener {
                     }
                 }
                 Movement.init(nearbyRobots, trees, bullets);
-                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 31 + 2* frame / 30 && rc.getTreeCount() < 4;
+                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 31 + 2* frame / 30;
                 if (DEBUG) System.out.println("Gardener positioning");
             }
 

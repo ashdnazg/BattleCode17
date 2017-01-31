@@ -154,7 +154,7 @@ public class Util {
         TreeInfo tree;
         if (rc.getTeamBullets() < 110) {
             for (i = 0; i < trees.length; i++) {
-                if (cnt >= px.length || i > 8) break;
+                if (cnt >= px.length || i > 4) break;
                 tree = trees[i];
                 x = tree.location.x;
                 y = tree.location.y;
@@ -168,7 +168,7 @@ public class Util {
             }
         }
         for (i = 0; i < robots.length; i++) {
-            if (cnt >= px.length || i > 5) break;
+            if (cnt >= px.length || i > 4) break;
             robot = robots[i];
             x = robot.location.x;
             y = robot.location.y;
@@ -273,7 +273,7 @@ public class Util {
     }
 
 
-    static TreeInfo[] temp = new TreeInfo[10];
+    static TreeInfo[] temp = new TreeInfo[8];
     static TreeInfo[] cache = new TreeInfo[0];
     static boolean resense = false;
 
@@ -325,7 +325,7 @@ public class Util {
         return cache;
     }
 
-    static TreeInfo[] temp2 = new TreeInfo[10];
+    static TreeInfo[] temp2 = new TreeInfo[8];
     static TreeInfo[] cache2 = new TreeInfo[0];
 
     static TreeInfo[] senseClosestTrees() throws GameActionException {

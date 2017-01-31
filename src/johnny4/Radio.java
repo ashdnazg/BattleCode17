@@ -447,11 +447,11 @@ public class Radio {
     }
 
     public static float getTreeX(int info) {
-        return 0.5f * ((info & 0b11111111110000000000000000000000) >>> 21);
+        return 0.5f * ((info & 0b11111111111000000000000000000000) >>> 21);
     }
 
     public static float getTreeY(int info) {
-        return 0.5f * ((info & 0b00000000001111111111000000000000) >>> 10);
+        return 0.5f * ((info & 0b00000000000111111111110000000000) >>> 10);
     }
 
     public static RobotType getUnitType(int info) {
@@ -546,6 +546,7 @@ public class Radio {
                 break;
             }
         }
+        if (Util.DEBUG) System.out.println("No tree to delete found" );
     }
 
     public static int countTreeCutRequests() throws GameActionException {
