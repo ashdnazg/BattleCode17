@@ -419,7 +419,7 @@ public class Soldier {
         MapLocation myLocation = rc.getLocation();
 
         if (nextEnemy.equals(myLocation)) return false;
-        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius, enemyType)) return false;
+        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius, enemyType) && dist > 3.99f) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
         if (Util.DEBUG) {
             System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers + 2) * 2 * enemyType.strideRadius) + " degrees");
@@ -452,7 +452,7 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(firedir);
             return true;
-        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || !spotterTarget || nearbySoldiers > 0 || nextGardener != null || rc.getTreeCount() > 5) && (maxArc > 0.01f || dist < 5)) {
+        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || !spotterTarget || nearbySoldiers > 0 || nextGardener != null || rc.getTreeCount() > 5) && (maxArc > 0.01f || dist < 5.5f)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(firedir);
             return true;
