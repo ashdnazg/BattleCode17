@@ -290,7 +290,7 @@ public class Soldier {
                 Direction fireDir = null;
                 float minfiredist = 3f / enemyType.strideRadius + 6 + rc.getType().bodyRadius * 4;
                 if (DEBUG) System.out.println("Engagement dist is " + dist + " / " + minfiredist);
-                boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius);
+                boolean hasLosOnEnemy = !longrange && checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius, enemyType);
 
 
                 if (enemyType == RobotType.SCOUT || enemyType == RobotType.GARDENER && rc.getHealth() / rc.getType().maxHealth > 0.75f) {
@@ -408,7 +408,7 @@ public class Soldier {
         MapLocation myLocation = rc.getLocation();
 
         if (nextEnemy.equals(myLocation)) return false;
-        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius)) return false;
+        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius, enemyType)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
         if (Util.DEBUG) {
             System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers + 2) * 2 * enemyType.strideRadius) + " degrees");
@@ -433,7 +433,7 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if ((dist - radius < 1.51 + Math.max(0, money / 70f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER && (money > 60.0f || rc.getTreeCount() > 5 || nextGardener != null || dist < 6.5f)) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
+        if ((dist - radius < 1.51 + Math.max(0, money / 70f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER && (money > 60.0f || nextGardener != null || dist < 6.5f)) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
             return true;

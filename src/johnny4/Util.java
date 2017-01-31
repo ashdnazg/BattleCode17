@@ -141,9 +141,10 @@ public class Util {
         return maxPlusMinus;
     }
 
-    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius) throws GameActionException {
+    static boolean checkLineOfFire(MapLocation start, MapLocation target, TreeInfo[] trees, RobotInfo robots[], float shooterRadius, RobotType enemyType) throws GameActionException {
         float sensorRadius = rc.getType().sensorRadius;
-        float maxDist = Math.min(start.distanceTo(target) - 1.0f, sensorRadius - 0.01f);
+        float targetDist = start.distanceTo(target);
+        float maxDist = Math.min(targetDist - 1.0f, sensorRadius - 0.01f);
         Direction dir = start.directionTo(target);
         float checkDist = shooterRadius + 0.5f;
         MapLocation checkLoc;
@@ -159,7 +160,13 @@ public class Util {
                 }
                 ri = rc.senseRobotAtLocation(checkLoc);
                 if (ri != null) {
-                    return ri.team != myTeam;
+                    if (ri.team == myTeam) {
+                        return false;
+                    }
+                    if (ri.type == RobotType.ARCHON && enemyType != RobotType.ARCHON) {
+                        return false;
+                    }
+                    return true;
                 }
                 return false;
             }
@@ -462,7 +469,7 @@ static int predictionFactor = 0;
                 float logArg = (requiredVPs * (q_1) + currentVPIncome) / currentVPIncome;
                 if (logArg > 0.0f) {
                     float turnsToWin = (float) (Math.log(logArg) / log_q);
-                    if (turnsToWin < 200.0f) {
+                    if (turnsToWin < 150.0f + ((Radio.allyCounts[Radio.typeToInt(RobotType.SOLDIER)] > Radio.enemyCounts[Radio.typeToInt(RobotType.SOLDIER)]) ? 50.0f : 0.0f)) {
                         if (Util.DEBUG) System.out.println("Victory expected 200");
                         rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
                         fireAllowed = false;
