@@ -41,11 +41,16 @@ public class Archon {
         lastRandomLocation = rc.getLocation();
         float dist = 1e10f;
         float curDist;
+        int touchingFriendArchons = 0;
+        int touchingEnemyArchons = 0;
         for (MapLocation archonPos : map.enemyArchonPos) {
             curDist = archonPos.distanceTo(stuckLocation);
             if (curDist < dist) {
                 lastRandomLocation = archonPos;
                 dist = curDist;
+            }
+            if (curDist < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
+                touchingEnemyArchons++;
             }
         }
         for (MapLocation archonPos : map.ourArchonPos) {
@@ -54,6 +59,12 @@ public class Archon {
                 lastRandomLocation = archonPos;
                 dist = curDist;
             }
+            if (curDist < 2 * RobotType.ARCHON.bodyRadius + 0.02 && curDist > 0) {
+                touchingFriendArchons++;
+            }
+        }
+        if (touchingFriendArchons > 0 && touchingEnemyArchons == 0 && rc.senseNearbyTrees(RobotType.ARCHON.bodyRadius + 0.01f).length > 0) {
+            rc.disintegrate();
         }
 
         lastRandomLocation = rc.getLocation();
@@ -108,7 +119,7 @@ public class Archon {
                     lastGardenerPos = r.location;
                     break;
                 }
-                if (r.location.distanceTo(myLocation) < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
+                if (r.type == RobotType.ARCHON && r.location.distanceTo(myLocation) < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
                     if (r.getTeam().equals(myTeam)) {
                         touchingFriendArchons++;
                     }else{
