@@ -57,7 +57,6 @@ public class Radio {
         rc = rc_;
         myType = typeToInt(rc.getType());
         Counter.rc = rc_;
-        Stream.rc = rc_;
         byteCodeLimit = rc.getType().bytecodeLimit;
         myTeam = rc.getTeam();
         try {
