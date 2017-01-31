@@ -298,9 +298,11 @@ public class Soldier {
                         if (Util.DEBUG) System.out.println("Evading perpendicularly");
                         evadePos = nextEnemy.add(nextEnemy.directionTo(myLocation), MIN_EVASION_DIST + 1);
                     }
+                    Movement.MIN_FRIENDLY_SOLDIER_DIST = 0f;
                     if (!hasMoved && movement.findPath(evadePos, fireDir)) {
                         myLocation = rc.getLocation();
                     }
+                    Movement.MIN_FRIENDLY_SOLDIER_DIST = 4f;
                     hasMoved = true;
                 } else {
                     if (!hasMoved) {

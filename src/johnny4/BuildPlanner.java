@@ -187,7 +187,7 @@ public class BuildPlanner {
             return true;
         }
 
-        if (ownSoldiers + ownLumberjacks < 2 && frame < 200 && closestDanger < 30  || ownSoldiers < 1 || allOrNothing) {
+        if (ownSoldiers + ownLumberjacks < 2 && frame < 200 && closestDanger < 30  || ownSoldiers < 1 || allOrNothing && (ownSoldiers < enemySoldiers || frame < 105)) {
             return false;
         }
 

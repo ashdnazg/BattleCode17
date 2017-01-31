@@ -158,6 +158,7 @@ public class Gardener {
                     freeDir = nFreeDir;
                 } else {
                     freePos = true; //no space to build
+                    if (DEBUG) System.out.println("No space to build");
                 }
             }
             if (DEBUG && buildDirValid[freeDir])
@@ -178,7 +179,7 @@ public class Gardener {
             active = true;
             if (!_active) {
                 disabledSince = Math.min(frame, disabledSince);
-                if (frame - disabledSince > 20) active = false;
+                if (frame - disabledSince > 20 && frame - lastBuild > 30) active = false;
             } else {
                 disabledSince = 100000;
             }
