@@ -85,7 +85,7 @@ public class Tank {
                 dist = nextEnemy.distanceTo(myLocation);
                 movement.findPath(nextEnemyInfo == null ? nextEnemy : nextEnemyInfo.location.add(nextEnemyInfo.location.directionTo(myLocation), RobotType.TANK.bodyRadius + 1 + 0.001f), null);
                 if (Util.DEBUG) System.out.println("Aiming at " + nextEnemy);
-                if (Util.fireAllowed && rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius, nextEnemyInfo.type) && !myLocation.equals(nextEnemy)) {
+                if (Util.fireAllowed && rc.canFireSingleShot() && checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.TANK.bodyRadius, nextEnemyInfo != null ? nextEnemyInfo.type : RobotType.SOLDIER) && !myLocation.equals(nextEnemy)) {
                     if (best != null && best.type != RobotType.SCOUT) {
                         Radio.reportContact();
                     }

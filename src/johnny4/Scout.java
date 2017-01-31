@@ -342,7 +342,7 @@ public class Scout {
                         if (Util.DEBUG) System.out.println("Civilian in range " + dist + " size " + civSize);
                         Direction fireDir = null;
                         if (!hasFired && false) {//don't fire before moving
-                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius, nextCivilianInfo.type) && Util.fireAllowed && rc.canFireSingleShot()) {
+                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius, nextCivilianInfo != null ? nextCivilianInfo.type : RobotType.GARDENER) && Util.fireAllowed && rc.canFireSingleShot()) {
                                 if (nextCivilianInfo != null && lastCivilianInfo != null) {
                                     nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
                                 }
@@ -390,7 +390,7 @@ public class Scout {
                             if (nextCivilianInfo != null && lastCivilianInfo != null) {
                                 nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
                             }
-                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius, nextCivilianInfo.type) && Util.fireAllowed && rc.canFireSingleShot()) {
+                            if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius, nextCivilianInfo != null ? nextCivilianInfo.type : RobotType.GARDENER) && Util.fireAllowed && rc.canFireSingleShot()) {
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
@@ -438,7 +438,7 @@ public class Scout {
                 if (nextEnemyInfo != null && lastEnemyInfo != null) {
                     nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
                 }
-                if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius, nextEnemyInfo.type) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
+                if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius, nextEnemyInfo != null ? nextEnemyInfo.type : RobotType.SOLDIER) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
                     hasFired = true;
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     Movement.lastLOS = frame;
