@@ -259,7 +259,7 @@ public class Soldier {
                     Map.generateFarTargets(map.rc, myLocation, 1000, 0);
                     if (Util.DEBUG) System.out.println("Using long range target");
                     MapLocation archon = Map.getTarget(3, myLocation);
-                    if (archon != null && archon.distanceTo(myLocation) < 20 && frame - stayWithArchon > 50) {
+                    if (archon != null && archon.distanceTo(myLocation) < 20 && (frame - stayWithArchon > 50 || money > MIN_ARCHON_BULLETS)) {
                         nextEnemy = archon;
                     } else {
                         nextEnemy = Map.getTarget(suicidal ? 2 : getTargetType, myLocation);
