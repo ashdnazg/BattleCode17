@@ -161,7 +161,7 @@ public class Util {
                     return shootThroughEnemyTrees && ti.team == enemyTeam;
                 }
                 ri = rc.senseRobotAtLocation(checkLoc);
-                if (ri != null) {
+                if (ri != null && ri.ID == rc.getID()) {
                     if (ri.team == myTeam) {
                         return false;
                     }
