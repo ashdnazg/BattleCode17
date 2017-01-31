@@ -222,6 +222,8 @@ public class Util {
     }
 
 
+static float predictionFactor = 0;
+
     static MapLocation predict(RobotInfo enemy, RobotInfo lastEnemy, float extratime) throws GameActionException {
         MapLocation nextEnemy = enemy.location;
         float enemyRadius = enemy.type.bodyRadius;
@@ -262,7 +264,8 @@ public class Util {
             float time = vjy - ujy > 0.01f ? ((enemy.location.y - myLocation.y) / (vjy - ujy) + extratime) : ((enemy.location.x - myLocation.x) / (vjx - ujx) + extratime);
             // This factor is important!
             time *= (ABmag - enemyRadius) / ABmag;
-            time *= rand();
+            time *= predictionFactor / 2.0f;
+            predictionFactor = (predictionFactor + 1) % 3;
 
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
