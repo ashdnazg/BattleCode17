@@ -262,6 +262,7 @@ public class Util {
             float time = vjy - ujy > 0.01f ? ((enemy.location.y - myLocation.y) / (vjy - ujy) + extratime) : ((enemy.location.x - myLocation.x) / (vjx - ujx) + extratime);
             // This factor is important!
             time *= (ABmag - enemyRadius) / ABmag;
+            time *= rand();
 
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
