@@ -373,10 +373,10 @@ public class Scout {
                             }
                         }
                         if (!hasFired && !longRangeCiv && !cantfire && (Radio.countAllies(RobotType.GARDENER) > 0 && rc.getTreeCount() > 1 || nearbyAlliedFighters == 0)) {
+                            if (nextCivilianInfo != null && lastCivilianInfo != null) {
+                                nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
+                            }
                             if (checkLineOfFire(myLocation, nextCivilian, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) && Util.fireAllowed && rc.canFireSingleShot()) {
-                                if (nextCivilianInfo != null && lastCivilianInfo != null) {
-                                    nextCivilian = predict(nextCivilianInfo, lastCivilianInfo, 0);
-                                }
                                 fireDir = myLocation.directionTo(nextCivilian);
                                 rc.fireSingleShot(fireDir);
                                 hasFired = true;
@@ -420,10 +420,10 @@ public class Scout {
             if (Util.DEBUG)
                 System.out.println(!hasFired + " && " + nextEnemy + " && " + !longRangeEnemy + " && " + " < 12");
             if (!hasFired && nextEnemy != null && !longRangeEnemy && (nextEnemy.distanceTo(myLocation) < 12 && (Radio.countActiveGardeners() == 0 || rc.getTreeCount() > 5 || nextEnemy.distanceTo(myLocation) < 4))) {
+                if (nextEnemyInfo != null && lastEnemyInfo != null) {
+                    nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
+                }
                 if ((checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, RobotType.SCOUT.bodyRadius) || nextEnemy.distanceTo(myLocation) < 4.5) && Util.fireAllowed && rc.canFireSingleShot()) {
-                    if (nextEnemyInfo != null && lastEnemyInfo != null) {
-                        nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
-                    }
                     hasFired = true;
                     rc.fireSingleShot(myLocation.directionTo(nextEnemy));
                     Movement.lastLOS = frame;

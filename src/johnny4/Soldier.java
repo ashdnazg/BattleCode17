@@ -97,6 +97,7 @@ public class Soldier {
     RobotInfo nextGardener;
     int nearbyEnemySoldiers = 0;
     int ignoreBTrees = 0;
+    boolean spotterTarget = false;
 
     float money;
 
@@ -177,7 +178,7 @@ public class Soldier {
             if (nextEnemyInfo != null && nextEnemyInfo.type == RobotType.ARCHON && nearbySoldiers > 0 && minAllyID < rc.getID()){
                 stayWithArchon = frame; //ignore archons for 50 frames
             }
-            boolean spotterTarget = false;
+            spotterTarget = false;
             Map.generateFarTargets(map.rc, myLocation, 5, 0);
             MapLocation spotted = Map.getTarget(getTargetType, myLocation);
             if (spotted != null) {
@@ -320,7 +321,7 @@ public class Soldier {
                 }
 
                 if (!hasFired && !longrange) {
-                    if (checkLineOfFire(myLocation, nextEnemyInfo.location, trees, nearbyRobots, rc.getType().bodyRadius) && dist < minfiredist) {
+                    if (dist < minfiredist) {
                         if (DEBUG) System.out.println("Firing late " + nextEnemyInfo.location.distanceTo(myLocation));
                         hasFired = tryFire(nextEnemyInfo, nextEnemy, enemyType, dist, enemyType.bodyRadius);
                         if (hasFired) {
@@ -370,11 +371,12 @@ public class Soldier {
             return false;
 
         if (nextEnemyInfo != null && lastEnemyInfo != null && enemyType != RobotType.SCOUT) {
-            nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, 0);
+            nextEnemy = predict(nextEnemyInfo, lastEnemyInfo, spotterTarget ? 1 : 0);
         }
-
         MapLocation myLocation = rc.getLocation();
+
         if (nextEnemy.equals(myLocation)) return false;
+        if (!checkLineOfFire(myLocation, nextEnemy, trees, nearbyRobots, rc.getType().bodyRadius)) return false;
         Direction firedir = myLocation.directionTo(nextEnemy).rotateLeftDegrees((2 * rand() - 1f) * Math.min(3, nearbySoldiers + 2) * 1.6f * enemyType.strideRadius);
         // if (Util.DEBUG)
         System.out.println("Random offset of +- " + (Math.min(3, nearbySoldiers + 2) * 2 * enemyType.strideRadius) + " degrees");
