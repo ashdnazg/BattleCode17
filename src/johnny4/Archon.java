@@ -41,16 +41,11 @@ public class Archon {
         lastRandomLocation = rc.getLocation();
         float dist = 1e10f;
         float curDist;
-        int touchingFriendArchons = 0;
-        int touchingEnemyArchons = 0;
         for (MapLocation archonPos : map.enemyArchonPos) {
             curDist = archonPos.distanceTo(stuckLocation);
             if (curDist < dist) {
                 lastRandomLocation = archonPos;
                 dist = curDist;
-            }
-            if (curDist < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
-                touchingEnemyArchons++;
             }
         }
         for (MapLocation archonPos : map.ourArchonPos) {
@@ -59,12 +54,6 @@ public class Archon {
                 lastRandomLocation = archonPos;
                 dist = curDist;
             }
-            if (curDist < 2 * RobotType.ARCHON.bodyRadius + 0.02 && curDist > 0) {
-                touchingFriendArchons++;
-            }
-        }
-        if (touchingFriendArchons > 0 && touchingEnemyArchons == 0) {
-            rc.disintegrate();
         }
 
         lastRandomLocation = rc.getLocation();
@@ -80,6 +69,8 @@ public class Archon {
             Clock.yield();
         }
     }
+
+    int timesTouched = 0;
 
 
     protected void tick() {
@@ -108,6 +99,8 @@ public class Archon {
                     }
                 }
             }
+            int touchingFriendArchons = 0;
+            int touchingEnemyArchons = 0;
             for (RobotInfo r: nearbyRobots){
                 if (r.getTeam().equals(myTeam) && r.type == RobotType.GARDENER) {
                     lastGardener = frame;
@@ -115,6 +108,16 @@ public class Archon {
                     lastGardenerPos = r.location;
                     break;
                 }
+                if (r.location.distanceTo(myLocation) < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
+                    if (r.getTeam().equals(myTeam)) {
+                        touchingFriendArchons++;
+                    }else{
+                        touchingEnemyArchons++;
+                    }
+                }
+            }
+            if (touchingFriendArchons > 0 && touchingEnemyArchons == 0 && timesTouched ++> 5) {
+                rc.disintegrate();
             }
 
             boolean hireGardener = false;
