@@ -264,8 +264,8 @@ static int predictionFactor = 0;
             float time = vjy - ujy > 0.01f ? ((enemy.location.y - myLocation.y) / (vjy - ujy) + extratime) : ((enemy.location.x - myLocation.x) / (vjx - ujx) + extratime);
             // This factor is important!
             time *= (ABmag - enemyRadius) / ABmag;
-            time *= (2 - predictionFactor) / 2.0f;
-            predictionFactor = (predictionFactor + 1) % 3;
+            time *= (3 - predictionFactor) / 3.0f;
+            predictionFactor = (predictionFactor + 1) % 4;
 
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
             if (Util.DEBUG) System.out.println("Time: " + time);
