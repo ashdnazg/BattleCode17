@@ -428,7 +428,7 @@ public class Soldier {
             return false;
         }
         Radio.reportContact();
-        if ((dist - radius < 1.51 + Math.max(0, money / 70f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER && (money > 60.0f || rc.getTreeCount() > 2 || nextGardener != null || dist < 6.9f)) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
+        if ((dist - radius < 1.51 + Math.max(0, money / 70f - 2) + Math.max(0, 4 * nearbyEnemySoldiers - 3) || !Util.tooManyTrees && dist < 8 && enemyType == RobotType.SOLDIER && (money > 60.0f || rc.getTreeCount() > 5 || nextGardener != null || dist < 6.5f)) && (maxArc > PENTAD_ARC_PLUSMINUS || dist < 3) && rc.canFirePentadShot()) {
             if (Util.DEBUG) System.out.println("Firing pentad");
             rc.firePentadShot(firedir);
             return true;
@@ -436,7 +436,7 @@ public class Soldier {
             if (Util.DEBUG) System.out.println("Firing triad");
             rc.fireTriadShot(firedir);
             return true;
-        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || nearbySoldiers > 0 || nextGardener != null) && (maxArc > 0.01f || dist < 5)) {
+        } else if (rc.canFireSingleShot() && (dist < 11 - 6 * enemyType.strideRadius || !spotterTarget || nearbySoldiers > 0 || nextGardener != null) && (maxArc > 0.01f || dist < 5)) {
             if (Util.DEBUG) System.out.println("Firing single bullet");
             rc.fireSingleShot(firedir);
             return true;
