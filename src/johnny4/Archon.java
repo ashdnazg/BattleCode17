@@ -18,6 +18,7 @@ public class Archon {
     MapLocation stuckLocation;
     int stuckSince;
     int lastGardener = -1000;
+    MapLocation lastGardenerPos = null;
     Team myTeam;
     static int gardenersHired = 0;
 
@@ -92,6 +93,7 @@ public class Archon {
                 if (r.getTeam().equals(myTeam) && r.type == RobotType.GARDENER) {
                     lastGardener = frame;
                     lastRandomLocation = myLocation.add(r.location.directionTo(myLocation), 10);
+                    lastGardenerPos = r.location;
                     break;
                 }
             }
@@ -171,9 +173,9 @@ public class Archon {
 
             // Move randomly
             if (!tryingToShake && frame - lastGardener < 30) {
-                if (!movement.findPath(myLocation, null)){
+                if (!movement.findPath(myLocation.add(lastGardenerPos.directionTo(myLocation), 10), null)){
                     int iterations = 0;
-                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 2) {
+                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 1) {
                         lastRandomLocation = myLocation.add(randomDirection(), 20);
                     }
                 }

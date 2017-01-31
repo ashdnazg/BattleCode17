@@ -12,7 +12,7 @@ public class Movement {
     static int lastInit = -1;
     static RobotInfo[] robots;
     static TreeInfo[] trees;
-    static BulletInfo[] bullets = new BulletInfo[10];
+    static BulletInfo[] bullets = new BulletInfo[5];
     static int bulletLen = 0;
     static MapLocation myLocation;
     static Direction fireDir;
@@ -63,7 +63,7 @@ public class Movement {
                 MIN_FRIENDLY_LUMBERJACK_DIST = RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
-                GO_STRAIGHT_DISTANCE = 100;
+                GO_STRAIGHT_DISTANCE = 00;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 MIN_FRIENDLY_SOLDIER_DIST = 0;
@@ -74,7 +74,7 @@ public class Movement {
                 MIN_FRIENDLY_LUMBERJACK_DIST = 0;//RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS + 0.01f;
                 MIN_ENEMY_DIST = 0f;
                 MIN_ENEMY_SCOUT_DIST = 0f;
-                GO_STRAIGHT_DISTANCE = 1.5f;
+                GO_STRAIGHT_DISTANCE = 0.1f;
                 MIN_FRIENDLY_GARDENER_DIST = 0;
                 MIN_FRIENDLY_ARCHON_DIST = 0;
                 MIN_FRIENDLY_SOLDIER_DIST = 4; //overriden in soldier
@@ -139,7 +139,8 @@ public class Movement {
             currentThreat = threats[threatsLen];
         }
         for (int i = 0; i < bullets_.length; i++) {
-            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > 2 * strideDistance + 2 * bullets_[i].speed + robotType.bodyRadius)
+            if (bullets_[i].damage < 1) continue;
+            if (bulletLen >= bullets.length || bullets_[i].location.distanceTo(myLocation) > 10)
                 break;
             bullets[bulletLen++] = bullets_[i];
         }
@@ -396,7 +397,7 @@ public class Movement {
         if (DEBUG) {
             if (Util.DEBUG) System.out.println(olddist + " -> " + myLocation.distanceTo(target) + " : " + retval);
         }
-        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || lastLOS >= rc.getRoundNum() - 4 && olddist < GO_STRAIGHT_DISTANCE * 8.0)) {
+        if (retval && !escaping && olddist < myLocation.distanceTo(target) && (olddist < GO_STRAIGHT_DISTANCE || GO_STRAIGHT_DISTANCE > 0 && lastLOS >= rc.getRoundNum() - 4 && olddist < 12)) {
             if (DEBUG) {
                 if (Util.DEBUG)
                     System.out.println("Switching bugdir because of distance and los " + (lastLOS >= rc.getRoundNum() - 4));
@@ -426,8 +427,8 @@ public class Movement {
         }
         nloc = myLocation.add(dir, rc.getType().strideRadius);
         if (MIN_OBSTACLE_DIST > 0.0001) {
-            TreeInfo[] ntrees = rc.senseNearbyTrees(nloc, MIN_OBSTACLE_DIST, null);
-            if (ntrees.length > 0) return 1f - 0.1f * ntrees[0].location.distanceTo(nloc);
+            TreeInfo[] ntrees = rc.senseNearbyTrees(nloc, MIN_OBSTACLE_DIST + 0.05f, null);
+            if (ntrees.length > 0) return 1f - 0.1f * (ntrees[0].location.distanceTo(nloc) - ntrees[0].radius);
             final float N = 11;
             for (int i = 0; i <= N; i++) {
                 if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
@@ -447,16 +448,18 @@ public class Movement {
         //if (max > 0.0001) return max;
         br = robotType.bodyRadius * robotType.bodyRadius;
 
+        float bmax = 0;
+
         if (evadeBullets) {
             for (int i = 0; i < bulletLen; i++) {
                 retval = willCollideWithMe(nloc, bullets[i]);
-                if (retval > 0 && retval < 15) {
-                    max += (15f - retval / 15) * 0.3f;
+                if (retval > -0.001f && retval < 15) {
+                    bmax = Math.max(bmax, (15f - retval) * 0.3f);
                 }
             }
         }
 
-        return max;
+        return max + bmax;
     }
 
 
@@ -529,15 +532,15 @@ public class Movement {
                             bestDeg = degreeOffset * currentCheck - 2 * lob * degreeOffset * currentCheck + lob * 360;
                         }
                         currentCheck++;
-                        if (Clock.getBytecodesLeft() < 2500) break; //emergency brake
+                        if (Clock.getBytecodesLeft() < 5000) break; //emergency brake
                     }
-                    if (Clock.getBytecodesLeft() < 2500) break;
+                    if (Clock.getBytecodesLeft() < 5000) break;
                     if (attempt >= maxAttempt) break;
                     dist = attemptDist[attempt++];
                 } while (true);
                 left = !left;
                 dist = strideDistance;
-                if (Clock.getBytecodesLeft() < 2500) break;
+                if (Clock.getBytecodesLeft() < 5000) break;
             }
             if (bestVal > 999) {
                 return -1f;

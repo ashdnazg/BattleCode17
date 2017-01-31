@@ -179,7 +179,7 @@ public class Gardener {
             active = true;
             if (!_active) {
                 disabledSince = Math.min(frame, disabledSince);
-                if (frame - disabledSince > 20 && frame - lastBuild > 30) active = false;
+                if (frame - disabledSince > 20) active = false;
             } else {
                 disabledSince = 100000;
             }
@@ -192,7 +192,7 @@ public class Gardener {
                             continue; //reserved spot
                         }
                         wouldBeTreeDir = i;
-                        _active = buildDirValid[freeDir];
+                        _active = buildDirValid[freeDir] || frame - lastBuild < 30;
                         break;
                     }
                 }
@@ -240,6 +240,8 @@ public class Gardener {
             if (treesPlanted == 0) {
                 MapLocation nextEnemyFarDangerous = Map.getTarget(4, myLocation);
                 MapLocation nextEnemyFarScout = Map.getTarget(8, myLocation);
+                if (Util.DEBUG && nextEnemyFarDangerous != null) rc.setIndicatorDot(nextEnemyFarDangerous, 255, 255, 0);
+                if (Util.DEBUG && nextEnemyFarScout != null) rc.setIndicatorDot(nextEnemyFarScout, 255, 100, 0);
                 if (nextEnemyFarDangerous != null && nextEnemyFarScout != null) {
                     if (nextEnemyFarDangerous.distanceTo(myLocation) < nextEnemyFarScout.distanceTo(myLocation)) {
                         nextEnemyFarScout = null;
@@ -248,18 +250,18 @@ public class Gardener {
                     }
                 }
                 Movement.MIN_OBSTACLE_DIST = 0;
-                if (nextEnemyFarDangerous != null && nextEnemyFarDangerous.distanceTo(myLocation) < 12) {
+                if (nextEnemyFarDangerous != null && nextEnemyFarDangerous.distanceTo(myLocation) < 14) {
                     walkingTarget = myLocation.add(nextEnemyFarDangerous.directionTo(myLocation), 5);
                 } else if (nextEnemyFarScout != null && nextEnemyFarScout.distanceTo(myLocation) < 8.5f) {
                     walkingTarget = myLocation.add(nextEnemyFarScout.directionTo(myLocation), 3);
                 } else {
-                    if (frame - spawnFrame > 16) {
+                    if (frame - spawnFrame > 16 + frame / 30 || myLocation.distanceTo(walkingTarget) < 2) {
                         walkingTarget = myLocation;
                         Movement.MIN_OBSTACLE_DIST = 3;
                     }
                 }
                 Movement.init(nearbyRobots, trees, bullets);
-                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 31 && rc.getTreeCount() < 4;
+                inPosition = !movement.findPath(walkingTarget, null) || frame - spawnFrame > 31 + 2* frame / 30 && rc.getTreeCount() < 4;
                 if (DEBUG) System.out.println("Gardener positioning");
             }
 

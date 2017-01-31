@@ -131,13 +131,13 @@ public class Util {
         Team enemyTeam = myTeam.opponent();
         float maxPlusMinus = 3.14159265358979323f;
         for (int i = 0; i < robots.length; i++) {
-            if (robots[i].team.equals(enemyTeam)) continue;
+            if (robots[i].team.equals(enemyTeam) || robots[i].type == RobotType.ARCHON && robots[i].health > 30) continue;
             maxPlusMinus = Math.min(maxPlusMinus, Math.abs(start.directionTo(robots[i].location).radiansBetween(toTarget)) - (robots[i].type.bodyRadius + 1) / (start.distanceTo(robots[i].location)));
-        }
+        }/*
         for (int i = 0; i < trees.length; i++) {
             if (!trees[i].team.equals(myTeam)) continue;
             maxPlusMinus = Math.min(maxPlusMinus, Math.abs(start.directionTo(trees[i].location).radiansBetween(toTarget)));
-        }
+        }*/
         return maxPlusMinus;
     }
 
@@ -416,14 +416,16 @@ public class Util {
         distToRobot = bullet.location.distanceTo(myLocation);
         theta = bullet.dir.radiansBetween(bullet.location.directionTo(myLocation));
 
+        if (distToRobot < rc.getType().bodyRadius) return 0f;
         // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
         if (Math.abs(theta) > Math.PI / 2) {
             return -1f;
         }
         parallel = (float) Math.abs(distToRobot * Math.sin(theta)) / rc.getType().bodyRadius;
 
+        //System.out.println(myLocation + ": " + parallel + " -> " + (parallel * 2 + distToRobot));
         if ((parallel <= 1)) {
-            return (0.5f + parallel) * distToRobot;
+            return parallel * 2 + rc.getLocation().distanceTo(bullet.location);
         }
         return -1f;
     }
