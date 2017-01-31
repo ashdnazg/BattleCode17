@@ -127,6 +127,7 @@ public class Soldier {
             MapLocation nextEnemy = null;
             MapLocation nextEnemyScout = null;
             RobotInfo nextEnemyInfo = null;
+            RobotInfo nextEnemySoldier = null;
             RobotInfo nextSpotter = null;
             nextGardener = null;
             nearbySoldiers = nearbyEnemySoldiers = 0;
@@ -157,8 +158,8 @@ public class Soldier {
                     nearbyEnemySoldiers++;
                 }
                 if (!ri.getTeam().equals(rc.getTeam()) && (ri.type != RobotType.ARCHON || frame - stayWithArchon > 50) &&
-                        (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0) >
-                                ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 2.5f : 0))) {
+                        (nextEnemy == null || nextEnemy.distanceTo(myLocation) * enemyType.strideRadius + (enemyType == RobotType.ARCHON ? 10 : 0) + (enemyType == RobotType.LUMBERJACK ? 3.7f : 0) >
+                                ri.location.distanceTo(myLocation) * ri.type.strideRadius + (ri.type == RobotType.ARCHON ? 10 : 0) + (ri.type == RobotType.LUMBERJACK ? 3.7f : 0))) {
                     if ((ri.type != RobotType.SCOUT || !ignoreScouts || nextGardener != null)) {
                         nextEnemy = ri.location;
                         nextEnemyInfo = ri;
@@ -168,6 +169,9 @@ public class Soldier {
                         }
                     } else {
                         nextEnemyScout = ri.location;
+                    }
+                    if (ri.type == RobotType.SOLDIER || ri.type == RobotType.TANK){
+                        nextEnemySoldier = ri;
                     }
                 }
                 if (ri.getTeam().equals(rc.getTeam()) && (ri.type == RobotType.SCOUT) && (nextSpotter == null || nextSpotter.location.distanceTo(myLocation) > ri.location.distanceTo(myLocation))) {
@@ -341,6 +345,14 @@ public class Soldier {
                 myLocation = rc.getLocation();
             }
 
+            if (!hasFired && nextEnemySoldier != null) {
+                if (checkLineOfFire(myLocation, nextEnemySoldier.location, trees, nearbyRobots, rc.getType().bodyRadius)) {
+                    if (DEBUG) System.out.println("Firing at soldier ");
+                    hasFired = tryFire(nextEnemySoldier, nextEnemySoldier.location, RobotType.SCOUT, nextEnemySoldier.location.distanceTo(myLocation), RobotType.SCOUT.bodyRadius);
+                } else {
+                    if (Util.DEBUG) System.out.println("No LOS on soldier");
+                }
+            }
             if (!hasFired && nextEnemyScout != null) {
                 if (checkLineOfFire(myLocation, nextEnemyScout, trees, nearbyRobots, rc.getType().bodyRadius)) {
                     if (DEBUG) System.out.println("Firing at scout ");
