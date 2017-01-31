@@ -267,7 +267,57 @@ static int predictionFactor = 0;
             time *= (3 - predictionFactor) / 3.0f;
             predictionFactor = (predictionFactor + 1) % 4;
 
+            float step = time * 0.5f;
+            float initialStep = step;
+            MapLocation testSpot;
+            float sensorRadius = rc.getType().sensorRadius;
+
+            Team myTeam = rc.getTeam();
+            MapLocation lastGood = null;
+
             nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
+            while (step > 0.5f) {
+                if (nextEnemy.distanceTo(myLocation) >= sensorRadius) {
+                    testSpot = myLocation.add(myLocation.directionTo(nextEnemy), sensorRadius - 0.01f);
+                } else {
+                    testSpot = nextEnemy;
+                }
+                if (!rc.onTheMap(testSpot)) {
+                    time -= step;
+                    step *= 0.5f;
+                    nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
+                    continue;
+                } else {
+                    TreeInfo ti = rc.senseTreeAtLocation(testSpot);
+                    if (ti != null) {
+                        time -= step;
+                        step *= 0.5f;
+                        nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
+                        continue;
+                    }
+                    RobotInfo ri = rc.senseRobotAtLocation(testSpot);
+                    if (ri != null && ri.team == myTeam) {
+                        time -= step;
+                        step *= 0.5f;
+                        nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
+                        continue;
+                    }
+                    if (step != initialStep) {
+                        time += step;
+                        step *= 0.5f;
+                        lastGood = nextEnemy;
+                        nextEnemy = new MapLocation(enemy.location.x + ux * time, enemy.location.y + uy * time);
+                        continue;
+                    } else {
+                        lastGood = nextEnemy;
+                        break;
+                    }
+                }
+            }
+            if (lastGood != null) {
+                nextEnemy = lastGood;
+            }
+
             if (Util.DEBUG) System.out.println("Time: " + time);
             if (Util.DEBUG) rc.setIndicatorLine(lastEnemy.location, enemy.location, 255, 255, 0);
             if (Util.DEBUG) rc.setIndicatorLine(enemy.location, nextEnemy, 255, 100, 0);
