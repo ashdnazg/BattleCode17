@@ -428,11 +428,12 @@ public class Movement {
         if (MIN_OBSTACLE_DIST > 0.0001) {
             TreeInfo[] ntrees = rc.senseNearbyTrees(nloc, MIN_OBSTACLE_DIST, null);
             if (ntrees.length > 0) return 1f - 0.1f * ntrees[0].location.distanceTo(nloc);
-            for (int i = 0; i < 5; i++) {
-                if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
-                if (!rc.onTheMap(nloc.add(Direction.getEast(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
-                if (!rc.onTheMap(nloc.add(Direction.getSouth(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
-                if (!rc.onTheMap(nloc.add(Direction.getWest(), (i + 1) / 5 * MIN_OBSTACLE_DIST))) return 1f - 0.1f * i;
+            final float N = 11;
+            for (int i = 0; i < N; i++) {
+                if (!rc.onTheMap(nloc.add(Direction.getNorth(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
+                if (!rc.onTheMap(nloc.add(Direction.getEast(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
+                if (!rc.onTheMap(nloc.add(Direction.getSouth(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
+                if (!rc.onTheMap(nloc.add(Direction.getWest(), (i + 1) / N * MIN_OBSTACLE_DIST))) return 8f - 7f / N * i;
             }
         }
         for (int i = 0; i < threatsLen; i++) {
