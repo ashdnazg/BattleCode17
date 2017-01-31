@@ -375,7 +375,7 @@ public class Soldier {
 
             if (nearbyRobots.length < 5) nearbyRobots = map.sense();
             for (RobotInfo ri : nearbyRobots) {
-                if (!ri.team.equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER || ri.type == RobotType.TANK)) {
+                if (!ri.team.equals(rc.getTeam()) && (ri.type == RobotType.SOLDIER || ri.type == RobotType.TANK || ri.type == RobotType.LUMBERJACK && nextEnemySoldier == null)) {
                     nextEnemySoldier = ri;
                 }
             }
