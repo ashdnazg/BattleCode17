@@ -1,16 +1,16 @@
-package johnny4;
+package johnny4_20170131;
 
 import battlecode.common.*;
 
 import java.util.Random;
 
-import static johnny4.Radio.*;
+import static johnny4_20170131.Radio.*;
 
 public class Util {
 
     static RobotController rc;
     static Random rnd;
-    static final boolean DEBUG = false;
+    static final boolean DEBUG = true;
     static final float PENTAD_ARC_PLUSMINUS = GameConstants.PENTAD_SPREAD_DEGREES * 2 / 180f * 3.14159265358979323f;
     static final float TRIAD_ARC_PLUSMINUS = GameConstants.TRIAD_SPREAD_DEGREES / 180f * 3.14159265358979323f;
 
@@ -502,26 +502,31 @@ static int predictionFactor = 0;
         int requiredVPs = (1000 - rc.getTeamVictoryPoints());
 
         if (rc.getTeamBullets() / currentVPCost >= requiredVPs) {
-            rc.donate(((int) ((rc.getTeamBullets() - 0.001f) / currentVPCost)) * currentVPCost + 0.001f);
+            rc.donate(((int) (rc.getTeamBullets() / currentVPCost)) * currentVPCost);
         } else if (!fireAllowed) {
-            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST - 0.001f;
+            if (Util.DEBUG) System.out.println("There are " + Radio.countActiveGardeners() + " active gardeners");
+            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST;
             if (bulletsToDonate > 0.0f) {
-                rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
+                rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
             }
         } else {
-            float bulletsToDonate = rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST - 0.001f;
+            float bulletsToDonate = (rc.getTeamBullets() - Radio.countActiveGardeners() * GameConstants.BULLET_TREE_COST) / currentVPCost;
             if (bulletsToDonate > 0.0f) {
-                requiredVPs -= (int) (bulletsToDonate / currentVPCost);
+                requiredVPs -= ((int) (bulletsToDonate / currentVPCost)) * currentVPCost;
                 float logArg = (requiredVPs * (q_1) + currentVPIncome) / currentVPIncome;
                 if (logArg > 0.0f) {
                     float turnsToWin = (float) (Math.log(logArg) / log_q);
+                    if (Util.DEBUG) System.out.println("Winning expected in " + turnsToWin + " rounds");
+                    if (Util.DEBUG) System.out.println("currentVPIncome " + currentVPIncome);
+                    if (Util.DEBUG) System.out.println("up " + Math.log((requiredVPs * (q_1) + currentVPIncome) / currentVPIncome));
+                    if (Util.DEBUG) System.out.println("down " + log_q);
                     if (turnsToWin < 200.0f) {
                         if (Util.DEBUG) System.out.println("Victory expected 200");
-                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
+                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
                         fireAllowed = false;
                     } else if (turnsToWin < 400.0f && !Radio.getLandContact()) {
                         if (Util.DEBUG) System.out.println("Victory expected 400");
-                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
+                        rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost);
                         fireAllowed = false;
                     }
                 }
