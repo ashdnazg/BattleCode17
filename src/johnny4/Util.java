@@ -161,6 +161,7 @@ public class Util {
                 if (ri != null) {
                     return ri.team != myTeam;
                 }
+                return false;
             }
             checkDist += 0.5f;
         }
