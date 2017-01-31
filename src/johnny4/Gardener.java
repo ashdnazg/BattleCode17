@@ -174,8 +174,11 @@ public class Gardener {
             } else {
                 noBuildPosSince = 10000;
             }
-            freePos |= rc.getHealth() < 10;
-            freePos |= !Util.fireAllowed; // in endgame build all hexes
+            boolean fillhexes = false;
+            if (rc.getHealth() < 10 || !Util.fireAllowed){
+                freePos = true;
+                fillhexes = true;
+            }
 
             int wouldBeTreeDir = -1;
             active = true;
@@ -194,14 +197,14 @@ public class Gardener {
                             continue; //reserved spot
                         }
                         wouldBeTreeDir = i;
-                        _active = buildDirValid[freeDir] || frame - lastBuild < 30;
+                        _active = buildDirValid[freeDir] || frame - lastBuild < 30 || fillhexes;
                         break;
                     }
                 }
             }
 
             // Trees
-            if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree() && inPosition && buildDirValid[freeDir] && wouldBeTreeDir >= 0) {
+            if (money > MIN_CONSTRUCTION_MONEY && BuildPlanner.buildTree() && inPosition && (fillhexes || buildDirValid[freeDir]) && wouldBeTreeDir >= 0) {
                 //request to cut annoying trees
                 for (TreeInfo t : trees) {
                     if (t.team == myTeam)
