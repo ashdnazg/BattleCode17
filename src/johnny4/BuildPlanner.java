@@ -208,7 +208,7 @@ public class BuildPlanner {
         if (!haveMoney || nearbyGardeners + nearbyProtectors / 2 > 4 || !Util.fireAllowed) {
             return false;
         }
-        if (Radio.countActiveGardeners() > 0) {
+        if (Radio.countActiveGardeners() > 0 + (int)(money / 200)) {
             if (Util.DEBUG) System.out.println("There are still " + Radio.countActiveGardeners() + " active gardeners");
             return false;
         }
