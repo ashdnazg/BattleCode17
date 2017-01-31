@@ -469,7 +469,7 @@ static int predictionFactor = 0;
                 float logArg = (requiredVPs * (q_1) + currentVPIncome) / currentVPIncome;
                 if (logArg > 0.0f) {
                     float turnsToWin = (float) (Math.log(logArg) / log_q);
-                    if (turnsToWin < 150.0f + ((Radio.allyCounts[Radio.typeToInt(RobotType.SOLDIER)] > Radio.enemyCounts[Radio.typeToInt(RobotType.SOLDIER)]) ? 50.0f : 0.0f)) {
+                    if (turnsToWin < 100.0f + ((Radio.enemyCounts[Radio.typeToInt(RobotType.SOLDIER)] < 7) ? 100.0f : 0.0f)) {
                         if (Util.DEBUG) System.out.println("Victory expected 200");
                         rc.donate(((int) (bulletsToDonate / currentVPCost)) * currentVPCost + 0.001f);
                         fireAllowed = false;
