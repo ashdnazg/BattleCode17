@@ -11,7 +11,7 @@ public class Archon {
     Radio radio;
     Movement movement;
     Direction lastDirection;
-    Direction[] directions = new Direction[23];
+    Direction[] directions = new Direction[24];
     Team enemyTeam;
 
     MapLocation lastRandomLocation;
@@ -112,7 +112,7 @@ public class Archon {
             }
             int touchingFriendArchons = 0;
             int touchingEnemyArchons = 0;
-            for (RobotInfo r: nearbyRobots){
+            for (RobotInfo r : nearbyRobots) {
                 if (r.getTeam().equals(myTeam) && r.type == RobotType.GARDENER) {
                     lastGardener = frame;
                     lastRandomLocation = myLocation.add(r.location.directionTo(myLocation), 10);
@@ -122,12 +122,12 @@ public class Archon {
                 if (r.type == RobotType.ARCHON && r.location.distanceTo(myLocation) < 2 * RobotType.ARCHON.bodyRadius + 0.02) {
                     if (r.getTeam().equals(myTeam)) {
                         touchingFriendArchons++;
-                    }else{
+                    } else {
                         touchingEnemyArchons++;
                     }
                 }
             }
-            if (touchingFriendArchons > 0 && touchingEnemyArchons == 0 && timesTouched ++> 5) {
+            if (touchingFriendArchons > 0 && touchingEnemyArchons == 0 && timesTouched++ > 5) {
                 rc.disintegrate();
             }
 
@@ -142,16 +142,16 @@ public class Archon {
             MapLocation forwardSpot = myLocation.add(lastDirection, 2.0f);
             boolean eligibleSpot = rc.onTheMap(forwardSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(forwardSpot, 2.0f)/* freeDirs > 1*/;
             boolean goodSpot = rc.onTheMap(potentialSpot, 3.0f) && !rc.isCircleOccupiedExceptByThisRobot(potentialSpot, 3.0f);
-            if (eligibleSpot && rc.canHireGardener(oppositeDir) && hireGardener) {
+            /*if (eligibleSpot && rc.canHireGardener(oppositeDir) && hireGardener) {
                 rc.hireGardener(oppositeDir);
                 Radio.reportBuild(RobotType.GARDENER);
-                gardenersHired ++;
-            } else if (hireGardener) {
+                gardenersHired++;
+            } else */if (hireGardener) {
                 boolean[] blockedDir = new boolean[directions.length];
-                for (TreeInfo t : trees){
+                for (TreeInfo t : trees) {
                     int nextDir = 0;
                     float thisAngle = myLocation.directionTo(t.location).getAngleDegrees();
-                    for (int i = 0; i < directions.length; i++){
+                    for (int i = 0; i < directions.length; i++) {
                         if (directions[i].getAngleDegrees() < thisAngle) nextDir = i;
                     }
                     blockedDir[nextDir] = true;
@@ -160,23 +160,30 @@ public class Archon {
                 Direction buildDir = null;
                 Direction alternateBuildDir = null;
                 int freeDirs = 0;
-                for (int i = 0; i < directions.length; i++){
-/*
-                    if (!blockedDir[i]){
-                        buildDir = directions[i];
-                        freeDirs ++;
-                        //System.out.println("Direction " + directions[i] + " is free");
-                    }else */if (rc.canHireGardener(directions[i])){
+                for (int i = 0; i < directions.length; i++) {
+                    boolean valid = true;
+                    for (MapLocation archon : Map.enemyArchonPos) {
+                        if (Math.abs(directions[i].degreesBetween(myLocation.directionTo(archon))) < 120 - Map.enemyArchonPos.length * 30) {
+                            valid = false;
+                        }
+                    }
+                    if (valid && rc.canHireGardener(directions[i]) && alternateBuildDir == null) {
+                        alternateBuildDir = directions[i];
+                        //System.out.println(alternateBuildDir + " found");
+                    }
+                }
+                for (int i = 0; i < directions.length; i++) {
+                    if (rc.canHireGardener(directions[i]) && alternateBuildDir == null) {
                         alternateBuildDir = directions[i];
                     }
                 }
-                if (freeDirs == 1 && alternateBuildDir != null){
+                if (freeDirs == 1 && alternateBuildDir != null) {
                     freeDirs = 2;
                     buildDir = alternateBuildDir;
                 }
                 if (alternateBuildDir != null) {
                     rc.hireGardener(alternateBuildDir);
-                    gardenersHired ++;
+                    gardenersHired++;
                     Radio.reportBuild(RobotType.GARDENER);
                 }
             }
@@ -206,9 +213,9 @@ public class Archon {
 
             // Move randomly
             if (!tryingToShake && frame - lastGardener < 30) {
-                if (!movement.findPath(myLocation.add(lastGardenerPos.directionTo(myLocation), 10), null)){
+                if (!movement.findPath(myLocation.add(lastGardenerPos.directionTo(myLocation), 10), null)) {
                     int iterations = 0;
-                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations ++ < 1) {
+                    while ((lastRandomLocation.distanceTo(myLocation) < 0.6 * RobotType.ARCHON.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || !movement.findPath(lastRandomLocation, null)) && iterations++ < 1) {
                         lastRandomLocation = myLocation.add(randomDirection(), 20);
                     }
                 }
@@ -216,7 +223,8 @@ public class Archon {
             }
         } catch (Exception e) {
             if (Util.DEBUG) System.out.println("Archon Exception");
-            e.printStackTrace();EXCEPTION();
+            e.printStackTrace();
+            EXCEPTION();
         }
     }
 }
