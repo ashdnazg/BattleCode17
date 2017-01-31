@@ -98,6 +98,11 @@ public class Map {
                             break;
                         }
                         continue;
+                    case 9:
+                        if (t == SCOUT || t == ARCHON) {
+                            break;
+                        }
+                        continue;
                 }
                 if (best == null || best.distanceTo(myLocation) > farTargets[t].distanceTo(myLocation)) {
                     best = farTargets[t];

@@ -247,7 +247,7 @@ public class BuildPlanner {
         if (!((nearbyLumberjacks > 0 || !gardenerStuckified) && (nearbyProtectors + nearbyArchons < 3 || nearbySoldiers == 0))){
             needSoldiers = false;
         }
-        boolean noScouts = ownScouts == 0 && frame > 110;
+        boolean noScouts = ownScouts == 0 && frame > 0*110;
         boolean needLumberJacks = (((Radio.countTreeCutRequests() > 0 && ownLumberjacks == 0) && (ownLumberjacks < ((ownSoldiers + 1) / 3))) || (!needSoldiers && ownLumberjacks < Radio.countTreeCutRequests() && (ownLumberjacks < 1 && ownSoldiers > 1 || ownLumberjacks < 2 && frame > 180))) && (!Radio.getLandContact() || frame > 200) ||
                 gardenerStuckified && (nearbyLumberjacks == 0 || money > 140 && !needSoldiers && nearbyLumberjacks < 3) && nearbyNonBulletTrees > 0;
         boolean needScouts = ownScouts < (ownSoldiers * 2 + ownLumberjacks + 1) / 4 && ownScouts < 3;

@@ -240,7 +240,7 @@ public class Gardener {
             // Positioning
             if (treesPlanted == 0) {
                 MapLocation nextEnemyFarDangerous = Map.getTarget(4, myLocation);
-                MapLocation nextEnemyFarScout = Map.getTarget(8, myLocation);
+                MapLocation nextEnemyFarScout = Map.getTarget(9, myLocation);
                 if (Util.DEBUG && nextEnemyFarDangerous != null) rc.setIndicatorDot(nextEnemyFarDangerous, 255, 255, 0);
                 if (Util.DEBUG && nextEnemyFarScout != null) rc.setIndicatorDot(nextEnemyFarScout, 255, 100, 0);
                 if (nextEnemyFarDangerous != null && nextEnemyFarScout != null) {

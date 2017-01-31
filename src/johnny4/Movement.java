@@ -119,7 +119,7 @@ public class Movement {
         if (robotType == RobotType.SOLDIER || robotType == RobotType.TANK){
             ABORT = 4200;
         }else{
-            ABORT = 2000;
+            ABORT = 2500;
         }
         MIN_MOVE_TO_FIRE_ANGLE = 90.01f - 180f / 3.14159265358979323f * (float) Math.acos(robotType.bodyRadius / (robotType.bodyRadius + GameConstants.BULLET_SPAWN_OFFSET));
         if (Util.DEBUG)

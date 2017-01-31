@@ -197,8 +197,11 @@ public class Soldier {
                 if (Util.DEBUG) System.out.println("Going for fake gardener");
                 if (myLocation.distanceTo(nextBulletTree.location) < 3) ignoreBTrees = frame;
             }
+            Movement.MIN_FRIENDLY_SOLDIER_DIST = 4f;
             if (nextGardener != null && nextEnemy != null && nextEnemy.distanceTo(nextGardener.location) < myLocation.distanceTo(nextEnemy) + 1) {
+                rc.setIndicatorDot(nextGardener.location, 0, 255, 0);
                 MIN_EVASION_DIST = 0f;
+                Movement.MIN_FRIENDLY_SOLDIER_DIST = 0;
                 if (Util.DEBUG) System.out.println("Protect gardener");
             } else {
                 MIN_EVASION_DIST = 7f + rc.getType().bodyRadius * 3;
@@ -268,8 +271,6 @@ public class Soldier {
             }
             if (nextEnemy == null) {
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 10f;
-            } else {
-                Movement.MIN_FRIENDLY_SOLDIER_DIST = 4f;
             }
             Movement.init(nearbyRobots, trees, bullets);
             boolean hasMoved = false;

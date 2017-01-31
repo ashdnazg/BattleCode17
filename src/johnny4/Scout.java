@@ -205,9 +205,9 @@ public class Scout {
                 setSpotter(!isSpotter); //revert pathfinding constants
                 setSpotter(!isSpotter);
             }
-            if (nextCivilianInfo != null  && nextCivilianInfo.type == RobotType.SCOUT){
-                Movement.MIN_ENEMY_DIST = 4f;
-                if (nextEnemy.distanceTo(myLocation) < 4f && myLocation.distanceTo(nextCivilian) < 4f || rc.getHealth() < 5){
+            if (nextCivilianInfo != null  && nextCivilianInfo.type == RobotType.GARDENER){
+                Movement.MIN_ENEMY_DIST = myLocation.distanceTo(nextCivilianInfo.location) < 3.5f ? 0f : 6f;
+                if (rc.getHealth() <= 5){
                     stopScoutAttack = frame;
                 }
             }
@@ -362,7 +362,7 @@ public class Scout {
                                     best = ti;
                                 }
                             }
-                            if (mindist < attackDistance - nextCivilianInfo.moveCount * nextCivilianInfo.type.strideRadius) {
+                            if (mindist < attackDistance - nextCivilianInfo.moveCount * nextCivilianInfo.type.strideRadius && best.radius > 1.01) {
                                 MapLocation nextDanger = nextEnemy == null ? nextCivilian : nextEnemy;
                                 MapLocation pos = best.location.add(best.location.directionTo(nextDanger), best.radius - RobotType.SCOUT.bodyRadius - GameConstants.BULLET_SPAWN_OFFSET / 2);
                                 if (DEBUG) System.out.println("Going into tree");
@@ -375,7 +375,13 @@ public class Scout {
                             }
                         }
                         if (!hasMoved) { // Alternatively circle towards enemy
-                            if (movement.findPath(nextCivilianInfo.location.add(nextCivilianInfo.location.directionTo(nextEnemy), -2.005f), fireDir)) {
+                            MapLocation movpos;
+                            if (nextEnemy != null && nextEnemy.distanceTo(nextCivilianInfo.location) > 0.1f){
+                                movpos = nextCivilianInfo.location.add(nextCivilianInfo.location.directionTo(nextEnemy), -2.005f);
+                            }else{
+                                movpos = nextCivilianInfo.location.add(nextCivilianInfo.location.directionTo(myLocation), 2.005f);
+                            }
+                            if (movement.findPath(movpos, fireDir)) {
                                 hasMoved = true;
                                 myLocation = rc.getLocation();
                             }
