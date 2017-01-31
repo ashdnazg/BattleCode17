@@ -204,7 +204,7 @@ public class Soldier {
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 0;
                 if (Util.DEBUG) System.out.println("Protect gardener");
             }else if (nextEnemyInfo != null && nextEnemyInfo.moveCount + nextEnemyInfo.attackCount  == 0){
-                rc.setIndicatorDot(nextGardener.location, 255, 100, 0);
+                rc.setIndicatorDot(nextEnemy, 255, 100, 0);
                 MIN_EVASION_DIST = 0f;
                 Movement.MIN_FRIENDLY_SOLDIER_DIST = 0;
             }else {
