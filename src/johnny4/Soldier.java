@@ -91,6 +91,9 @@ public class Soldier {
     int ignoreBTrees = 0;
     boolean spotterTarget = false;
     boolean lastNoBullets = true;
+    float randomTargetMinDist = 100000;
+    int lastRandomTargetImprovement = 0;
+    int lastRandomTargetCheck = 0;
 
     float money;
 
@@ -355,9 +358,17 @@ public class Soldier {
                     }
                 }
             } else if (!hasMoved) {
-                if (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || frame - lastRandomLocTime > 69 || !movement.findPath(lastRandomLocation, null)) {
+                if (lastRandomLocation.distanceTo(myLocation) < 0.8 * RobotType.SOLDIER.sensorRadius || !rc.onTheMap(myLocation.add(myLocation.directionTo(lastRandomLocation), 4)) || lastRandomTargetCheck - lastRandomTargetImprovement > 13 || !movement.findPath(lastRandomLocation, null)) {
                     lastRandomLocation = myLocation.add(randomDirection(), 100);
                     lastRandomLocTime = frame;
+                    lastRandomTargetCheck = frame;
+                    lastRandomTargetImprovement = frame;
+                    randomTargetMinDist = 100000;
+                }
+                lastRandomTargetCheck = frame;
+                if (myLocation.distanceTo(lastRandomLocation) < randomTargetMinDist){
+                    randomTargetMinDist = myLocation.distanceTo(lastRandomLocation);
+                    lastRandomTargetImprovement = frame;
                 }
                 myLocation = rc.getLocation();
             }
