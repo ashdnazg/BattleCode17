@@ -95,6 +95,8 @@ public class Scout {
         }
     }
 
+    int stopScoutAttack = -100;
+
     protected void tick() {
         try {
             preTick();
@@ -178,7 +180,7 @@ public class Scout {
 
                 RobotType ut = r.getType();
                 if (!r.getTeam().equals(rc.getTeam())) {
-                    if ((ut == RobotType.GARDENER && (!isSpotter || nearbyEnemyFighters == 0) || rc.getHealth() / RobotType.SCOUT.maxHealth > 0.6 && r.getHealth() < 10 * (frame + 1500f) / 1500 && ut != RobotType.SCOUT && nearbyAlliedFighters == 0 || ut == RobotType.SCOUT && (chaseAllScouts)) &&
+                    if ((ut == RobotType.GARDENER && (!isSpotter || frame - stopScoutAttack  > 42) || rc.getHealth() / RobotType.SCOUT.maxHealth > 0.6 && r.getHealth() < 10 * (frame + 1500f) / 1500 && ut != RobotType.SCOUT && nearbyAlliedFighters == 0 || ut == RobotType.SCOUT && (chaseAllScouts)) &&
                             (civMinDist > r.location.distanceTo(myLocation) || lastCivilian != null && r.location.distanceTo(lastCivilian) < 3)) {
                         nextCivilian = r.location;
                         nextCivilianInfo = r;
@@ -202,6 +204,12 @@ public class Scout {
             if (lastCivilianInfo != null && (nextCivilian == null || lastCivilianInfo.ID != nextCivilianInfo.ID)) {
                 setSpotter(!isSpotter); //revert pathfinding constants
                 setSpotter(!isSpotter);
+            }
+            if (nextCivilianInfo != null  && nextCivilianInfo.type == RobotType.SCOUT){
+                Movement.MIN_ENEMY_DIST = 4f;
+                if (nextEnemy.distanceTo(myLocation) < 5f && myLocation.distanceTo(nextCivilian) < 4f){
+                    stopScoutAttack = frame;
+                }
             }
             if (nextCivilianInfo != null && (lastCivilianInfo == null || lastCivilianInfo.ID != nextCivilianInfo.ID)) {
                 if (nextCivilianInfo != null) {
