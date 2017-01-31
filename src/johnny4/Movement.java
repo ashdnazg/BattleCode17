@@ -307,6 +307,9 @@ public class Movement {
     static boolean escaping = false;
 
     public boolean findPath(MapLocation target, Direction fireDir) throws GameActionException {
+        if (robotType == RobotType.TANK){
+            evadeBullets = false;
+        }
         if (Util.DEBUG) System.out.println("Starting findPath " + Clock.getBytecodeNum());
         if (target == null) {
             if (Util.DEBUG) System.out.println("Pathfinding to null, that's easy");
