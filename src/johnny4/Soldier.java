@@ -176,7 +176,7 @@ public class Soldier {
             if (nextEnemyInfo != null && nextEnemyInfo.type == RobotType.ARCHON && nearbySoldiers > 0 && minAllyID < rc.getID()) {
                 stayWithArchon = frame; //ignore archons for 50 frames
             }
-            if (Radio.countAllies(RobotType.SOLDIER) <= map.enemyArchonPos.length) {
+            if (Radio.countAllies(RobotType.SOLDIER) < map.enemyArchonPos.length) {
                 stayWithArchon = Math.max(stayWithArchon, frame - 45);
             }
             spotterTarget = false;
